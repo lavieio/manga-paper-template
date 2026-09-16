@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1.2" cy="1.2" r="1.2" fill="rgba(41,38,31,0.16)" />
+    </pattern>
+  </defs>
+
+  <!-- 点阵稿纸底 -->
+  <rect width="1200" height="630" fill="#f7f2e7" />
+  <rect width="1200" height="630" fill="url(#dots)" />
+
+  <!-- 朱砂印章 -->
+  <g transform="translate(84 74) rotate(-3)">
+    <rect width="72" height="72" fill="#b5342e" stroke="#1c1913" stroke-width="5" />
+    <text x="36" y="52" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="40"
+          font-weight="700" fill="#fffdf6" text-anchor="middle">M</text>
+  </g>
+  <text x="176" y="126" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="52"
+        font-weight="700" fill="#1c1913" letter-spacing="2">MangaPaper</text>
+
+  <!-- 贴纸 -->
+  <g font-family="ui-monospace, Menlo, Consolas, monospace" font-size="22" font-weight="700" fill="#1c1913">
+    <g transform="translate(86 186) rotate(-1.5)">
+      <rect width="196" height="42" fill="#6fd3c1" stroke="#1c1913" stroke-width="3" />
+      <text x="98" y="29" text-anchor="middle">漫画 × 稿纸</text>
+    </g>
+    <g transform="translate(298 186) rotate(1.2)">
+      <rect width="230" height="42" fill="#f2a7c3" stroke="#1c1913" stroke-width="3" />
+      <text x="115" y="29" text-anchor="middle">私密文章加密</text>
+    </g>
+    <g transform="translate(544 186) rotate(-1)">
+      <rect width="150" height="42" fill="#f6d34e" stroke="#1c1913" stroke-width="3" />
+      <text x="75" y="29" text-anchor="middle">纯静态</text>
+    </g>
+  </g>
+
+  <!-- 终端窗（正文示意） -->
+  <g transform="translate(86 266)">
+    <rect width="700" height="286" fill="#fffdf6" stroke="#1c1913" stroke-width="6" />
+    <rect width="700" height="54" fill="#f7f2e7" stroke="#1c1913" stroke-width="6" />
+    <circle cx="36" cy="27" r="11" fill="#b5342e" stroke="#1c1913" stroke-width="3" />
+    <circle cx="74" cy="27" r="11" fill="#f6d34e" stroke="#1c1913" stroke-width="3" />
+    <circle cx="112" cy="27" r="11" fill="#6fd3c1" stroke="#1c1913" stroke-width="3" />
+    <text x="150" y="34" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="19"
+          fill="#6d6355">posts/hello-manga-paper.md</text>
+    <g font-family="ui-monospace, Menlo, Consolas, monospace" font-size="24" fill="#1c1913">
+      <text x="34" y="112" font-weight="700">const</text>
+      <text x="130" y="112">post = {</text>
+      <text x="58" y="160">title:</text>
+      <rect x="180" y="138" width="452" height="30" fill="rgba(246,211,78,0.55)" />
+      <text x="196" y="160">'点阵稿纸，墨色硬边，贴纸标签'</text>
+      <text x="34" y="212">}</text>
+      <text x="34" y="260" font-weight="700">return</text>
+      <rect x="150" y="238" width="420" height="30" fill="rgba(246,211,78,0.55)" />
+      <text x="166" y="260">'一次安静的发布'</text>
+    </g>
+  </g>
+
+  <!-- 右侧竖排说明 -->
+  <g font-family="ui-monospace, Menlo, Consolas, monospace" fill="#1c1913">
+    <text x="838" y="300" font-size="24" font-weight="700">Maple Mono NF CN</text>
+    <text x="838" y="342" font-size="20" fill="#6d6355">CDN 分片按需加载</text>
+    <text x="838" y="386" font-size="20" fill="#6d6355">明暗双主题</text>
+    <text x="838" y="430" font-size="20" fill="#6d6355">Pagefind 搜索</text>
+    <text x="838" y="474" font-size="20" fill="#6d6355">PhotoSwipe 灯箱</text>
+    <text x="838" y="518" font-size="20" fill="#6d6355">remark42 评论（可选）</text>
+  </g>
+
+  <!-- 页脚朱砂线 -->
+  <rect x="86" y="582" width="1028" height="4" fill="#b5342e" />
+</svg>
