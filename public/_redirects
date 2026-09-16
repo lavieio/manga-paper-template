@@ -1,0 +1,2 @@
+# Cloudflare Pages 重定向（若同时提供 vercel.json，请按 README 删除非目标平台那份）
+/posts/ /posts/1 301

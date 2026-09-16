@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "test": "node --test scripts/*.test.ts src/utils/*.test.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "verify": "node scripts/verify-dist.ts"
   },
   "engines": {
     "node": ">=22 <25"
