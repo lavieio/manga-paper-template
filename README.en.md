@@ -165,9 +165,6 @@ You can also create the repo first via [**Use this template**](https://github.co
 3. Environment variables: at least `NODE_VERSION=22` (plus the others from the table below)
 4. Save and deploy
 
-> Cloudflare's [Deploy to Cloudflare button](https://developers.cloudflare.com/workers/platform/deploy-buttons)
-> targets Workers projects; for a purely static Pages site just follow the steps above.
-
 ### Environment Variables
 
 | Variable | Purpose |

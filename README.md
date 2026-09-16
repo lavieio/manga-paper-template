@@ -159,8 +159,6 @@ cover: /cover.png       # 可选
 3. 环境变量：至少加 `NODE_VERSION=22`（以及环境变量表中的其它项）
 4. 保存并部署
 
-> Cloudflare 的 [Deploy to Cloudflare 按钮](https://developers.cloudflare.com/workers/platform/deploy-buttons) 主要面向 Workers 项目；纯静态 Pages 站按上述步骤即可。
-
 ### 环境变量
 
 | 变量 | 用途 |
