@@ -3,7 +3,7 @@
 
 ![Astro](https://img.shields.io/badge/Astro-7.x-FF5D01?style=for-the-badge&logo=astro&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![License](https://img.shields.io/github/license/lavieio/manga-paper-template?color=%232F3741&style=for-the-badge)
+![License: MIT](https://img.shields.io/badge/License-MIT-2F3741?style=for-the-badge)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white&style=for-the-badge)](https://conventionalcommits.org)
 
 **简体中文** · [English](README.en.md)
@@ -54,15 +54,15 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 
 ## 💻 Tech Stack
 
-**框架** - [Astro](https://astro.build/)（`output: 'static'`，无 SSR adapter）
-**源码语言** - TypeScript（Node 原生类型剥离，构建前无需编译步骤）
-**字体** - [Maple Mono NF CN](https://github.com/subframe7536/maple-font)（OFL-1.1）+ [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/)
-**静态搜索** - [Pagefind](https://pagefind.app/)
-**灯箱** - [PhotoSwipe](https://photoswipe.com/)
-**评论** - [remark42](https://remark42.com/)（自托管，可选）
-**加密** - WebCrypto（PBKDF2 600k + AES-256-GCM）
-**Git 钩子** - [husky](https://typicode.github.io/husky/)
-**部署** - [Cloudflare Pages](https://pages.cloudflare.com/) 或 [Vercel](https://vercel.com/)（二选一）
+- **框架** — [Astro](https://astro.build/)（`output: 'static'`，无 SSR adapter）
+- **源码语言** — TypeScript（Node 原生类型剥离，构建前无需编译步骤）
+- **字体** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font)（OFL-1.1）+ [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/)
+- **静态搜索** — [Pagefind](https://pagefind.app/)
+- **灯箱** — [PhotoSwipe](https://photoswipe.com/)
+- **评论** — [remark42](https://remark42.com/)（自托管，可选）
+- **加密** — WebCrypto（PBKDF2 600k + AES-256-GCM）
+- **Git 钩子** — [husky](https://typicode.github.io/husky/)
+- **部署** — [Cloudflare Pages](https://pages.cloudflare.com/) 或 [Vercel](https://vercel.com/)（二选一）
 
 ## 👨🏻‍💻 Running Locally
 

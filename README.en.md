@@ -3,7 +3,7 @@
 
 ![Astro](https://img.shields.io/badge/Astro-7.x-FF5D01?style=for-the-badge&logo=astro&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![License](https://img.shields.io/github/license/lavieio/manga-paper-template?color=%232F3741&style=for-the-badge)
+![License: MIT](https://img.shields.io/badge/License-MIT-2F3741?style=for-the-badge)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white&style=for-the-badge)](https://conventionalcommits.org)
 
 [简体中文](README.md) · **English**
@@ -55,15 +55,15 @@ All posts live in `src/content/blog/`; the **first-level directory name becomes 
 
 ## 💻 Tech Stack
 
-**Framework** - [Astro](https://astro.build/) (`output: 'static'`, no SSR adapter)
-**Source language** - TypeScript (Node native type stripping — no build step before running)
-**Fonts** - [Maple Mono NF CN](https://github.com/subframe7536/maple-font) (OFL-1.1) via [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/)
-**Static search** - [Pagefind](https://pagefind.app/)
-**Lightbox** - [PhotoSwipe](https://photoswipe.com/)
-**Comments** - [remark42](https://remark42.com/) (self-hosted, optional)
-**Encryption** - WebCrypto (PBKDF2 600k + AES-256-GCM)
-**Git hooks** - [husky](https://typicode.github.io/husky/)
-**Deployment** - [Cloudflare Pages](https://pages.cloudflare.com/) or [Vercel](https://vercel.com/) (choose one)
+- **Framework** — [Astro](https://astro.build/) (`output: 'static'`, no SSR adapter)
+- **Source language** — TypeScript (Node native type stripping — no build step before running)
+- **Fonts** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font) (OFL-1.1) via [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/)
+- **Static search** — [Pagefind](https://pagefind.app/)
+- **Lightbox** — [PhotoSwipe](https://photoswipe.com/)
+- **Comments** — [remark42](https://remark42.com/) (self-hosted, optional)
+- **Encryption** — WebCrypto (PBKDF2 600k + AES-256-GCM)
+- **Git hooks** — [husky](https://typicode.github.io/husky/)
+- **Deployment** — [Cloudflare Pages](https://pages.cloudflare.com/) or [Vercel](https://vercel.com/) (choose one)
 
 ## 👨🏻‍💻 Running Locally
 
