@@ -52,13 +52,16 @@ const sheets = Astro.props.posts.slice(0, MAX_FEATURED);
       ))
     }
   </div>
-  <div class="dots" role="tablist" aria-label="精选轮播">
+  <div class="dots" role="group" aria-label="精选轮播">
     {
-      sheets.map((post, i) => (
-        <button class="dot" data-index={i} aria-label={`查看精选：${post.data.title}`}>
-          {String(i + 1).padStart(2, "0")}
-        </button>
-      ))
+      sheets.map((post, i) => {
+        const label = String(i + 1).padStart(2, "0");
+        return (
+          <button class="dot" data-index={i} aria-label={`${label} · 查看精选：${post.data.title}`}>
+            {label}
+          </button>
+        );
+      })
     }
   </div>
 </section>
