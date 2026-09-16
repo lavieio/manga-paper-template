@@ -1,0 +1,262 @@
+---
+/**
+ * /private 私密文章入口（demo: private-lock.html 形态 B 定稿）
+ * - 计数不显示在明文页头（防元数据泄漏），解锁后从 payload 恢复
+ * - 占位：gate 封条框 + 3 张涂黑骨架卡；解锁：骨架刮开 → 真实卡片逐张浮入
+ */
+import "../styles/private.css";
+import Base from "../layouts/Base.astro";
+import { getPrivatePosts, getPostSlug, getCategory } from "../utils/posts";
+import { estimateReadTime } from "../utils/readtime";
+import { formatDate } from "../utils/format";
+import { encryptText, getPrivatePassword } from "../utils/private-crypto";
+
+interface PrivateCard {
+  slug: string;
+  title: string;
+  description: string;
+  date: string;
+  updated?: string;
+  category: string;
+  tags: string[];
+  minutes: number;
+}
+
+const posts = await getPrivatePosts();
+let payloadJson = "";
+
+if (posts.length > 0) {
+  const cards: PrivateCard[] = posts.map((p) => ({
+    slug: getPostSlug(p),
+    title: p.data.title,
+    description: p.data.description,
+    date: formatDate(p.data.date),
+    updated: p.data.updated ? formatDate(p.data.updated) : undefined,
+    category: getCategory(p),
+    tags: p.data.tags,
+    minutes: estimateReadTime(p.body ?? ""),
+  }));
+  payloadJson = JSON.stringify(
+    await encryptText(JSON.stringify(cards), getPrivatePassword("/private")),
+  );
+}
+---
+
+<Base title="私密文章" noindex unlockCheck>
+  <div class="page-head">
+    <h1>私密文章</h1>
+    {/* 计数来自密文，解锁后才显示 */}
+    <span class="count" data-private-count hidden></span>
+  </div>
+
+  {
+    posts.length === 0 ? (
+      <p class="empty">暂无私密文章。</p>
+    ) : (
+      <>
+        <div data-private-gate>
+          <div class="seal-box" data-seal-box>
+            <p>这里收着没公开的文章。输入访问密码查看列表——解密在浏览器本地完成。</p>
+            <div class="row">
+              <input type="password" placeholder="输入密码…" aria-label="访问密码" data-gate-input />
+              <button class="gate-btn" type="button" data-gate-submit>解锁 →</button>
+            </div>
+            <p class="hint" data-gate-hint></p>
+          </div>
+
+          <div class="locked-cards">
+            {[0.5, 0.4, 0.3].map((seed, i) => (
+              <div class="locked-card" aria-hidden="true">
+                <div class="row-bars"><div class="bar short" style={`--tilt:${seed - 0.9}deg`} /></div>
+                <div class={i % 2 ? "bar mid" : "bar long"} style={`--tilt:${seed}deg`} />
+                <div class={i % 2 ? "bar long" : "bar mid"} style={`--tilt:${-seed}deg`} />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <section class="cards real-cards" data-private-list hidden />
+        <script
+          type="application/json"
+          id="private-index-payload"
+          is:inline
+          set:html={payloadJson}
+        />
+      </>
+    )
+  }
+</Base>
+
+<script>
+  import {
+    deriveExportableKey,
+    importCachedKey,
+    decryptText,
+    type EncryptedPayload,
+  } from "../utils/private-crypto";
+  import { saveUnlockedKey, loadUnlockedKey, clearUnlockedKey } from "../scripts/private-key";
+  import { categoryColor } from "../utils/category";
+
+  const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const PEEL_MS = REDUCED ? 0 : 450;
+
+  interface PrivateCard {
+    slug: string;
+    title: string;
+    description: string;
+    date: string;
+    updated?: string;
+    category: string;
+    tags: string[];
+    minutes: number;
+  }
+
+  const gateWrap = document.querySelector<HTMLElement>("[data-private-gate]");
+  const sealBox = document.querySelector<HTMLElement>("[data-seal-box]");
+  const input = document.querySelector<HTMLInputElement>("[data-gate-input]");
+  const submit = document.querySelector<HTMLButtonElement>("[data-gate-submit]");
+  const hint = document.querySelector<HTMLElement>("[data-gate-hint]");
+  const list = document.querySelector<HTMLElement>("[data-private-list]");
+  const countEl = document.querySelector<HTMLElement>("[data-private-count]");
+  const payloadEl = document.getElementById("private-index-payload");
+
+  if (gateWrap && sealBox && input && submit && hint && list && countEl && payloadEl) {
+    const payload = JSON.parse(payloadEl.textContent ?? "{}") as EncryptedPayload;
+
+    gateWrap.querySelectorAll<HTMLElement>(".bar").forEach((b, i) => {
+      b.style.transitionDelay = `${i * 45}ms`;
+    });
+
+    const esc = (s: string) => {
+      const d = document.createElement("span");
+      d.textContent = s;
+      return d.innerHTML;
+    };
+
+    const renderCards = (cards: PrivateCard[]) => {
+      list.innerHTML = cards
+        .map(
+          (c) => `
+        <a class="card" href="/posts/${esc(c.slug)}">
+          <div class="top">
+            <span class="sticker ${categoryColor(c.category)}">${esc(c.category)}</span>
+            ${c.tags.map((t) => `<span class="sticker blue">${esc(t)}</span>`).join("")}
+          </div>
+          <h2>${esc(c.title)}</h2>
+          <p class="excerpt">${esc(c.description)}</p>
+          <div class="foot">
+            <span>${c.date}</span>
+            ${c.updated ? `<span>更新于 ${c.updated}</span>` : ""}
+            <span>${c.minutes} 分钟</span>
+            <span class="open">阅读 →</span>
+          </div>
+        </a>`,
+        )
+        .join("");
+      list.querySelectorAll<HTMLElement>(".card").forEach((c, i) => {
+        c.style.transitionDelay = `${i * 80}ms`;
+      });
+    };
+
+    const unlock = async (key: CryptoKey, instant = false) => {
+      const cards = JSON.parse(await decryptText(payload, key)) as PrivateCard[];
+      renderCards(cards);
+      countEl.textContent = `${cards.length} 篇`;
+      countEl.hidden = false;
+
+      if (instant) {
+        // 缓存命中：无动画直接呈现
+        gateWrap.hidden = true;
+        list.hidden = false;
+        document.body.classList.add("unlocked", "instant");
+        return;
+      }
+      gateWrap.classList.add("unlocked");
+      setTimeout(() => {
+        gateWrap.hidden = true;
+        list.hidden = false;
+        document.body.classList.add("unlocked");
+      }, PEEL_MS);
+    };
+
+    const busy = (on: boolean) => {
+      submit.disabled = on;
+      submit.textContent = on ? "解锁中…" : "解锁 →";
+    };
+
+    const fail = () => {
+      hint.textContent = "密码错误，请重试";
+      sealBox.classList.remove("shake");
+      void sealBox.offsetWidth;
+      sealBox.classList.add("shake");
+    };
+
+    const tryPassword = async () => {
+      const password = input.value;
+      if (!password) {
+        hint.textContent = "请输入密码";
+        return;
+      }
+      busy(true);
+      hint.textContent = "";
+      try {
+        const { key, exported } = await deriveExportableKey(password);
+        await unlock(key);
+        saveUnlockedKey(exported);
+      } catch {
+        fail();
+      } finally {
+        busy(false);
+      }
+    };
+
+    submit.addEventListener("click", tryPassword);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") tryPassword();
+    });
+
+    const cached = loadUnlockedKey();
+    if (cached) {
+      importCachedKey(cached)
+        .then((key) => unlock(key, true))
+        .catch(() => {
+          clearUnlockedKey();
+          delete document.documentElement.dataset.unlocked;
+          input.focus();
+        });
+      // 看门狗：异常时 3 秒仍未呈现列表，恢复 gate，避免白屏
+      setTimeout(() => {
+        if (list.hidden) {
+          delete document.documentElement.dataset.unlocked;
+          input.focus();
+        }
+      }, 3000);
+    } else {
+      input.focus();
+    }
+  }
+</script>
+
+<style>
+  .page-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin: 8px 0 28px;
+  }
+  .page-head h1 {
+    font-size: 30px;
+    font-weight: 700;
+  }
+  .count {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .empty {
+    color: var(--ink-soft);
+  }
+  .cards {
+    display: grid;
+    gap: 26px;
+  }
+</style>

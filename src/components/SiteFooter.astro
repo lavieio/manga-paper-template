@@ -6,10 +6,16 @@ const year = new Date().getFullYear();
 
 <footer class="site-footer">
   <span>© {year} {site.author}</span>
-  <span>Built with Maple Mono NF CN</span>
+  <span><a class="private-link" href="/private">私密</a> · Built with Maple Mono NF CN</span>
 </footer>
 
 <style>
+  .private-link {
+    color: inherit;
+  }
+  .private-link:hover {
+    color: var(--red);
+  }
   .site-footer {
     display: flex;
     justify-content: space-between;

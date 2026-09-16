@@ -1,6 +1,7 @@
 ---
 import "../styles/fonts.css";
 import "../styles/global.css";
+import "../styles/card.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import { site } from "../config";
@@ -8,9 +9,13 @@ import { site } from "../config";
 interface Props {
   title?: string;
   description?: string;
+  /** 私密文章等不希望被索引的页面 */
+  noindex?: boolean;
+  /** 私密页面：首帧前同步检查解锁缓存，避免密码框闪烁 */
+  unlockCheck?: boolean;
 }
 
-const { title, description = site.tagline } = Astro.props;
+const { title, description = site.tagline, noindex = false, unlockCheck = false } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
@@ -35,6 +40,19 @@ const FONT_WEIGHTS = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    {
+      unlockCheck && (
+        <script is:inline>
+          // 首帧前检查解锁缓存：有密钥则直接标记，CSS 立即隐藏密码框（防闪烁）
+          try {
+            if (localStorage.getItem("mangapaper:private-key")) {
+              document.documentElement.dataset.unlocked = "1";
+            }
+          } catch (e) {}
+        </script>
+      )
+    }
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     {

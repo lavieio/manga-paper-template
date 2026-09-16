@@ -1,0 +1,223 @@
+/* 私密文章「机密档案」占位与解锁动画（demo: demos/comic/private-lock.html 定稿） */
+
+/* 机密印章 */
+.seal-stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 18px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--red);
+  border: 4px solid var(--red);
+  border-radius: 4px;
+  transform: rotate(-3deg);
+  opacity: 0.85;
+  box-shadow: inset 0 0 8px rgba(181, 52, 46, 0.3);
+  transition:
+    transform 0.35s ease,
+    opacity 0.35s ease;
+}
+
+/* 涂黑涂抹条 */
+.bar {
+  height: 22px;
+  background: var(--ink);
+  border-radius: 2px;
+  transform: rotate(var(--tilt, 0deg));
+  transform-origin: left center;
+  transition:
+    transform 0.5s cubic-bezier(0.2, 0.7, 0.25, 1),
+    opacity 0.4s ease;
+}
+.bar.short { width: 34%; }
+.bar.mid { width: 58%; }
+.bar.long { width: 86%; }
+.bar.full { width: 96%; }
+
+.redact-head {
+  margin: 20px 0 0;
+}
+.redact-title {
+  display: flex;
+  gap: 10px;
+  margin-top: 26px;
+}
+.redact-body {
+  margin-top: 44px;
+  display: grid;
+  gap: 14px;
+}
+.redact-body .bar {
+  height: 16px;
+}
+
+/* 解锁封条框（页内，非弹窗） */
+.seal-box {
+  margin: 40px auto 0;
+  max-width: 460px;
+  border: 3px solid var(--ink);
+  background: var(--card);
+  box-shadow: var(--shadow-lg);
+  padding: 26px 24px;
+  position: relative;
+}
+.seal-box::before {
+  content: "封 · SEALED";
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  background: var(--yellow);
+  color: var(--ink);
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  padding: 2px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+.seal-box p {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+.seal-box .row {
+  display: flex;
+  gap: 12px;
+}
+.seal-box input {
+  flex: 1;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  border: 3px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+}
+.seal-box input:focus {
+  box-shadow: var(--shadow);
+}
+.seal-box .hint {
+  min-height: 1.5em;
+  color: var(--red);
+  font-size: 12px;
+  margin: 12px 0 0;
+}
+
+/* 首帧前已检测到解锁缓存：整体隐藏占位区，页面呈纸张背景，
+   解密完成后内容瞬时替换——与普通页面无感 */
+html[data-unlocked] .redact-wrap,
+html[data-unlocked] [data-private-gate] {
+  display: none;
+}
+
+/* 密码错误：漫画「摇头」 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+.seal-box.shake {
+  animation: shake 0.3s ease;
+}
+
+/* 解锁动画：涂抹条逐条刮开，印章放大淡出 */
+.unlocked .bar {
+  transform: scaleX(0) rotate(var(--tilt, 0deg));
+  opacity: 0;
+}
+.unlocked .seal-stamp {
+  transform: rotate(-3deg) scale(1.4);
+  opacity: 0;
+}
+
+/* 真实内容入场 */
+.prose-reveal {
+  opacity: 0;
+  transform: translateY(10px);
+}
+.prose-reveal.show {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+
+/* 列表页：涂黑卡片骨架 */
+.locked-cards {
+  display: grid;
+  gap: 26px;
+  margin-top: 36px;
+}
+.locked-card {
+  border: 3px dashed var(--ink-soft);
+  background: var(--card);
+  padding: 20px 22px 16px;
+  display: grid;
+  gap: 12px;
+}
+.locked-card .row-bars {
+  display: flex;
+  gap: 10px;
+}
+
+/* 真实卡片逐张浮入 */
+.real-cards .card {
+  opacity: 0;
+  transform: translateY(14px);
+}
+.unlocked .real-cards .card {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s cubic-bezier(0.2, 0.7, 0.25, 1);
+}
+/* 缓存命中：卡片直接呈现，不走入场动画 */
+.instant .real-cards .card {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* 解锁按钮（详情页封条框 + 列表页 gate 共用） */
+.gate-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+  background: var(--cyan);
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.gate-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+}
+.gate-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .seal-stamp,
+  .prose-reveal,
+  .real-cards .card {
+    transition: none !important;
+  }
+  .seal-box.shake {
+    animation: none;
+  }
+}
