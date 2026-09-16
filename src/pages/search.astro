@@ -1,0 +1,245 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="搜索">
+  <div class="page-head"><h1>搜索</h1></div>
+
+  <div class="search-box">
+    <span class="prompt" aria-hidden="true">&gt;_</span>
+    <input
+      type="search"
+      placeholder="输入关键词…"
+      aria-label="搜索文章"
+      autocomplete="off"
+      data-search-input
+    />
+    <span class="hint" aria-hidden="true">Enter</span>
+  </div>
+  <p class="search-tip" data-search-tip>支持标题与全文检索；输入即搜。</p>
+
+  <section class="results" data-results hidden></section>
+
+  <div class="state" data-state hidden></div>
+</Base>
+
+<script>
+  /**
+   * Pagefind 搜索（plan §10）
+   * - 索引由构建脚本 `pagefind --site dist` 生成；dev 模式无索引 → 明确提示
+   * - 300ms 防抖；结果含高亮摘要与分类贴纸
+   * - 动态 import 的是 dist 里的公开路径，需 @vite-ignore 跳过打包期解析
+   */
+  const DEBOUNCE_MS = 300;
+
+  interface PagefindResultData {
+    url: string;
+    excerpt: string;
+    meta: { title?: string; category?: string };
+    raw_url?: string;
+  }
+
+  interface PagefindModule {
+    options: (opts: { excerptLength?: number }) => Promise<void>;
+    search: (query: string) => Promise<{ results: { data: () => Promise<PagefindResultData> }[] }>;
+  }
+
+  const input = document.querySelector<HTMLInputElement>("[data-search-input]");
+  const resultsEl = document.querySelector<HTMLElement>("[data-results]");
+  const stateEl = document.querySelector<HTMLElement>("[data-state]");
+  const tipEl = document.querySelector<HTMLElement>("[data-search-tip]");
+
+  if (input && resultsEl && stateEl && tipEl) {
+    let pagefind: PagefindModule | null = null;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const say = (html: string) => {
+      stateEl.innerHTML = html;
+      stateEl.hidden = false;
+    };
+
+    const loadPagefind = async (): Promise<PagefindModule | null> => {
+      if (pagefind) return pagefind;
+      try {
+        const mod = (await import(
+          /* @vite-ignore */ "/pagefind/pagefind.js"
+        )) as unknown as PagefindModule;
+        await mod.options({ excerptLength: 28 });
+        pagefind = mod;
+        return mod;
+      } catch {
+        say(
+          '搜索索引未生成——请先运行 <b>npm run build</b>（Pagefind 索引在构建后产出，dev 模式不包含）。',
+        );
+        return null;
+      }
+    };
+
+    const stickerClass = (category: string) =>
+      ({ 技术: "cyan", 随笔: "pink", 摄影: "yellow" })[category] ?? "blue";
+
+    const renderResults = (items: PagefindResultData[], query: string) => {
+      if (items.length === 0) {
+        resultsEl.hidden = true;
+        say(`没有命中「<b>${query}</b>」——换个词试试？`);
+        return;
+      }
+      stateEl.hidden = true;
+      resultsEl.innerHTML = items
+        .map((item) => {
+          const category = item.meta.category ?? "";
+          return `
+            <a class="hit" href="${item.url}">
+              <div class="head">
+                ${category ? `<span class="sticker ${stickerClass(category)}">${category}</span>` : ""}
+                <h2>${item.meta.title ?? item.url}</h2>
+              </div>
+              <p class="snip">${item.excerpt}</p>
+            </a>`;
+        })
+        .join("");
+      resultsEl.hidden = false;
+      tipEl.textContent = `命中 ${items.length} 篇`;
+    };
+
+    const search = async (query: string) => {
+      if (!query.trim()) {
+        resultsEl.hidden = true;
+        stateEl.hidden = true;
+        tipEl.textContent = "支持标题与全文检索；输入即搜。";
+        return;
+      }
+      const mod = await loadPagefind();
+      if (!mod) return;
+      const { results } = await mod.search(query);
+      const items = await Promise.all(results.slice(0, 20).map((r) => r.data()));
+      renderResults(items, query);
+    };
+
+    const scheduleSearch = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void search(input.value), DEBOUNCE_MS);
+    };
+
+    input.addEventListener("input", scheduleSearch);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        clearTimeout(timer);
+        void search(input.value);
+      }
+    });
+    input.focus();
+  }
+</script>
+
+<style>
+  .page-head {
+    margin: 8px 0 24px;
+  }
+  .page-head h1 {
+    font-size: 30px;
+    font-weight: 700;
+  }
+
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 3px solid var(--ink);
+    background: var(--card);
+    box-shadow: var(--shadow-lg);
+    padding: 14px 18px;
+  }
+  .search-box .prompt {
+    font-weight: 700;
+    color: var(--red);
+    font-size: 18px;
+  }
+  .search-box input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: var(--font-mono);
+    font-size: 18px;
+    color: var(--ink);
+  }
+  .search-box .hint {
+    font-size: 12px;
+    color: var(--ink-soft);
+    border: 2px solid var(--ink);
+    padding: 2px 8px;
+  }
+  .search-tip {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .results {
+    margin-top: 40px;
+    display: grid;
+    gap: 22px;
+  }
+  :global(.hit) {
+    border: 3px solid var(--ink);
+    background: var(--card);
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    display: block;
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease;
+  }
+  :global(.hit:hover) {
+    transform: translate(-3px, -3px);
+    box-shadow: var(--shadow-lg);
+  }
+  :global(.hit .head) {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  :global(.hit h2) {
+    font-size: 17px;
+    font-weight: 700;
+  }
+  :global(.hit .snip) {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+  :global(.hit mark) {
+    background: var(--yellow);
+    color: #1c1913;
+    padding: 0 2px;
+    border: 1px solid rgba(28, 25, 19, 0.4);
+  }
+  :global(.hit .sticker) {
+    display: inline-block;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border: 2px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  :global(.hit .sticker.cyan) { background: var(--cyan); transform: rotate(-1.5deg); }
+  :global(.hit .sticker.pink) { background: var(--pink); transform: rotate(1.2deg); }
+  :global(.hit .sticker.yellow) { background: var(--yellow); transform: rotate(-1deg); }
+  :global(.hit .sticker.blue) { background: var(--blue); transform: rotate(1deg); }
+
+  .state {
+    margin-top: 40px;
+    border: 3px dashed var(--ink-soft);
+    padding: 40px 22px;
+    text-align: center;
+    color: var(--ink-soft);
+  }
+  .state b {
+    color: var(--ink);
+  }
+</style>

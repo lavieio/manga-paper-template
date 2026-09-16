@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "astro build && pagefind --site dist",
     "preview": "astro preview",
     "astro": "astro",
     "test": "node --test scripts/*.test.ts src/utils/*.test.ts",
@@ -21,6 +21,7 @@
     "photoswipe": "^5.4.4"
   },
   "devDependencies": {
-    "husky": "^9.1.7"
+    "husky": "^9.1.7",
+    "pagefind": "^1.5.2"
   }
 }
