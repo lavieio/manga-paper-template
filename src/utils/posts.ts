@@ -82,16 +82,31 @@ function printDistinctCategories(posts: BlogPost[]): void {
 }
 
 /**
- * 唯一的「已发布文章」入口：排除 draft（私密文章的排除由单独管线处理），
- * 按发布时间倒序。列表/归档/标签/分类/RSS 一律走这里。
+ * 唯一的「已发布文章」入口：排除 draft；列表/归档/标签/分类/RSS 一律走这里。
+ * 私密文章默认排除；仅详情页路由需要时用 { includePrivate: true } 取全量。
  */
-export async function getPublishedPosts(): Promise<DatedPost[]> {
+export async function getPublishedPosts(options?: {
+  includePrivate?: boolean;
+}): Promise<DatedPost[]> {
   const all = await getCollection("blog");
   all.forEach(assertValidPost);
   assertUniqueSlugs(all);
-  const published = all.filter((p) => !p.data.draft).map(fillMissingDate);
+  const published = all
+    .filter((p) => !p.data.draft && (options?.includePrivate || !p.data.private))
+    .map(fillMissingDate);
   printDistinctCategories(published);
   return published.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+}
+
+/** 全部私密文章（不含草稿），按发布时间倒序——供 /private 加密入口页使用 */
+export async function getPrivatePosts(): Promise<DatedPost[]> {
+  const all = await getCollection("blog");
+  all.forEach(assertValidPost);
+  assertUniqueSlugs(all);
+  return all
+    .filter((p) => p.data.private && !p.data.draft)
+    .map(fillMissingDate)
+    .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 }
 
 /** tag/category 进入 URL 的唯一编码方式 */

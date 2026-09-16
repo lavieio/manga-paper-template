@@ -230,7 +230,31 @@
   transform: scaleY(1);
 }
 
-/* 窄屏 TOC 弹层 */
+/* 私密文章：解锁前 TOC 整体隐藏，解锁后恢复常规显示规则 */
+.post-toc.deferred,
+.toc-fab.deferred {
+  display: none;
+}
+@media (min-width: 1400px) {
+  .post-toc.deferred.unlocked {
+    display: block;
+  }
+}
+@media (max-width: 1399px) {
+  .toc-fab.deferred.unlocked {
+    display: inline-flex;
+  }
+}
+
+/* 窄屏 TOC 弹层（<1400px 悬浮 TOC 放不下，收进按钮弹层） */
+@media (max-width: 1399px) {
+  .toc-fab:not(.deferred) {
+    display: inline-flex;
+  }
+  .toc-popover.open {
+    display: block;
+  }
+}
 .toc-fab {
   display: none;
   position: fixed;
@@ -255,15 +279,6 @@
   z-index: 50;
   width: min(320px, calc(100vw - 44px));
 }
-@media (max-width: 1399px) {
-  .toc-fab {
-    display: inline-flex;
-  }
-  .toc-popover.open {
-    display: block;
-  }
-}
-
 /* 上一篇/下一篇 */
 .post-nav {
   display: grid;
