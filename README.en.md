@@ -139,7 +139,6 @@ the timezone is pinned to `Asia/Shanghai`.
 - **Dotted paper**: 1.2px ink dots on a 22px grid (repeating `radial-gradient`)
 - **Hard edges**: 3px ink borders with `4px 4px 0` hard shadows (zero blur)
 - **Sticker labels**: small type, ±1.5° rotation, per-category colours (tech=cyan / essays=pink / photo=yellow / else=blue)
-- **Vermilion, rationed**: seal logotype, featured sticker, TOC indicator, link underlines — the most expensive colour here
 - **Type**: Maple Mono NF CN everywhere; dark mode only swaps CSS variable values, never structure
 
 ## 🌐 Deployment
@@ -148,7 +147,7 @@ Both platforms consume the same `dist/`. **Deploy to one only** — no platform-
 
 ### Deploy to Vercel
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper-template&project-name=manga-paper&repository-name=manga-paper&env=PRIVATE_PASSWORD,SITE_URL,PUBLIC_UNLOCK_TTL_HOURS&envDescription=Fill%20in%20the%20values%20from%20.env.example%3A%20PRIVATE_PASSWORD%20encrypts%20private%20posts%20(use%20a%20strong%20password%20before%20going%20live)%2C%20SITE_URL%20is%20your%20real%20domain.&envDefaults=%7B%22PUBLIC_UNLOCK_TTL_HOURS%22%3A%221%22%7D&envLink=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper-template%2Fblob%2Fmain%2F.env.example)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper-template&project-name=manga-paper&repository-name=manga-paper&env=PRIVATE_PASSWORD,SITE_URL,PUBLIC_UNLOCK_TTL_HOURS&envDescription=PRIVATE_PASSWORD%20encrypts%20private%20posts%20%E2%80%94%20use%20a%20strong%20password%20before%20going%20live.%20SITE_URL%20is%20your%20real%20domain.%20PUBLIC_UNLOCK_TTL_HOURS%20is%20the%20unlock%20memory%20in%20hours%2C%20default%201.&envDefaults=%7B%22PUBLIC_UNLOCK_TTL_HOURS%22%3A%221%22%7D)
 
 - **One-click** (the button above): sign in → the repo is copied into your account (pick **Private** if you plan
   to write private posts) → fill in the environment variables → deploy

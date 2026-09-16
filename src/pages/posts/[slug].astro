@@ -55,6 +55,7 @@ if (post.data.private) {
   description={privatePayload ? "这篇内容已加密" : post.data.description}
   noindex={!!privatePayload}
   unlockCheck={!!privatePayload}
+  searchable={!privatePayload}
 >
   {
     privatePayload ? (
