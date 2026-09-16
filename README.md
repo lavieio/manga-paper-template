@@ -136,7 +136,6 @@ cover: /cover.png       # 可选
 - **点阵稿纸底**：22px 网格 1.2px 墨点（`radial-gradient` repeat）
 - **硬边硬阴影**：3px 墨色实线边框 + `4px 4px 0` 单方向硬阴影（零高斯模糊）
 - **贴纸标签**：小字、±1.5° 微旋、按内容分主题色（技术=青 / 随笔=粉 / 摄影=黄 / 其他=蓝）
-- **朱砂红严格限量**：印章 logoseal、精选贴纸、TOC 指示条、链接下划线——这是最贵的颜色，绝不够花
 - **字体**：Maple Mono NF CN 全站等宽；暗色只切换 CSS 变量值，不改结构
 
 ## 🌐 部署
@@ -145,7 +144,7 @@ cover: /cover.png       # 可选
 
 ### Vercel 部署
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper-template&project-name=manga-paper&repository-name=manga-paper&env=PRIVATE_PASSWORD,SITE_URL,PUBLIC_UNLOCK_TTL_HOURS&envDescription=%E6%8C%89%E5%8F%B3%E4%BE%A7%E9%93%BE%E6%8E%A5%E7%9A%84%20.env.example%20%E5%A1%AB%E5%86%99%EF%BC%9APRIVATE_PASSWORD%20%E7%94%A8%E4%BA%8E%E7%A7%81%E5%AF%86%E6%96%87%E7%AB%A0%E5%8A%A0%E5%AF%86%EF%BC%88%E4%B8%8A%E7%BA%BF%E5%8A%A1%E5%BF%85%E6%94%B9%E4%B8%BA%E5%BC%BA%E5%AF%86%E7%A0%81%EF%BC%89%EF%BC%8CSITE_URL%20%E5%A1%AB%E4%BD%A0%E7%9A%84%E7%9C%9F%E5%AE%9E%E5%9F%9F%E5%90%8D&envDefaults=%7B%22PUBLIC_UNLOCK_TTL_HOURS%22%3A%221%22%7D&envLink=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper-template%2Fblob%2Fmain%2F.env.example)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper-template&project-name=manga-paper&repository-name=manga-paper&env=PRIVATE_PASSWORD,SITE_URL,PUBLIC_UNLOCK_TTL_HOURS&envDescription=PRIVATE_PASSWORD%20%E7%94%A8%E4%BA%8E%E7%A7%81%E5%AF%86%E6%96%87%E7%AB%A0%E5%8A%A0%E5%AF%86%EF%BC%8C%E4%B8%8A%E7%BA%BF%E5%8A%A1%E5%BF%85%E6%94%B9%E4%B8%BA%E5%BC%BA%E5%AF%86%E7%A0%81%EF%BC%9BSITE_URL%20%E5%A1%AB%E4%BD%A0%E7%9A%84%E7%9C%9F%E5%AE%9E%E5%9F%9F%E5%90%8D%EF%BC%9BPUBLIC_UNLOCK_TTL_HOURS%20%E6%98%AF%E8%A7%A3%E9%94%81%E8%AE%B0%E5%BF%86%E6%97%B6%E9%95%BF%EF%BC%88%E5%B0%8F%E6%97%B6%EF%BC%89%EF%BC%8C%E9%BB%98%E8%AE%A4%201%E3%80%82&envDefaults=%7B%22PUBLIC_UNLOCK_TTL_HOURS%22%3A%221%22%7D)
 
 - **一键部署**（上面的按钮）：登录 → 把仓库复制到你的账号（要写私密文章请选 **Private**）→ 按提示填环境变量 → 部署
 - **仪表盘导入**：Vercel → **Add New → Project** 选仓库；Framework 选 Astro，Build Command `npm run build`，Output Directory `dist`，Node 22
