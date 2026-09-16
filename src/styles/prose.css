@@ -318,13 +318,3 @@
 .nav-card.next {
   text-align: right;
 }
-
-/* 评论区占位 */
-.comment-box {
-  margin-top: 56px;
-  border: 3px dashed var(--ink-soft);
-  padding: 30px 22px;
-  text-align: center;
-  color: var(--ink-soft);
-  font-size: 13px;
-}
