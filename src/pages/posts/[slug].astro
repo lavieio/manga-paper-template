@@ -85,7 +85,9 @@ if (post.data.private) {
           </div>
         </div>
 
-        <article class="prose">
+        <article class="prose" data-pagefind-body>
+          {/* Pagefind 元数据需在 body 内：搜索结果卡片用它显示分类贴纸 */}
+          <span data-pagefind-meta="category" hidden>{category}</span>
           <Content />
         </article>
 
