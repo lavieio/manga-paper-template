@@ -25,7 +25,7 @@ function read(path: string): string {
 /** 列表/首页/摘要类页面（私密文章不应出现） */
 const PUBLIC_LIST_FILES = [
   join(DIST, "index.html"),
-  join(DIST, "posts/1/index.html"),
+  join(DIST, "posts/index.html"),
   join(DIST, "archive/index.html"),
   join(DIST, "tags/index.html"),
 ];

@@ -1,38 +1,29 @@
 # MangaPaper 🖋
-
 ![MangaPaper](public/default-og.svg)
 
 ![Astro](https://img.shields.io/badge/Astro-7.x-FF5D01?style=for-the-badge&logo=astro&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![License](https://img.shields.io/github/license/lavieio/manga-paper?color=%232F3741&style=for-the-badge)
+![License](https://img.shields.io/github/license/lavieio/manga-paper-template?color=%232F3741&style=for-the-badge)
 [![Conventional Commits](https://img.shields.io/badge/Conventional%20Commits-1.0.0-%23FE5196?logo=conventionalcommits&logoColor=white&style=for-the-badge)](https://conventionalcommits.org)
 
 [简体中文](README.md) · **English**
 
 MangaPaper is a **comic-paper** themed open-source blog template: dotted notebook paper, ink-black hard borders,
-offset hard shadows, slapped-on sticker labels — with a monospace type system (Maple Mono NF CN) and light/dark themes.
-Fully static: no backend, no client framework.
-
-- Want to see it? Run it locally ([Running Locally](#-running-locally)) or hit [Deploy](#-deployment)
-- Building a private blog? Start with the [two-repository workflow](#-two-repository-workflow-template--private-blog)
-- Curious about the design decisions? See [Design Language](#-design-language)
+offset hard shadows, slapped-on sticker labels — with a full monospace type system (Maple Mono NF CN) and
+light/dark themes. Fully static: no backend, no client framework.
 
 ## 🔥 Features
 
-- [x] Paper × comic design language (dot grid / hard borders / hard shadows / sticker labels, vermilion used sparingly)
-- [x] light & dark mode (theme applied before first paint — no flash; View Transitions page-turn effect)
-- [x] Monospace everywhere, loaded from CDN in `unicode-range` chunks, with metric-matched fallback
+- [x] Paper × comic design language, monospace everywhere
 - [x] **Private posts**: AES-256-GCM encrypted at build time; only ciphertext ships; `/private` gated index
 - [x] Table of contents (sticky right rail, scroll highlighting with vermilion indicator)
-- [x] Homepage Featured paper-stack carousel (auto-play, bidirectional hover, `prefers-reduced-motion` fallback)
+- [x] Homepage Featured paper-stack carousel
 - [x] static search ([Pagefind](https://pagefind.app/), CJK-friendly)
-- [x] Image lightbox ([PhotoSwipe](https://photoswipe.com/), lazy-loaded; dimensions injected at build time — zero layout shift)
 - [x] Archive timeline / tag cloud / category pages
 - [x] draft posts & pagination (8 per page)
 - [x] sitemap & rss feed (private and draft posts excluded)
 - [x] Comments ([remark42](https://remark42.com/), optional — not rendered unless configured)
 - [x] Automatic dates: a git hook injects `date` and refreshes `updated`
-- [x] Build-output assertions (`npm run verify`: no private leakage, index page count, artifacts present)
 - [x] One-click deploy (Vercel / Cloudflare Pages)
 
 ## 🚀 Project Structure
@@ -40,7 +31,6 @@ Fully static: no backend, no client framework.
 ```bash
 /
 ├── public/
-│   ├── _redirects              # Cloudflare Pages 301 (pick one: this or vercel.json)
 │   ├── default-og.svg          # README hero / social preview
 │   └── favicon.svg             # vermilion seal
 ├── scripts/
@@ -57,8 +47,7 @@ Fully static: no backend, no client framework.
 │   ├── utils/                  # content pipeline, crypto, formatting, reading time
 │   ├── config.ts               # site name / author / remark42 (single source of truth)
 │   └── content.config.ts       # content schema (zod)
-├── astro.config.mjs
-└── vercel.json                 # Vercel 301 (pick one: this or public/_redirects)
+└── astro.config.mjs
 ```
 
 All posts live in `src/content/blog/`; the **first-level directory name becomes the category**
@@ -82,11 +71,11 @@ Requires **Node ≥ 22** (see `.nvmrc`).
 
 ```bash
 # Option 1: clone directly (for theme development)
-git clone https://github.com/lavieio/manga-paper.git my-blog
+git clone https://github.com/lavieio/manga-paper-template.git my-blog
 cd my-blog && npm install
 
 # Option 2: use this repo as a template (for blogging; pick Private)
-# https://github.com/lavieio/manga-paper/generate
+# https://github.com/lavieio/manga-paper-template/generate
 
 cp .env.example .env          # fill in as needed — see Environment Variables
 npm run dev                   # http://localhost:4321
@@ -155,30 +144,29 @@ the timezone is pinned to `Asia/Shanghai`.
 
 ## 🌐 Deployment
 
-### One-click deploy
+Both platforms consume the same `dist/`. **Deploy to one only** — no platform-specific config file is needed.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper&project-name=manga-paper&repository-name=manga-paper&env=PRIVATE_PASSWORD,SITE_URL,PUBLIC_UNLOCK_TTL_HOURS&envDescription=Fill%20in%20the%20values%20from%20.env.example%3A%20PRIVATE_PASSWORD%20encrypts%20private%20posts%20(use%20a%20strong%20password%20before%20going%20live)%2C%20SITE_URL%20is%20your%20real%20domain.&envDefaults=%7B%22PUBLIC_UNLOCK_TTL_HOURS%22%3A%221%22%7D&envLink=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper%2Fblob%2Fmain%2F.env.example)
+### Deploy to Vercel
 
-[**Use this template**](https://github.com/lavieio/manga-paper/generate) — create your own repository from this one (pick **Private**).
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper-template&project-name=manga-paper&repository-name=manga-paper&env=PRIVATE_PASSWORD,SITE_URL,PUBLIC_UNLOCK_TTL_HOURS&envDescription=Fill%20in%20the%20values%20from%20.env.example%3A%20PRIVATE_PASSWORD%20encrypts%20private%20posts%20(use%20a%20strong%20password%20before%20going%20live)%2C%20SITE_URL%20is%20your%20real%20domain.&envDefaults=%7B%22PUBLIC_UNLOCK_TTL_HOURS%22%3A%221%22%7D&envLink=https%3A%2F%2Fgithub.com%2Flavieio%2Fmanga-paper-template%2Fblob%2Fmain%2F.env.example)
 
-> ⚠️ One-click deploy **copies the repository into your own account**. If you plan to use private posts,
-> make sure the new repository is **private** and put the real password into the platform's environment
-> variables (never into the URL).
+- **One-click** (the button above): sign in → the repo is copied into your account (pick **Private** if you plan
+  to write private posts) → fill in the environment variables → deploy
+- **Dashboard import**: Vercel → **Add New → Project**, pick the repo; Framework: Astro, Build Command `npm run build`,
+  Output Directory `dist`, Node 22
 
-### Manual deploy (choose one)
+You can also create the repo first via [**Use this template**](https://github.com/lavieio/manga-paper-template/generate)
+(recommended: **Private**) and import it into Vercel afterwards.
 
-Both platforms consume the same `dist/`. **Deploy to one only**, and **delete the other platform's redirect config**:
+### Deploy to Cloudflare Pages
 
-| Platform | Configuration | Delete |
-| :--- | :--- | :--- |
-| Cloudflare Pages | Build: `npm run build`; Output: `dist`; env `NODE_VERSION=22` | `vercel.json` |
-| Vercel | Framework: Astro; Build: `npm run build`; Output: `dist`; Node 22 | `public/_redirects` |
-
-The real 301 for `/posts/` → `/posts/1` comes from the platform config file (a meta-refresh fallback ships too).
+1. Cloudflare dashboard → **Workers & Pages → Create → Pages → Connect to Git**, then pick your repo
+2. Build settings: Build command `npm run build`, Output directory `dist`
+3. Environment variables: at least `NODE_VERSION=22` (plus the others from the table below)
+4. Save and deploy
 
 > Cloudflare's [Deploy to Cloudflare button](https://developers.cloudflare.com/workers/platform/deploy-buttons)
-> targets Workers projects; for a purely static Pages site use the dashboard:
-> **Workers & Pages → Create → Pages → Connect to Git**.
+> targets Workers projects; for a purely static Pages site just follow the steps above.
 
 ### Environment Variables
 
@@ -203,35 +191,18 @@ With `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` configured, public posts
 ## 🔤 Fonts
 
 By default fonts come from the [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/) (cn-font-split chunks,
-OFL-1.1, hinted) — no font files to self-host.
+OFL-1.1, hinted) — no font files to self-host. Only four weights are loaded (body 400 / italic 400i / stickers 600 /
+headings 700), and they load **non-blocking** (`preload` + `onload` switching `rel`, with a `<noscript>` fallback).
 
 To self-host instead: download Maple Mono NF CN, subset it yourself, emit `public/fonts/**`,
-then swap the eight CDN `<link>` tags in `src/layouts/Base.astro` for local `@font-face` rules
+then swap the CDN `<link>` tags in `src/layouts/Base.astro` for local `@font-face` rules
 (keep the metric-matched fallback in `src/styles/fonts.css`). ZeoSeven also ships a
 [ZSFT CLI](https://fonts.zeoseven.com/docs/cli/) for private deployments. Offline, fonts fall back to
 metric-adjusted Consolas.
 
-## 🔁 Two-repository Workflow (template → private blog)
-
-```
-public repo MangaPaper (this one, the template)  ──theme improvements──▶  private repo (your blog: real posts + real env)
-```
-
-- Create a **private** repository from this template; keep real posts, real env and CI secrets there
-- Improve the theme in the public repo; the private repo `git fetch` + merges (the two barely overlap)
-- The public repo only ever holds sample posts, including sample private posts
-
-## ❓ FAQ
-
-- **The hook rejects my commit with “partially staged”**: `git add` the whole change set first, as the message says
-- **Hooks don't run on Windows**: husky needs git-bash (bundled with Git for Windows)
-- **Build logs say “missing date, falling back to today”**: expected — the file is not committed yet; the hook injects the real date on commit
-- **Private posts ask for the password every time**: make sure the password in `.env` did not change; changing it invalidates cached keys
-- **Fonts look different offline**: the CDN is unreachable, so the metric-matched local monospace fallback kicks in
-
 ## ✨ Feedback & Suggestions
 
-Open an [issue](https://github.com/lavieio/manga-paper/issues) for feedback, bugs or feature requests.
+Open an [issue](https://github.com/lavieio/manga-paper-template/issues) for feedback, bugs or feature requests.
 
 ## 📜 License
 

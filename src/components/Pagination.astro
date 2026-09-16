@@ -22,13 +22,15 @@ function pageItems(current: number, last: number): (number | "…")[] {
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
+/** 第 1 页住在 /posts/，其后在 /posts/N */
+const pageUrl = (n: number) => (n <= 1 ? "/posts/" : `/posts/${n}`);
 const items = pageItems(currentPage, lastPage);
 ---
 
 <nav class="pager" aria-label="分页">
   {
     currentPage > 1 && (
-      <a class="pg" href={`/posts/${currentPage - 1}`}>
+      <a class="pg" href={pageUrl(currentPage - 1)}>
         ← 上一页
       </a>
     )
@@ -42,7 +44,7 @@ const items = pageItems(currentPage, lastPage);
           {pad(item)}
         </span>
       ) : (
-        <a class="pg" href={`/posts/${item}`}>
+        <a class="pg" href={pageUrl(item)}>
           {pad(item)}
         </a>
       ),
@@ -50,7 +52,7 @@ const items = pageItems(currentPage, lastPage);
   }
   {
     currentPage < lastPage && (
-      <a class="pg" href={`/posts/${currentPage + 1}`}>
+      <a class="pg" href={pageUrl(currentPage + 1)}>
         下一页 →
       </a>
     )
