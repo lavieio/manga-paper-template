@@ -15,7 +15,10 @@
     "node": ">=22 <25"
   },
   "dependencies": {
-    "astro": "^7.3.2"
+    "@astrojs/markdown-remark": "^7.3.1",
+    "astro": "^7.3.2",
+    "image-size": "^2.0.4",
+    "photoswipe": "^5.4.4"
   },
   "devDependencies": {
     "husky": "^9.1.7"
