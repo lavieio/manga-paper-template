@@ -1,0 +1,88 @@
+/* PhotoSwipe 稿纸风覆盖样式（随灯箱 JS 一起懒加载） */
+
+.pswp {
+  /* 墨色半透明遮罩（不是默认纯黑），让稿纸微透 */
+  --pswp-bg: rgba(41, 38, 31, 0.92);
+}
+
+[data-theme="dark"] .pswp {
+  --pswp-bg: rgba(10, 9, 7, 0.94);
+}
+
+/* ── 关闭键：漫画印章方块（朱砂底 + 墨黑硬边框 + 硬阴影 + 黑色×）──
+   ① 用 .pswp 前缀提升优先级：PhotoSwipe 默认有
+      `.pswp__button:hover/:active/:focus { background:none; border:0; box-shadow:none }`
+      会把方块在交互时抹掉
+   ② base/hover/active/focus 四态都要重新声明，否则同样被覆盖 */
+.pswp .pswp__button--close,
+.pswp .pswp__button--close:hover,
+.pswp .pswp__button--close:active,
+.pswp .pswp__button--close:focus {
+  width: 44px;
+  height: 44px;
+  margin: 10px 12px 0 0;
+  padding: 0;
+  overflow: visible;
+  background: #b5342e;
+  border: 3px solid #1c1913;
+  box-shadow: 3px 3px 0 #1c1913;
+  opacity: 1;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease;
+}
+/* hover：上抬 + 阴影加深（与全站按钮一致） */
+.pswp .pswp__button--close:hover,
+.pswp .pswp__button--close:focus-visible {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 #1c1913;
+}
+.pswp .pswp__button--close:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #1c1913;
+}
+/* 图标：黑×居中，悬停旋转 */
+.pswp .pswp__button--close .pswp__icn {
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  fill: #1c1913;
+  transition: transform 0.2s ease;
+}
+.pswp .pswp__button--close:hover .pswp__icn {
+  transform: rotate(90deg);
+}
+
+/* ── 页码角标：移到右下角，等宽小字 ── */
+.pswp__counter {
+  position: fixed;
+  top: auto;
+  bottom: 12px;
+  inset-inline-start: auto;
+  inset-inline-end: 16px;
+  margin: 0;
+  height: auto;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  opacity: 0.9;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+}
+
+.pswp__button {
+  font-family: var(--font-mono);
+}
+
+.pswp__img {
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pswp__button--close,
+  .pswp__button--close .pswp__icn {
+    transition: none;
+  }
+}
