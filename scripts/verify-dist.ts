@@ -33,12 +33,19 @@ const PUBLIC_LIST_FILES = [
 function main(): void {
   // ① 基础产物
   check("dist/index.html 存在", existsSync(join(DIST, "index.html")));
-  check("Pagefind 索引存在", existsSync(join(DIST, "pagefind/pagefind.js")));
-  check("RSS 存在", existsSync(join(DIST, "rss.xml")));
 
   const hidden = collectHiddenPosts();
   const privates = hidden.filter((p) => p.isPrivate);
   const drafts = hidden.filter((p) => p.isDraft);
+  const publicCount = countAllPosts() - hidden.length;
+
+  // Pagefind 仅在存在可索引页面（公开文章）时产出索引
+  check(
+    "Pagefind 索引存在",
+    publicCount === 0 || existsSync(join(DIST, "pagefind/pagefind.js")),
+    `公开文章数 ${publicCount}`,
+  );
+  check("RSS 存在", existsSync(join(DIST, "rss.xml")));
 
   // ② 私密文章：页面存在但零明文、noindex、含密文 payload
   for (const post of privates) {
@@ -71,9 +78,8 @@ function main(): void {
   // ⑤ Pagefind 页数 = 公开文章数（总数 - 私密/草稿数）
   const entry = read(join(DIST, "pagefind/pagefind-entry.json"));
   if (entry) {
-    const expected = countAllPosts() - hidden.length;
     const actual = JSON.parse(entry).languages?.["zh-cn"]?.page_count;
-    check(`Pagefind 页数 = 公开文章数 (${expected})`, actual === expected, `实际 ${actual}`);
+    check(`Pagefind 页数 = 公开文章数 (${publicCount})`, actual === publicCount, `实际 ${actual}`);
   }
 
   // 输出
