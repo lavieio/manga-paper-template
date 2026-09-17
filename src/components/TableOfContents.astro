@@ -1,0 +1,70 @@
+---
+/**
+ * 右侧 TOC（plan §7.2）：悬浮于容器右缘外侧（≥1400px），否则收进右下「目录」弹层。
+ * - headings 为空且 defer=true：只渲染空壳，由私密文章解密后客户端构建
+ *   （defer 模式下壳默认隐藏，解锁后加 .unlocked 显示）
+ * - 高亮逻辑在 src/scripts/toc.ts（与客户端构建共用）
+ */
+
+export interface TocHeading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings: TocHeading[];
+  /** 私密文章：先渲染空壳，解密后由 buildToc() 填充 */
+  defer?: boolean;
+}
+
+const { headings, defer = false } = Astro.props;
+const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
+---
+
+{
+  (items.length > 0 || defer) && (
+    <>
+      <aside class:list={["post-toc", { deferred: defer }]} data-toc-shell>
+        <div class="toc-box">
+          <div class="toc-cap">目录 / CONTENTS</div>
+          <ul class="toc-list" data-toc>
+            {items.map((h) => (
+              <li>
+                <a href={`#${h.slug}`} data-depth={h.depth} data-slug={h.slug}>
+                  {h.text}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </aside>
+
+      <button
+        class:list={["toc-fab", { deferred: defer }]}
+        type="button"
+        aria-expanded="false"
+        aria-controls="toc-popover"
+      >
+        目录
+      </button>
+      <div class="toc-popover toc-box" id="toc-popover">
+        <div class="toc-cap">目录 / CONTENTS</div>
+        <ul class="toc-list" data-toc-popover>
+          {items.map((h) => (
+            <li>
+              <a href={`#${h.slug}`} data-depth={h.depth} data-slug={h.slug}>
+                {h.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
+  )
+}
+
+<script>
+  import { initToc } from "../scripts/toc";
+  initToc();
+</script>

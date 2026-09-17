@@ -1,0 +1,31 @@
+---
+import type { DatedPost } from "../utils/posts";
+import { getPostSlug, getCategory } from "../utils/posts";
+import { categoryColor } from "../utils/category";
+import { estimateReadTime } from "../utils/readtime";
+import { formatDate } from "../utils/format";
+
+interface Props {
+  post: DatedPost;
+}
+
+const { post } = Astro.props;
+const category = getCategory(post);
+const minutes = estimateReadTime(post.body ?? "");
+const href = `/posts/${getPostSlug(post)}`;
+---
+
+<a class="card" href={href}>
+  <div class="top">
+    <span class={`sticker ${categoryColor(category)}`}>{category}</span>
+    {post.data.featured && <span class="sticker red">精选</span>}
+  </div>
+  <h2>{post.data.title}</h2>
+  <p class="excerpt">{post.data.description}</p>
+  <div class="foot">
+    <span>{formatDate(post.data.date)}</span>
+    {post.data.updated && <span>更新于 {formatDate(post.data.updated)}</span>}
+    <span>{minutes} 分钟</span>
+    <span class="open">阅读 →</span>
+  </div>
+</a>

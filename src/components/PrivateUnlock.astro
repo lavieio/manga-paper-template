@@ -1,0 +1,162 @@
+---
+/**
+ * 私密文章「机密档案」占位 + 解锁（demo: private-lock.html 定稿）
+ * - 页面只含密文 payload + 涂抹条占位，零明文
+ * - 解锁：涂抹条逐条刮开 → 印章淡出 → 正文浮入 → TOC 现场构建
+ * - 密码错误：封条框抖动；密钥缓存走 localStorage TTL（private-key.ts）
+ */
+import "../styles/private.css";
+import type { EncryptedPayload } from "../utils/private-crypto";
+
+interface Props {
+  payload: EncryptedPayload;
+}
+
+const payloadJson = JSON.stringify(Astro.props.payload);
+---
+
+<div class="redact-wrap" data-lock data-pagefind-ignore>
+  <div class="redact-head">
+    <span class="seal-stamp">机 密</span>
+    <div class="redact-title">
+      <div class="bar long" style="--tilt:-0.4deg"></div>
+      <div class="bar short" style="--tilt:0.6deg"></div>
+    </div>
+  </div>
+
+  <div class="redact-body">
+    <div class="bar full" style="--tilt:0.3deg"></div>
+    <div class="bar mid" style="--tilt:-0.5deg"></div>
+    <div class="bar long" style="--tilt:0.2deg"></div>
+    <div class="bar short" style="--tilt:-0.3deg"></div>
+  </div>
+
+  <div class="seal-box" data-seal-box>
+    <p>这是一篇私密文章。输入访问密码开封——解密在你的浏览器本地完成，密码不会上传。</p>
+    <div class="row">
+      <input type="password" placeholder="输入密码…" aria-label="访问密码" data-lock-input />
+      <button class="gate-btn" type="button" data-lock-submit>开封 →</button>
+    </div>
+    <p class="hint" data-lock-hint></p>
+  </div>
+
+  <div class="redact-body" style="margin-top:36px">
+    <div class="bar long" style="--tilt:-0.2deg"></div>
+    <div class="bar full" style="--tilt:0.4deg"></div>
+    <div class="bar mid" style="--tilt:-0.6deg"></div>
+  </div>
+</div>
+
+<script type="application/json" id="private-payload" is:inline set:html={payloadJson} />
+
+<script>
+  import {
+    deriveExportableKey,
+    importCachedKey,
+    decryptText,
+    type EncryptedPayload,
+  } from "../utils/private-crypto";
+  import { saveUnlockedKey, loadUnlockedKey, clearUnlockedKey } from "../scripts/private-key";
+  import { buildToc } from "../scripts/toc";
+
+  const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const PEEL_MS = REDUCED ? 0 : 500;
+
+  const lockWrap = document.querySelector<HTMLElement>("[data-lock]");
+  const sealBox = document.querySelector<HTMLElement>("[data-seal-box]");
+  const input = document.querySelector<HTMLInputElement>("[data-lock-input]");
+  const submit = document.querySelector<HTMLButtonElement>("[data-lock-submit]");
+  const hint = document.querySelector<HTMLElement>("[data-lock-hint]");
+  const article = document.querySelector<HTMLElement>("[data-private-article]");
+  const payloadEl = document.getElementById("private-payload");
+
+  if (lockWrap && sealBox && input && submit && hint && article && payloadEl) {
+    const payload = JSON.parse(payloadEl.textContent ?? "{}") as EncryptedPayload;
+
+    // 涂抹条刮开动画的逐条延迟
+    lockWrap.querySelectorAll<HTMLElement>(".bar").forEach((b, i) => {
+      b.style.transitionDelay = `${i * 60}ms`;
+    });
+
+    const unlock = async (key: CryptoKey, instant = false) => {
+      const html = await decryptText(payload, key);
+      article.innerHTML = html;
+
+      if (instant) {
+        // 缓存命中：与普通页面一致——无动画无占位，直接呈现
+        lockWrap.hidden = true;
+        article.hidden = false;
+      } else {
+        // 手输密码：涂抹条刮开 → 正文浮入 → 构建 TOC 显示
+        lockWrap.classList.add("unlocked");
+        setTimeout(() => {
+          lockWrap.hidden = true;
+          article.hidden = false;
+          article.classList.add("prose-reveal");
+          requestAnimationFrame(() => article.classList.add("show"));
+        }, PEEL_MS);
+      }
+      document
+        .querySelectorAll<HTMLElement>("[data-toc-shell], .toc-fab, .toc-popover")
+        .forEach((el) => el.classList.add("unlocked"));
+      buildToc(article);
+    };
+
+    const busy = (on: boolean) => {
+      submit.disabled = on;
+      submit.textContent = on ? "开封中…" : "开封 →";
+    };
+
+    const fail = () => {
+      hint.textContent = "密码错误，请重试";
+      sealBox.classList.remove("shake");
+      void sealBox.offsetWidth;
+      sealBox.classList.add("shake");
+    };
+
+    const tryPassword = async () => {
+      const password = input.value;
+      if (!password) {
+        hint.textContent = "请输入密码";
+        return;
+      }
+      busy(true);
+      hint.textContent = "";
+      try {
+        const { key, exported } = await deriveExportableKey(password);
+        await unlock(key);
+        saveUnlockedKey(exported);
+      } catch {
+        fail();
+      } finally {
+        busy(false);
+      }
+    };
+
+    submit.addEventListener("click", tryPassword);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") tryPassword();
+    });
+
+    // 时效内已解锁过 → 瞬时开封（无动画）；缓存失效则清除并回到密码框
+    const cached = loadUnlockedKey();
+    if (cached) {
+      importCachedKey(cached)
+        .then((key) => unlock(key, true))
+        .catch(() => {
+          clearUnlockedKey();
+          delete document.documentElement.dataset.unlocked;
+          input.focus();
+        });
+      // 看门狗：异常时 3 秒仍未呈现正文，恢复密码框，避免白屏
+      setTimeout(() => {
+        if (article.hidden) {
+          delete document.documentElement.dataset.unlocked;
+          input.focus();
+        }
+      }, 3000);
+    } else {
+      input.focus();
+    }
+  }
+</script>

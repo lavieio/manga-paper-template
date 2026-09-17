@@ -1,0 +1,106 @@
+---
+import "../styles/fonts.css";
+import "../styles/global.css";
+import "../styles/card.css";
+import SiteHeader from "../components/SiteHeader.astro";
+import SiteFooter from "../components/SiteFooter.astro";
+import { site } from "../config";
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** 私密文章等不希望被索引的页面 */
+  noindex?: boolean;
+  /** 私密页面：首帧前同步检查解锁缓存，避免密码框闪烁 */
+  unlockCheck?: boolean;
+  /**
+   * 可被 Pagefind 索引（仅公开文章页设 true）。
+   * 其余页面整个 body 标 data-pagefind-ignore：
+   * 否则当站内没有任何 data-pagefind-body 时，Pagefind 会退化成索引全部页面。
+   */
+  searchable?: boolean;
+}
+
+const {
+  title,
+  description = site.tagline,
+  noindex = false,
+  unlockCheck = false,
+  searchable = false,
+} = Astro.props;
+const pageTitle = title ? `${title} · ${site.name}` : site.name;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+
+// 字体 CDN：只加载站点实际用到的字重（正文 400 / 引用斜体 400i / 贴纸 600 / 标题 700）。
+// 非阻塞加载：preload + onload 切 rel（配合 font-display: swap 与度量对齐 fallback，
+// 首帧先用 fallback 绘制，字体就绪后替换）。
+const FONT_CDN = "https://fontsapi.zeoseven.com/442";
+const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    {
+      unlockCheck && (
+        <script is:inline>
+          // 首帧前检查解锁缓存：有密钥则直接标记，CSS 立即隐藏密码框（防闪烁）
+          try {
+            if (localStorage.getItem("mangapaper:private-key")) {
+              document.documentElement.dataset.unlocked = "1";
+            }
+          } catch (e) {}
+        </script>
+      )
+    }
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    {
+      FONT_WEIGHTS.map((w) => (
+        <link
+          rel="preload"
+          as="style"
+          href={`${FONT_CDN}/${w}/result.css`}
+          onload="this.onload=null;this.rel='stylesheet'"
+        />
+      ))
+    }
+    <noscript>
+      {
+        FONT_WEIGHTS.map((w) => (
+          <link rel="stylesheet" href={`${FONT_CDN}/${w}/result.css`} />
+        ))
+      }
+    </noscript>
+    <script is:inline>
+      // 首帧前决定主题，避免 FOUC（plan §4.3）
+      (function () {
+        var saved = null;
+        try {
+          saved = localStorage.getItem("theme");
+        } catch (e) {}
+        var theme =
+          saved === "dark" || saved === "light"
+            ? saved
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+  <body data-pagefind-ignore={searchable ? undefined : ""}>
+    <div class="wrap">
+      <SiteHeader current={Astro.url.pathname} />
+      <main>
+        <slot />
+      </main>
+      <SiteFooter />
+    </div>
+  </body>
+</html>
