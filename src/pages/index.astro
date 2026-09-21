@@ -17,18 +17,8 @@ const stats = {
 ---
 
 <Base>
-  {
-    featured.length > 1 ? (
-      <FeaturedStack posts={featured} />
-    ) : featured.length === 1 ? (
-      <section class="hero-single" aria-label="精选文章">
-        <div class="tag-row">
-          <span class="sticker red">{"// 精选"}</span>
-        </div>
-        <PostCard post={featured[0]} />
-      </section>
-    ) : null
-  }
+  {/* 精选统一由 FeaturedStack 渲染；单篇时组件内部降级为单张大卡 */}
+  {featured.length > 0 && <FeaturedStack posts={featured} />}
 
   <div class="sec-head">
     <span class="sticker yellow">最近更新</span>
@@ -50,14 +40,6 @@ const stats = {
 </Base>
 
 <style>
-  .hero-single {
-    padding: 48px 0 20px;
-  }
-  .tag-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 34px;
-  }
   .sec-head {
     display: flex;
     align-items: center;
@@ -130,6 +112,5 @@ const stats = {
     box-shadow: 3px 3px 0 var(--ink);
     color: var(--ink);
   }
-  .sticker.red { background: var(--red); color: var(--card); transform: rotate(-1.2deg); }
   .sticker.yellow { background: var(--yellow); transform: rotate(-1deg); }
 </style>
