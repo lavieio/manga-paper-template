@@ -16,6 +16,13 @@
   --pink: #f2a7c3;
   --yellow: #f6d34e;
   --blue: #9cb8f0;
+  /* 色块上的文字：贴纸硬色 / 黄底在暗色下依旧是浅色，所以这几处的字不能跟着主题翻——
+     浅色块（cyan / pink / yellow / blue）永远配墨字，深色块（朱砂）永远配纸白字。 */
+  --on-light-fill: #1c1913;
+  --on-dark-fill: #fffdf6;
+  /* 大面积黄底（文章表格表头）：暗色下压成暗黄，其上文字随之换成纸白 */
+  --yellow-fill: var(--yellow);
+  --on-yellow-fill: var(--on-light-fill);
   /* 硬阴影（零高斯模糊） */
   --shadow: 4px 4px 0 var(--ink);
   --shadow-lg: 7px 7px 0 var(--ink);
@@ -33,6 +40,8 @@
   --pink: #f5b7d0;
   --yellow: #f8db66;
   --blue: #a8c3f5;
+  --yellow-fill: #50431c; /* hsl(45 48% 21%)：铺大面积不刺眼，仍认得出是黄 */
+  --on-yellow-fill: var(--on-dark-fill);
 }
 
 * {

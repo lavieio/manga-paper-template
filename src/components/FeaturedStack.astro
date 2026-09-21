@@ -362,13 +362,14 @@ const stacked = sheets.length > 1;
   }
   .dot.on {
     background: var(--red);
-    color: var(--card);
+    color: var(--on-dark-fill);
     transform: rotate(-2deg);
   }
   .dot.lift-hover {
     transform: translate(-2px, -2px) rotate(-2deg);
     box-shadow: 5px 5px 0 var(--ink);
     background: var(--pink);
+    color: var(--on-light-fill);
   }
 
   .sticker {
@@ -379,11 +380,11 @@ const stacked = sheets.length > 1;
     letter-spacing: 0.04em;
     border: 2px solid var(--ink);
     box-shadow: 3px 3px 0 var(--ink);
-    color: var(--ink);
+    color: var(--on-light-fill);
   }
   .sticker.red {
     background: var(--red);
-    color: var(--card);
+    color: var(--on-dark-fill);
     transform: rotate(-1.2deg);
   }
 

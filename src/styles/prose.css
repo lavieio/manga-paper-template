@@ -159,8 +159,8 @@
   text-align: left;
 }
 .prose th {
-  background: var(--yellow);
-  color: #1c1913;
+  background: var(--yellow-fill);
+  color: var(--on-yellow-fill);
 }
 .prose figure {
   margin: 26px 0;
@@ -319,7 +319,7 @@
   font-family: var(--font-mono);
   border: 3px solid var(--ink);
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--on-light-fill);
   box-shadow: var(--shadow);
   cursor: pointer;
 }

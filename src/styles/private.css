@@ -70,7 +70,7 @@
   left: 50%;
   transform: translateX(-50%) rotate(-2deg);
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--on-light-fill);
   border: 2px solid var(--ink);
   box-shadow: 2px 2px 0 var(--ink);
   padding: 2px 16px;
@@ -193,7 +193,7 @@ html[data-unlocked] [data-private-gate] {
   border: 3px solid var(--ink);
   box-shadow: var(--shadow);
   background: var(--cyan);
-  color: var(--ink);
+  color: var(--on-light-fill);
   cursor: pointer;
   white-space: nowrap;
   transition:
