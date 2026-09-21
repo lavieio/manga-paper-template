@@ -3,11 +3,15 @@
 
 /* TOC 悬浮于正文容器（980px）右缘外侧，不占正文栏位；
    视口 ≥1400px 才能完整容纳（正文半宽 462 + 间隙 16 + TOC 220）。
-   位置与文章标题长短/篇幅完全无关。 */
+   位置与文章标题长短/篇幅完全无关。
+   --toc-left 是这一列的左缘，BackToTop 按钮要与它对齐，所以抽成变量。 */
+:root {
+  --toc-left: calc(50% + 478px);
+}
 .post-toc {
   position: fixed;
   top: 110px;
-  left: calc(50% + 478px);
+  left: var(--toc-left);
   width: 220px;
   z-index: 40;
 }
@@ -183,9 +187,16 @@
   padding: 12px 14px 16px;
   list-style: none;
   font-size: 13px;
-  /* 固定定位下以视口为界，防止矮屏溢出 */
+  /* 固定定位下以视口为界，防止矮屏溢出。
+     ≥1400px 时右下角还要放「回到顶部」（BackToTop.astro），
+     所以比弹层多让出 100px，长目录在按钮上方内部滚动。 */
   max-height: calc(100vh - 160px);
   overflow-y: auto;
+}
+@media (min-width: 1400px) {
+  .post-toc .toc-list {
+    max-height: calc(100vh - 260px);
+  }
 }
 .toc-list a {
   color: var(--ink-soft);
