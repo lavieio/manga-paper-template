@@ -44,7 +44,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   ├── scripts/                # 灯箱、TOC、私密解锁与密钥缓存（客户端）
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
 │   ├── utils/                  # 内容管线、加密、格式与阅读时长
-│   ├── config.ts               # 站名 / 作者 / remark42 配置（唯一站点入口）
+│   ├── config.ts               # 站名 / 作者 / 页脚仓库链接 / remark42 配置（唯一站点入口）
 │   └── content.config.ts       # 内容 schema（zod）
 └── astro.config.mjs
 ```
