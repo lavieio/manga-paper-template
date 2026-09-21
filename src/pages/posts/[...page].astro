@@ -45,7 +45,9 @@ const total = page.total;
   .page-head {
     display: flex;
     align-items: baseline;
-    gap: 16px;
+    column-gap: 16px;
+    /* 窄屏一行放不下时让计数整块换行，标题不再被挤成两行折字 */
+    flex-wrap: wrap;
     margin: 8px 0 4px;
   }
   .page-head h1 {
