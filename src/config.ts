@@ -3,6 +3,8 @@ export const site = {
   name: "MangaPaper",
   tagline: "A loose-leaf, comic-paper, monospace blog theme",
   author: "MangaPaper",
+  /** 页脚 GitHub 链接（模板源码地址）；置空则不渲染该入口 */
+  repo: "https://github.com/lavieio/manga-paper-template",
 } as const;
 
 /**

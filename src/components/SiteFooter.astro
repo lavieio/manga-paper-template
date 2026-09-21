@@ -1,21 +1,60 @@
 ---
 import { site } from "../config";
 
-const year = new Date().getFullYear();
+// 构建期年份：静态产物自带正确年份（无 JS 也成立）；跨年后由页尾内联脚本按浏览器时间修正
+const buildYear = new Date().getFullYear();
+/** 悬停提示里展示的仓库地址：去掉协议与结尾斜杠 */
+const repoHint = site.repo.replace(/^https?:\/\//, "").replace(/\/+$/, "");
 ---
 
 <footer class="site-footer">
-  <span>© {year} {site.author}</span>
-  <span><a class="private-link" href="/private">私密</a> · Built with Maple Mono NF CN</span>
+  <span>Copyright © <span data-year>{buildYear}</span> | {site.author}</span>
+
+  <span class="meta">
+    {
+      site.repo && (
+        <a
+          class="repo-link"
+          href={site.repo}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={repoHint}
+        >
+          <svg class="gh" viewBox="0 0 16 16" width="12" height="12" aria-hidden="true" fill="currentColor">
+            <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+          </svg>
+          GitHub<span class="arrow" aria-hidden="true">↗</span>
+        </a>
+      )
+    }
+    {/* 与仓库链接只靠间距分成两组（不用「·」连成一句），
+        免得被读成「GitHub（私密）」；印章是私密文章入口自己的标记 */}
+    <a class="private-link" href="/private" title="本站私密文章（需密码）">
+      <svg class="seal-mark" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">
+        <rect
+          x="1.6"
+          y="1.6"
+          width="12.8"
+          height="12.8"
+          fill="var(--red)"
+          stroke="var(--ink)"
+          stroke-width="2.6"
+        />
+      </svg>
+      私密文章
+    </a>
+  </span>
 </footer>
 
+<script is:inline>
+  // 纯静态站不会自己翻年份：跨年后打开页面时按浏览器时间就地修正（不必重新部署）
+  (function () {
+    var el = document.querySelector("[data-year]");
+    if (el) el.textContent = String(new Date().getFullYear());
+  })();
+</script>
+
 <style>
-  .private-link {
-    color: inherit;
-  }
-  .private-link:hover {
-    color: var(--red);
-  }
   .site-footer {
     display: flex;
     justify-content: space-between;
@@ -26,5 +65,35 @@ const year = new Date().getFullYear();
     border-top: 2px dashed var(--ink-soft);
     font-size: 12px;
     color: var(--ink-soft);
+  }
+  .site-footer .meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 24px; /* 两组之间的唯一分隔：不留「·」，语言上也不成一句 */
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .site-footer a {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: inherit;
+    transition: color 0.2s ease;
+  }
+  .site-footer a:hover {
+    color: var(--red);
+  }
+  .site-footer .gh {
+    flex: none;
+  }
+  /* 私密文章的朱砂小方章（负 3° 与解锁页 .seal-stamp 同一手势；
+     不叫 .seal——那是页头 logo 的名字） */
+  .site-footer .seal-mark {
+    flex: none;
+    transform: rotate(-3deg);
+    transition: transform 0.12s ease;
+  }
+  .site-footer .private-link:hover .seal-mark {
+    transform: rotate(-3deg) scale(1.12);
   }
 </style>
