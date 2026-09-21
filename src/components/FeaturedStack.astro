@@ -23,7 +23,9 @@ const stacked = sheets.length > 1;
 
 <section class="hero" aria-label="精选文章">
   <div class="tag-row">
-    <span class="sticker red">{stacked ? `// 精选 × ${sheets.length}` : "// 精选"}</span>
+    <span class="sticker red"
+      >{stacked ? `// 精选 × ${sheets.length}` : "// 精选"}</span
+    >
   </div>
   <div class="stack" id="featured-stack">
     {
@@ -46,46 +48,57 @@ const stacked = sheets.length > 1;
               </span>
             </div>
             <div class="body">
-              <pre class="code"><span class="k">const</span> post = {"{"}
-  title: <span class="s">'{post.data.title}'</span>,
-  category: <span class="s">'{getCategory(post)}'</span>,
-{"}"}
-
-<span class="k">return</span> <span class="s">'{post.data.description}'</span></pre>
+              <pre class="code">
+                <span class="k">const</span> post = {"{"}
+                title: <span class="s">'{post.data.title}'</span>, category:{" "}
+                <span class="s">'{getCategory(post)}'</span>,{"}"}
+                <span class="k">return</span>{" "}
+                <span class="s">'{post.data.description}'</span>
+              </pre>
             </div>
           </div>
         </a>
       ))
     }
   </div>
-  {stacked && (
-    <div class="dots" role="group" aria-label="精选轮播">
-      {
-        sheets.map((post, i) => {
+  {
+    stacked && (
+      <div class="dots" role="group" aria-label="精选轮播">
+        {sheets.map((post, i) => {
           const label = String(i + 1).padStart(2, "0");
           return (
-            <button class="dot" data-index={i} aria-label={`${label} · 查看精选：${post.data.title}`}>
+            <button
+              class="dot"
+              data-index={i}
+              aria-label={`${label} · 查看精选：${post.data.title}`}
+            >
               {label}
             </button>
           );
-        })
-      }
-    </div>
-  )}
+        })}
+      </div>
+    )
+  }
 </section>
 
 <script>
   const AUTO_DELAY = 3000;
 
   const stack = document.querySelector<HTMLElement>("#featured-stack");
-  const sheets = Array.from(stack?.querySelectorAll<HTMLElement>(".sheet") ?? []);
+  const sheets = Array.from(
+    stack?.querySelectorAll<HTMLElement>(".sheet") ?? [],
+  );
   const dots = Array.from(
-    document.querySelectorAll<HTMLButtonElement>(".featured-stack .dot, .hero .dot"),
+    document.querySelectorAll<HTMLButtonElement>(
+      ".featured-stack .dot, .hero .dot",
+    ),
   );
   const N = sheets.length;
   // 单张时不轮播，但仍需顶层样式与点击进入详情（走同一条路径）
   const single = N <= 1;
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)",
+  ).matches;
 
   let current = 0;
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -146,13 +159,21 @@ const stacked = sheets.length > 1;
       e.preventDefault();
       goTo(i);
     });
-    el.addEventListener("mouseenter", () => dots[i]?.classList.add("lift-hover"));
-    el.addEventListener("mouseleave", () => dots[i]?.classList.remove("lift-hover"));
+    el.addEventListener("mouseenter", () =>
+      dots[i]?.classList.add("lift-hover"),
+    );
+    el.addEventListener("mouseleave", () =>
+      dots[i]?.classList.remove("lift-hover"),
+    );
   });
   dots.forEach((d, i) => {
     d.addEventListener("click", () => goTo(i));
-    d.addEventListener("mouseenter", () => sheets[i]?.classList.add("lift-hover"));
-    d.addEventListener("mouseleave", () => sheets[i]?.classList.remove("lift-hover"));
+    d.addEventListener("mouseenter", () =>
+      sheets[i]?.classList.add("lift-hover"),
+    );
+    d.addEventListener("mouseleave", () =>
+      sheets[i]?.classList.remove("lift-hover"),
+    );
   });
   stack?.addEventListener("mouseenter", () => clearInterval(timer));
   stack?.addEventListener("mouseleave", restart);
@@ -174,11 +195,15 @@ const stacked = sheets.length > 1;
 
   .stack {
     display: grid;
+    /* minmax(0,1fr)：轨道不被「代码窗」的 max-content 撑宽，纸片才能跟着容器收缩 */
+    grid-template-columns: minmax(0, 1fr);
   }
   .sheet {
     display: block;
     grid-area: 1 / 1;
-    transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--rot, 0deg));
+    min-width: 0;
+    transform: translate(var(--tx, 0px), var(--ty, 0px))
+      rotate(var(--rot, 0deg));
     transition:
       transform 0.55s cubic-bezier(0.2, 0.7, 0.25, 1),
       opacity 0.4s ease;
@@ -189,7 +214,10 @@ const stacked = sheets.length > 1;
   }
   .sheet.behind:hover,
   .sheet.lift-hover {
-    transform: translate(calc(var(--tx, 0px) - 8px), calc(var(--ty, 0px) - 16px))
+    transform: translate(
+        calc(var(--tx, 0px) - 8px),
+        calc(var(--ty, 0px) - 16px)
+      )
       rotate(var(--rot, 0deg));
   }
   .sheet.behind:hover .window,
@@ -240,10 +268,20 @@ const stacked = sheets.length > 1;
     border-radius: 50%;
     border: 2px solid var(--ink);
   }
-  .tl.r { background: var(--red); }
-  .tl.y { background: var(--yellow); }
-  .tl.g { background: var(--cyan); }
+  .tl.r {
+    background: var(--red);
+  }
+  .tl.y {
+    background: var(--yellow);
+  }
+  .tl.g {
+    background: var(--cyan);
+  }
   .window .cap .file {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 12px;
     color: var(--ink-soft);
     margin-left: 6px;
@@ -260,11 +298,17 @@ const stacked = sheets.length > 1;
     font-family: var(--font-mono);
     font-size: 15px;
     line-height: 1.9;
-    overflow-x: auto;
-    white-space: pre;
+    /* 代码窗内容取自标题/描述，长度不可控：一律折行，横向滑动会把内容藏在卡片里 */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
-  .k { font-weight: 700; }
-  .s { background: rgba(246, 211, 78, 0.45); padding: 0 2px; }
+  .k {
+    font-weight: 700;
+  }
+  .s {
+    background: rgba(246, 211, 78, 0.45);
+    padding: 0 2px;
+  }
   :global(html[data-theme="dark"]) .s {
     background: rgba(246, 211, 78, 0.25);
   }
@@ -332,6 +376,10 @@ const stacked = sheets.length > 1;
   @media (max-width: 640px) {
     .window .body {
       padding: 18px 16px 20px;
+    }
+    /* 文件路径是装饰，窄屏让位给日期/分类，避免顶栏被撑宽 */
+    .window .cap .file {
+      display: none;
     }
     .code {
       font-size: 13px;
