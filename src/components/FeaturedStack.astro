@@ -3,6 +3,7 @@
  * Featured 纸片堆轮播（对齐 demos/05-comic-paper.html 定稿）
  * - 最多 5 张 featured，自动轮播 + 编号方块 + 双向 hover 联动 + 甩卡动画
  * - 顶层卡片点击进详情；后层卡片点击将其抽到顶层
+ * - 只有 1 张时不轮播：隐藏编号方块，仍是同一套纸片样式与点击行为
  * - prefers-reduced-motion：不自动播放，切换瞬时
  */
 import type { DatedPost } from "../utils/posts";
@@ -16,17 +17,22 @@ interface Props {
 
 const MAX_FEATURED = 5;
 const sheets = Astro.props.posts.slice(0, MAX_FEATURED);
+// 单篇时无“堆”可叠：不渲染编号方块，也不启动轮播
+const stacked = sheets.length > 1;
 ---
 
 <section class="hero" aria-label="精选文章">
-  <div class="tag-row"><span class="sticker red">{"// 精选 × "}{sheets.length}</span></div>
+  <div class="tag-row">
+    <span class="sticker red">{stacked ? `// 精选 × ${sheets.length}` : "// 精选"}</span>
+  </div>
   <div class="stack" id="featured-stack">
     {
       sheets.map((post, i) => (
-        <article
+        <a
           class="sheet"
           data-index={i}
-          data-href={`/posts/${getPostSlug(post)}`}
+          href={`/posts/${getPostSlug(post)}`}
+          aria-label={`精选文章：${post.data.title}`}
         >
           <div class="window">
             <div class="cap">
@@ -40,30 +46,35 @@ const sheets = Astro.props.posts.slice(0, MAX_FEATURED);
               </span>
             </div>
             <div class="body">
-              <pre class="code"><span class="k">const</span> post = {"{"}
+              {/* 定高代码窗：行数固定，超出部分底部淡出（避免纸堆里每张纸高度不一） */}
+              <div class="code-clamp">
+                <pre class="code"><span class="k">const</span> post = {"{"}
   title: <span class="s">'{post.data.title}'</span>,
   category: <span class="s">'{getCategory(post)}'</span>,
 {"}"}
 
 <span class="k">return</span> <span class="s">'{post.data.description}'</span></pre>
+              </div>
             </div>
           </div>
-        </article>
+        </a>
       ))
     }
   </div>
-  <div class="dots" role="group" aria-label="精选轮播">
-    {
-      sheets.map((post, i) => {
-        const label = String(i + 1).padStart(2, "0");
-        return (
-          <button class="dot" data-index={i} aria-label={`${label} · 查看精选：${post.data.title}`}>
-            {label}
-          </button>
-        );
-      })
-    }
-  </div>
+  {stacked && (
+    <div class="dots" role="group" aria-label="精选轮播">
+      {
+        sheets.map((post, i) => {
+          const label = String(i + 1).padStart(2, "0");
+          return (
+            <button class="dot" data-index={i} aria-label={`${label} · 查看精选：${post.data.title}`}>
+              {label}
+            </button>
+          );
+        })
+      }
+    </div>
+  )}
 </section>
 
 <script>
@@ -75,83 +86,110 @@ const sheets = Astro.props.posts.slice(0, MAX_FEATURED);
     document.querySelectorAll<HTMLButtonElement>(".featured-stack .dot, .hero .dot"),
   );
   const N = sheets.length;
+  // 单张时不轮播，但仍需顶层样式与点击进入详情（走同一条路径）
+  const single = N <= 1;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (N > 1) {
-    let current = 0;
-    let timer: ReturnType<typeof setInterval> | undefined;
-    let animating = false;
+  /** 代码窗行数：取本宽度下内容最长的那张，上限读 CSS 的 --code-cap（断点可不同） */
+  const measureCodeLines = () => {
+    const cap = Number.parseInt(getComputedStyle(stack).getPropertyValue("--code-cap"), 10);
+    const needed = sheets.reduce((max, el) => {
+      const code = el.querySelector<HTMLElement>(".code");
+      if (!code) return max;
+      const lineHeight = Number.parseFloat(getComputedStyle(code).lineHeight);
+      return Math.max(max, Math.round(code.scrollHeight / lineHeight));
+    }, 0);
+    const limit = Number.isFinite(cap) && cap > 0 ? cap : Number.POSITIVE_INFINITY;
+    return Math.min(Math.max(needed, 1), limit);
+  };
 
-    const applyPile = (el: HTMLElement, rel: number) => {
-      el.style.zIndex = String(N - rel);
-      el.style.setProperty("--tx", `${-6 * rel}px`);
-      el.style.setProperty("--ty", `${-8 * rel}px`);
-      el.style.setProperty("--rot", `${rel % 2 === 0 ? -1 : 1}deg`);
-    };
+  const fitCodeLines = () => {
+    stack?.style.setProperty("--code-lines", String(measureCodeLines()));
+  };
 
-    const layout = () => {
-      sheets.forEach((el, i) => {
-        const rel = (i - current + N) % N;
-        el.classList.toggle("front", rel === 0);
-        el.classList.toggle("behind", rel !== 0);
-        applyPile(el, rel);
-      });
-      dots.forEach((d, i) => d.classList.toggle("on", i === current));
-    };
+  let current = 0;
+  let timer: ReturnType<typeof setInterval> | undefined;
+  let animating = false;
 
-    const goTo = (target: number) => {
-      if (animating || target === current) return;
-      animating = true;
-      const out = sheets[current];
-      const finish = () => {
-        out.classList.remove("toss");
-        out.classList.add("fading");
-        current = target;
-        layout();
-        requestAnimationFrame(() =>
-          requestAnimationFrame(() => {
-            out.classList.remove("fading");
-            animating = false;
-          }),
-        );
-      };
-      if (reduceMotion) {
-        finish();
-      } else {
-        out.classList.add("toss");
-        out.addEventListener("animationend", finish, { once: true });
-      }
-      restart();
-    };
+  const applyPile = (el: HTMLElement, rel: number) => {
+    el.style.zIndex = String(N - rel);
+    el.style.setProperty("--tx", `${-6 * rel}px`);
+    el.style.setProperty("--ty", `${-8 * rel}px`);
+    el.style.setProperty("--rot", `${rel % 2 === 0 ? -1 : 1}deg`);
+  };
 
-    const restart = () => {
-      clearInterval(timer);
-      if (!reduceMotion) timer = setInterval(() => goTo((current + 1) % N), AUTO_DELAY);
-    };
-
+  const layout = () => {
     sheets.forEach((el, i) => {
-      el.addEventListener("click", () => {
-        if (i === current) {
-          const href = el.dataset.href;
-          if (href) location.href = href;
-        } else {
-          goTo(i);
-        }
-      });
-      el.addEventListener("mouseenter", () => dots[i]?.classList.add("lift-hover"));
-      el.addEventListener("mouseleave", () => dots[i]?.classList.remove("lift-hover"));
+      const rel = (i - current + N) % N;
+      el.classList.toggle("front", rel === 0);
+      el.classList.toggle("behind", rel !== 0);
+      applyPile(el, rel);
     });
-    dots.forEach((d, i) => {
-      d.addEventListener("click", () => goTo(i));
-      d.addEventListener("mouseenter", () => sheets[i]?.classList.add("lift-hover"));
-      d.addEventListener("mouseleave", () => sheets[i]?.classList.remove("lift-hover"));
-    });
-    stack?.addEventListener("mouseenter", () => clearInterval(timer));
-    stack?.addEventListener("mouseleave", restart);
+    dots.forEach((d, i) => d.classList.toggle("on", i === current));
+  };
 
-    layout();
+  const restart = () => {
+    clearInterval(timer);
+    if (single || reduceMotion) return;
+    timer = setInterval(() => goTo((current + 1) % N), AUTO_DELAY);
+  };
+
+  const goTo = (target: number) => {
+    if (single || animating || target === current) return;
+    animating = true;
+    const out = sheets[current];
+    const finish = () => {
+      out.classList.remove("toss");
+      out.classList.add("fading");
+      current = target;
+      layout();
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          out.classList.remove("fading");
+          animating = false;
+        }),
+      );
+    };
+    if (reduceMotion) {
+      finish();
+    } else {
+      out.classList.add("toss");
+      out.addEventListener("animationend", finish, { once: true });
+    }
     restart();
-  }
+  };
+
+  sheets.forEach((el, i) => {
+    // 真链接兼顾键盘与爬虫；非顶层卡片拦截默认跳转，改为抽到顶层
+    el.addEventListener("click", (e) => {
+      if (i === current) return;
+      e.preventDefault();
+      goTo(i);
+    });
+    el.addEventListener("mouseenter", () => dots[i]?.classList.add("lift-hover"));
+    el.addEventListener("mouseleave", () => dots[i]?.classList.remove("lift-hover"));
+  });
+  dots.forEach((d, i) => {
+    d.addEventListener("click", () => goTo(i));
+    d.addEventListener("mouseenter", () => sheets[i]?.classList.add("lift-hover"));
+    d.addEventListener("mouseleave", () => sheets[i]?.classList.remove("lift-hover"));
+  });
+  stack?.addEventListener("mouseenter", () => clearInterval(timer));
+  stack?.addEventListener("mouseleave", restart);
+
+  layout();
+  restart();
+
+  // 代码窗行数按实测内容定：字体度量到位后再量一次，跳断点/旋屏时重算
+  const CODE_FIT_DEBOUNCE = 120;
+  let fitTimer: ReturnType<typeof setTimeout> | undefined;
+
+  fitCodeLines();
+  document.fonts?.ready.then(fitCodeLines);
+  window.addEventListener("resize", () => {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitCodeLines, CODE_FIT_DEBOUNCE);
+  });
 </script>
 
 <style>
@@ -167,9 +205,17 @@ const sheets = Astro.props.posts.slice(0, MAX_FEATURED);
 
   .stack {
     display: grid;
+    /* minmax(0,1fr)：轨道不被「代码窗」的 max-content 撑宽，纸片才能跟着容器收缩 */
+    grid-template-columns: minmax(0, 1fr);
+    /* --code-lines 由脚本按实测内容写入（无 JS 时用下面的回退值 8）；
+       --code-cap 是「最多显示几行」，可按断点给不同值 */
+    --code-lines: 8;
+    --code-cap: 9;
   }
   .sheet {
+    display: block;
     grid-area: 1 / 1;
+    min-width: 0;
     transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--rot, 0deg));
     transition:
       transform 0.55s cubic-bezier(0.2, 0.7, 0.25, 1),
@@ -236,11 +282,20 @@ const sheets = Astro.props.posts.slice(0, MAX_FEATURED);
   .tl.y { background: var(--yellow); }
   .tl.g { background: var(--cyan); }
   .window .cap .file {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 12px;
     color: var(--ink-soft);
     margin-left: 6px;
   }
   .window .cap .desc {
+    /* 不换行：窄屏挤不下时出省略号，否则顶栗会多占一行、抬高这张纸片 */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     margin-left: auto;
     font-size: 12px;
     color: var(--ink-soft);
@@ -248,12 +303,23 @@ const sheets = Astro.props.posts.slice(0, MAX_FEATURED);
   .window .body {
     padding: 26px 26px 28px;
   }
-  .code {
+  /* 代码窗定高裁切：行数写死（--code-lines），超出部分底部淡出——
+     内容长度不可控，不裁切则每张纸片高度不同，后层会从前层底下探出边角 */
+  .code-clamp {
+    --code-leading: 1.9;
     font-family: var(--font-mono);
     font-size: 15px;
-    line-height: 1.9;
-    overflow-x: auto;
-    white-space: pre;
+    line-height: var(--code-leading);
+    height: calc(var(--code-lines) * var(--code-leading) * 1em);
+    overflow: hidden;
+    /* 遮罩只作用于文字（纸底画在 .window 上），内容不满时看不出痕迹 */
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 1em), transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1em), transparent);
+  }
+  .code {
+    font: inherit;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   .k { font-weight: 700; }
   .s { background: rgba(246, 211, 78, 0.45); padding: 0 2px; }
@@ -325,7 +391,15 @@ const sheets = Astro.props.posts.slice(0, MAX_FEATURED);
     .window .body {
       padding: 18px 16px 20px;
     }
-    .code {
+    /* 文件路径是装饰，窄屏让位给日期/分类，避免顶栏被撑宽 */
+    .window .cap .file {
+      display: none;
+    }
+    /* 窄屏字号降一档（em 定高自动缩）；窄屏折行多，允许更多行才不吞描述 */
+    .stack {
+      --code-cap: 12;
+    }
+    .code-clamp {
       font-size: 13px;
     }
   }
