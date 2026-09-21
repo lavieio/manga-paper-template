@@ -46,12 +46,15 @@ const stacked = sheets.length > 1;
               </span>
             </div>
             <div class="body">
-              <pre class="code"><span class="k">const</span> post = {"{"}
+              {/* 定高代码窗：行数固定，超出部分底部淡出（避免纸堆里每张纸高度不一） */}
+              <div class="code-clamp">
+                <pre class="code"><span class="k">const</span> post = {"{"}
   title: <span class="s">'{post.data.title}'</span>,
   category: <span class="s">'{getCategory(post)}'</span>,
 {"}"}
 
 <span class="k">return</span> <span class="s">'{post.data.description}'</span></pre>
+              </div>
             </div>
           </div>
         </a>
@@ -174,10 +177,13 @@ const stacked = sheets.length > 1;
 
   .stack {
     display: grid;
+    /* minmax(0,1fr)：轨道不被「代码窗」的 max-content 撑宽，纸片才能跟着容器收缩 */
+    grid-template-columns: minmax(0, 1fr);
   }
   .sheet {
     display: block;
     grid-area: 1 / 1;
+    min-width: 0;
     transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--rot, 0deg));
     transition:
       transform 0.55s cubic-bezier(0.2, 0.7, 0.25, 1),
@@ -244,11 +250,20 @@ const stacked = sheets.length > 1;
   .tl.y { background: var(--yellow); }
   .tl.g { background: var(--cyan); }
   .window .cap .file {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 12px;
     color: var(--ink-soft);
     margin-left: 6px;
   }
   .window .cap .desc {
+    /* 不换行：窄屏挤不下时出省略号，否则顶栗会多占一行、抬高这张纸片 */
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     margin-left: auto;
     font-size: 12px;
     color: var(--ink-soft);
@@ -256,12 +271,24 @@ const stacked = sheets.length > 1;
   .window .body {
     padding: 26px 26px 28px;
   }
-  .code {
+  /* 代码窗定高裁切：行数写死（--code-lines），超出部分底部淡出——
+     内容长度不可控，不裁切则每张纸片高度不同，后层会从前层底下探出边角 */
+  .code-clamp {
+    --code-lines: 8;
+    --code-leading: 1.9;
     font-family: var(--font-mono);
     font-size: 15px;
-    line-height: 1.9;
-    overflow-x: auto;
-    white-space: pre;
+    line-height: var(--code-leading);
+    height: calc(var(--code-lines) * var(--code-leading) * 1em);
+    overflow: hidden;
+    /* 遮罩只作用于文字（纸底画在 .window 上），内容不满时看不出痕迹 */
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 1em), transparent);
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1em), transparent);
+  }
+  .code {
+    font: inherit;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
   .k { font-weight: 700; }
   .s { background: rgba(246, 211, 78, 0.45); padding: 0 2px; }
@@ -333,7 +360,12 @@ const stacked = sheets.length > 1;
     .window .body {
       padding: 18px 16px 20px;
     }
-    .code {
+    /* 文件路径是装饰，窄屏让位给日期/分类，避免顶栏被撑宽 */
+    .window .cap .file {
+      display: none;
+    }
+    /* 窄屏字号降一档，行数不变（高度随 em 自动缩） */
+    .code-clamp {
       font-size: 13px;
     }
   }

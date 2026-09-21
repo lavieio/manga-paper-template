@@ -99,6 +99,14 @@ a {
   text-decoration: none;
 }
 
+html,
+body {
+  /* 精选纸片「甩出」时会横向探出版心：在根节点裁掉横向溢出，
+     否则每次轮播都会让页面短暂出现横向滚动条（移动端会整页抖动）。
+     用 clip 而非 hidden：不建立滚动容器，sticky / fixed 定位不受影响。 */
+  overflow-x: clip;
+}
+
 .wrap {
   max-width: 980px;
   margin: 0 auto;
