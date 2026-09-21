@@ -31,7 +31,7 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
           <ul class="toc-list" data-toc>
             {items.map((h) => (
               <li>
-                <a href={`#${h.slug}`} data-depth={h.depth} data-slug={h.slug}>
+                <a href={`#${h.slug}`} data-depth={h.depth} data-slug={h.slug} title={h.text}>
                   {h.text}
                 </a>
               </li>
@@ -53,7 +53,7 @@ const items = headings.filter((h) => h.depth >= 2 && h.depth <= 4);
         <ul class="toc-list" data-toc-popover>
           {items.map((h) => (
             <li>
-              <a href={`#${h.slug}`} data-depth={h.depth} data-slug={h.slug}>
+              <a href={`#${h.slug}`} data-depth={h.depth} data-slug={h.slug} title={h.text}>
                 {h.text}
               </a>
             </li>

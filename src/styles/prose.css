@@ -191,7 +191,30 @@
      ≥1400px 时右下角还要放「回到顶部」（BackToTop.astro），
      所以比弹层多让出 100px，长目录在按钮上方内部滚动。 */
   max-height: calc(100vh - 160px);
-  overflow-y: auto;
+  /* 只要纵向滚动：横向靠下面的 ellipsis 收口，永不出现横滚动条；
+     纵向滚动条也藏掉（无痕滚动），改用两端渐隐提示还有内容
+     （JS 按溢出方向写 --fade-top / --fade-bottom，见 src/scripts/toc.ts）。 */
+  overflow: hidden auto;
+  scrollbar-width: none;
+}
+.toc-list::-webkit-scrollbar {
+  display: none;
+}
+.toc-list.is-scrollable {
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 var(--fade-top, 0px),
+    #000 calc(100% - var(--fade-bottom, 0px)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 var(--fade-top, 0px),
+    #000 calc(100% - var(--fade-bottom, 0px)),
+    transparent 100%
+  );
 }
 @media (min-width: 1400px) {
   .post-toc .toc-list {
@@ -204,6 +227,11 @@
   padding: 4px 0 4px 14px;
   position: relative;
   line-height: 1.5;
+  /* 一条只占一行：长标题（如 插入意向锁（LOCK_INSERT_INTENTION））省略号收口，
+     完整标题写在 title 上（prose 内 hover 可见）。 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 0.2s ease;
 }
 .toc-list a[data-depth="3"] {
