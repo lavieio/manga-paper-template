@@ -90,6 +90,23 @@ const stacked = sheets.length > 1;
   const single = N <= 1;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+  /** 代码窗行数：取本宽度下内容最长的那张，上限读 CSS 的 --code-cap（断点可不同） */
+  const measureCodeLines = () => {
+    const cap = Number.parseInt(getComputedStyle(stack).getPropertyValue("--code-cap"), 10);
+    const needed = sheets.reduce((max, el) => {
+      const code = el.querySelector<HTMLElement>(".code");
+      if (!code) return max;
+      const lineHeight = Number.parseFloat(getComputedStyle(code).lineHeight);
+      return Math.max(max, Math.round(code.scrollHeight / lineHeight));
+    }, 0);
+    const limit = Number.isFinite(cap) && cap > 0 ? cap : Number.POSITIVE_INFINITY;
+    return Math.min(Math.max(needed, 1), limit);
+  };
+
+  const fitCodeLines = () => {
+    stack?.style.setProperty("--code-lines", String(measureCodeLines()));
+  };
+
   let current = 0;
   let timer: ReturnType<typeof setInterval> | undefined;
   let animating = false;
@@ -162,6 +179,17 @@ const stacked = sheets.length > 1;
 
   layout();
   restart();
+
+  // 代码窗行数按实测内容定：字体度量到位后再量一次，跳断点/旋屏时重算
+  const CODE_FIT_DEBOUNCE = 120;
+  let fitTimer: ReturnType<typeof setTimeout> | undefined;
+
+  fitCodeLines();
+  document.fonts?.ready.then(fitCodeLines);
+  window.addEventListener("resize", () => {
+    clearTimeout(fitTimer);
+    fitTimer = setTimeout(fitCodeLines, CODE_FIT_DEBOUNCE);
+  });
 </script>
 
 <style>
@@ -179,6 +207,10 @@ const stacked = sheets.length > 1;
     display: grid;
     /* minmax(0,1fr)：轨道不被「代码窗」的 max-content 撑宽，纸片才能跟着容器收缩 */
     grid-template-columns: minmax(0, 1fr);
+    /* --code-lines 由脚本按实测内容写入（无 JS 时用下面的回退值 8）；
+       --code-cap 是「最多显示几行」，可按断点给不同值 */
+    --code-lines: 8;
+    --code-cap: 9;
   }
   .sheet {
     display: block;
@@ -274,7 +306,6 @@ const stacked = sheets.length > 1;
   /* 代码窗定高裁切：行数写死（--code-lines），超出部分底部淡出——
      内容长度不可控，不裁切则每张纸片高度不同，后层会从前层底下探出边角 */
   .code-clamp {
-    --code-lines: 8;
     --code-leading: 1.9;
     font-family: var(--font-mono);
     font-size: 15px;
@@ -364,7 +395,10 @@ const stacked = sheets.length > 1;
     .window .cap .file {
       display: none;
     }
-    /* 窄屏字号降一档，行数不变（高度随 em 自动缩） */
+    /* 窄屏字号降一档（em 定高自动缩）；窄屏折行多，允许更多行才不吞描述 */
+    .stack {
+      --code-cap: 12;
+    }
     .code-clamp {
       font-size: 13px;
     }
