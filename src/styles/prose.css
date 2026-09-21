@@ -113,6 +113,19 @@
   font-size: 14px;
   line-height: 1.8;
 }
+/* ── 代码块跟随明暗主题（Shiki 双主题）──
+   shikiConfig.themes 会给 <pre class="astro-code"> 写内联的 light 值
+   （background-color / color），暗色值只存在 --shiki-dark* 变量里；
+   内联样式优先级高于选择器，所以这里必须 !important。
+   span 上没有 --shiki-dark-bg，var() 失效时该声明会被自动丢弃，不影响 token。 */
+[data-theme="dark"] .astro-code,
+[data-theme="dark"] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
 .prose ul,
 .prose ol {
   margin: 18px 0 18px 26px;
