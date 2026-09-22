@@ -30,6 +30,22 @@ const PUBLIC_LIST_FILES = [
   join(DIST, "tags/index.html"),
 ];
 
+type HiddenPost = ReturnType<typeof collectHiddenPosts>[number];
+
+/** ④ 私密/草稿不得出现在 sitemap / RSS / 公开列表 */
+function checkHiddenNotPublished(hidden: HiddenPost[]): void {
+  const sitemap = read(join(DIST, "sitemap-0.xml"));
+  const rss = read(join(DIST, "rss.xml"));
+  for (const post of hidden) {
+    check(`sitemap 无 ${post.slug}`, !sitemap.includes(post.slug));
+    check(`RSS 无 ${post.slug}`, !rss.includes(post.slug) && (!post.title || !rss.includes(post.title)));
+    for (const listFile of PUBLIC_LIST_FILES) {
+      const html = read(listFile);
+      check(`${listFile} 无 ${post.slug}`, !html.includes(post.slug) && !html.includes(`/posts/${post.slug}`));
+    }
+  }
+}
+
 function main(): void {
   // ① 基础产物
   check("dist/index.html 存在", existsSync(join(DIST, "index.html")));
@@ -64,16 +80,7 @@ function main(): void {
   }
 
   // ④ 私密/草稿不得出现在 sitemap / RSS / 公开列表
-  for (const post of hidden) {
-    const sitemap = read(join(DIST, "sitemap-0.xml"));
-    const rss = read(join(DIST, "rss.xml"));
-    check(`sitemap 无 ${post.slug}`, !sitemap.includes(post.slug));
-    check(`RSS 无 ${post.slug}`, !rss.includes(post.slug) && (!post.title || !rss.includes(post.title)));
-    for (const listFile of PUBLIC_LIST_FILES) {
-      const html = read(listFile);
-      check(`${listFile} 无 ${post.slug}`, !html.includes(post.slug) && !html.includes(`/posts/${post.slug}`));
-    }
-  }
+  checkHiddenNotPublished(hidden);
 
   // ⑤ Pagefind 页数 = 公开文章数（总数 - 私密/草稿数）
   const entry = read(join(DIST, "pagefind/pagefind-entry.json"));
