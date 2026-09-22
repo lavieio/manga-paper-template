@@ -54,13 +54,13 @@
     letter-spacing: 0.04em;
     border: 2px solid var(--ink);
     box-shadow: 3px 3px 0 var(--ink);
-    color: var(--ink);
+    color: var(--on-light-fill);
     white-space: nowrap;
   }
   .sticker.cyan { background: var(--cyan); transform: rotate(-1.5deg); }
   .sticker.pink { background: var(--pink); transform: rotate(1.2deg); }
   .sticker.yellow { background: var(--yellow); transform: rotate(-1deg); }
   .sticker.blue { background: var(--blue); transform: rotate(1deg); }
-  .sticker.red { background: var(--red); color: var(--card); transform: rotate(-1.2deg); }
+  .sticker.red { background: var(--red); color: var(--on-dark-fill); transform: rotate(-1.2deg); }
   
   

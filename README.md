@@ -16,6 +16,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 - [x] 稿纸 × 漫画设计语言，全站等宽字体
 - [x] **私密文章**：构建期 AES-256-GCM 加密，页面只存密文；`/private` 加密入口页
 - [x] 文章目录（右侧 sticky TOC，滚动高亮 + 朱砂指示条）
+- [x] 代码块一键复制（构建期注入按钮 + 事件委托；公开与私密文章都有）
 - [x] 首页 Featured 纸片堆轮播
 - [x] static search（[Pagefind](https://pagefind.app/)，支持中文）
 - [x] 归档时间轴 / 标签云 / 分类页
@@ -44,7 +45,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   ├── scripts/                # 灯箱、TOC、私密解锁与密钥缓存（客户端）
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
 │   ├── utils/                  # 内容管线、加密、格式与阅读时长
-│   ├── config.ts               # 站名 / 作者 / remark42 配置（唯一站点入口）
+│   ├── config.ts               # 站名 / 作者 / 页脚仓库链接 / remark42 配置（唯一站点入口）
 │   └── content.config.ts       # 内容 schema（zod）
 └── astro.config.mjs
 ```

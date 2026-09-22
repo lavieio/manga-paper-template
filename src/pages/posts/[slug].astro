@@ -4,6 +4,7 @@ import { render } from "astro:content";
 import { experimental_AstroContainer as AstroContainer } from "astro/container";
 import Base from "../../layouts/Base.astro";
 import TableOfContents from "../../components/TableOfContents.astro";
+import BackToTop from "../../components/BackToTop.astro";
 import Comments from "../../components/Comments.astro";
 import PrivateUnlock from "../../components/PrivateUnlock.astro";
 import { encryptText, getPrivatePassword, type EncryptedPayload } from "../../utils/private-crypto";
@@ -63,6 +64,7 @@ if (post.data.private) {
         <article class="prose" data-private-article data-pagefind-ignore hidden />
         <PrivateUnlock payload={privatePayload} />
         <TableOfContents headings={[]} defer />
+        <BackToTop />
       </>
     ) : (
       <>
@@ -118,6 +120,8 @@ if (post.data.private) {
 
         {/* TOC 悬浮于容器右缘外侧（≥1400px 才显示），不占正文栏位 */}
         <TableOfContents headings={headings} />
+
+        <BackToTop />
       </>
     )
   }
@@ -136,5 +140,7 @@ if (post.data.private) {
 
 <script>
   import { initLightbox } from "../../scripts/lightbox";
+  import { initCodeCopy } from "../../scripts/code-copy";
   initLightbox();
+  initCodeCopy();
 </script>

@@ -3,11 +3,15 @@
 
 /* TOC 悬浮于正文容器（980px）右缘外侧，不占正文栏位；
    视口 ≥1400px 才能完整容纳（正文半宽 462 + 间隙 16 + TOC 220）。
-   位置与文章标题长短/篇幅完全无关。 */
+   位置与文章标题长短/篇幅完全无关。
+   --toc-left 是这一列的左缘，BackToTop 按钮要与它对齐，所以抽成变量。 */
+:root {
+  --toc-left: calc(50% + 478px);
+}
 .post-toc {
   position: fixed;
   top: 110px;
-  left: calc(50% + 478px);
+  left: var(--toc-left);
   width: 220px;
   z-index: 40;
 }
@@ -109,6 +113,80 @@
   font-size: 14px;
   line-height: 1.8;
 }
+/* ── 代码块跟随明暗主题（Shiki 双主题）──
+   shikiConfig.themes 会给 <pre class="astro-code"> 写内联的 light 值
+   （background-color / color），暗色值只存在 --shiki-dark* 变量里；
+   内联样式优先级高于选择器，所以这里必须 !important。
+   span 上没有 --shiki-dark-bg，var() 失效时该声明会被自动丢弃，不影响 token。 */
+[data-theme="dark"] .astro-code,
+[data-theme="dark"] .astro-code span {
+  color: var(--shiki-dark) !important;
+  background-color: var(--shiki-dark-bg) !important;
+  font-style: var(--shiki-dark-font-style) !important;
+  font-weight: var(--shiki-dark-font-weight) !important;
+  text-decoration: var(--shiki-dark-text-decoration) !important;
+}
+/* ── 代码块「复制」按钮（plan §7.4）──
+   包裹层把按钮留在滚动容器之外：.astro-code 自己 overflow-x: auto，
+   绝对定位的后代会被一起横向滚走；按钮压在代码块上边框上（top: -11px），
+   只压到内边距，一行代码都不挡。 */
+.code-wrap {
+  position: relative;
+  margin: 24px 0;
+}
+/* 间距移到包裹层：pre 归零，免得两层间距叠加 */
+.code-wrap pre {
+  margin: 0;
+}
+.code-copy {
+  position: absolute;
+  top: -11px;
+  right: 10px;
+  padding: 5px 10px;
+  font: 600 11px/1 var(--font-mono);
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  background: var(--card);
+  border: 2px solid var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    opacity 0.15s ease;
+}
+.code-copy:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.code-copy:hover:not(.is-done):not(.is-fail) {
+  color: var(--red);
+}
+.code-copy:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+/* 成功：黄底墨字（--on-light-fill 不随主题翻，暗色下同样可读） */
+.code-copy.is-done {
+  background: var(--yellow);
+  color: var(--on-light-fill);
+}
+.code-copy.is-fail {
+  border-color: var(--red);
+  color: var(--red);
+}
+/* 有真指针的设备：hover / 键盘聚焦才出现，别挡着读代码；触屏设备常显 */
+@media (hover: hover) {
+  .code-copy {
+    opacity: 0;
+  }
+  .code-wrap:hover .code-copy,
+  .code-copy:focus-visible {
+    opacity: 1;
+  }
+}
 .prose ul,
 .prose ol {
   margin: 18px 0 18px 26px;
@@ -142,8 +220,8 @@
   text-align: left;
 }
 .prose th {
-  background: var(--yellow);
-  color: #1c1913;
+  background: var(--yellow-fill);
+  color: var(--on-yellow-fill);
 }
 .prose figure {
   margin: 26px 0;
@@ -183,9 +261,39 @@
   padding: 12px 14px 16px;
   list-style: none;
   font-size: 13px;
-  /* 固定定位下以视口为界，防止矮屏溢出 */
+  /* 固定定位下以视口为界，防止矮屏溢出。
+     ≥1400px 时右下角还要放「回到顶部」（BackToTop.astro），
+     所以比弹层多让出 100px，长目录在按钮上方内部滚动。 */
   max-height: calc(100vh - 160px);
-  overflow-y: auto;
+  /* 只要纵向滚动：横向靠下面的 ellipsis 收口，永不出现横滚动条；
+     纵向滚动条也藏掉（无痕滚动），改用两端渐隐提示还有内容
+     （JS 按溢出方向写 --fade-top / --fade-bottom，见 src/scripts/toc.ts）。 */
+  overflow: hidden auto;
+  scrollbar-width: none;
+}
+.toc-list::-webkit-scrollbar {
+  display: none;
+}
+.toc-list.is-scrollable {
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 var(--fade-top, 0px),
+    #000 calc(100% - var(--fade-bottom, 0px)),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0,
+    #000 var(--fade-top, 0px),
+    #000 calc(100% - var(--fade-bottom, 0px)),
+    transparent 100%
+  );
+}
+@media (min-width: 1400px) {
+  .post-toc .toc-list {
+    max-height: calc(100vh - 260px);
+  }
 }
 .toc-list a {
   color: var(--ink-soft);
@@ -193,6 +301,11 @@
   padding: 4px 0 4px 14px;
   position: relative;
   line-height: 1.5;
+  /* 一条只占一行：长标题（如 插入意向锁（LOCK_INSERT_INTENTION））省略号收口，
+     完整标题写在 title 上（prose 内 hover 可见）。 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: color 0.2s ease;
 }
 .toc-list a[data-depth="3"] {
@@ -267,7 +380,7 @@
   font-family: var(--font-mono);
   border: 3px solid var(--ink);
   background: var(--yellow);
-  color: var(--ink);
+  color: var(--on-light-fill);
   box-shadow: var(--shadow);
   cursor: pointer;
 }
