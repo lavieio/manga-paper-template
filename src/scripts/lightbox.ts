@@ -1,10 +1,16 @@
 /**
  * PhotoSwipe 灯箱（plan §9）
  * - 事件委托：正文（含私密文章解密后注入的内容）任意 <img> 点击即开
- * - 首次点击时才动态加载 photoswipe 与样式（首屏零负担）
+ * - 只有 PhotoSwipe 本体懒加载（首次点击才 import()），首屏零负担
+ * - **样式必须静态导入**：Astro 的 inlineStylesheets 会把页面 CSS 内联成 <style> 并删掉产物
+ *   文件；样式一旦走动态 import，Vite 注入的 <link rel=stylesheet> 一定 404，进而让整个
+ *   动态 import 链 reject，表现为「点了图片没反应」且无任何报错。静态导入由 Astro 统一处理
+ *   （内联或外链都安全）；代价是文章页多约 9 KB 内联 CSS，换来灯箱一定可用。
  * - 尺寸优先取 data-pswp-*（构建期注入）；外链图退化为运行时 naturalWidth
  * - 滚轮缩放：wheelToZoom（PhotoSwipe 默认滚轮只是平移）
  */
+import "photoswipe/dist/photoswipe.css";
+import "../styles/lightbox.css";
 
 interface PswpItem {
   src: string;
@@ -13,15 +19,20 @@ interface PswpItem {
   alt?: string;
 }
 
+const ERROR_TEXT = "图片查看器加载失败，请刷新后重试";
+/** 失败提示停留时长；够看清又不至于长期占位 */
+const ERROR_MS = 4000;
+
 let loading: Promise<typeof import("photoswipe").default> | null = null;
 
-/** 懒加载 PhotoSwipe（含其样式与稿纸风覆盖样式），只加载一次 */
-function loadPhotoSwipe() {
-  loading ??= Promise.all([
-    import("photoswipe"),
-    import("photoswipe/dist/photoswipe.css"),
-    import("../styles/lightbox.css"),
-  ]).then(([mod]) => mod.default);
+/** 懒加载 PhotoSwipe 本体，只加载一次；失败则清掉缓存，让下次点击可以重试 */
+function loadPhotoSwipe(): Promise<typeof import("photoswipe").default> {
+  loading ??= import("photoswipe")
+    .then((mod) => mod.default)
+    .catch((err: unknown) => {
+      loading = null;
+      throw err;
+    });
   return loading;
 }
 
@@ -49,21 +60,29 @@ function collectItems(images: HTMLImageElement[]): PswpItem[] {
   });
 }
 
-export function initLightbox(): void {
-  document.addEventListener("click", async (event) => {
-    const target = event.target as HTMLElement | null;
-    const img = target?.closest<HTMLImageElement>(".prose img");
-    if (!img) return;
+/** 加载失败不静默：就地给可见提示（样式在 lightbox.css，静态导入保证一定在场） */
+function showLoadError(img: HTMLImageElement, reason: unknown): void {
+  console.error("[lightbox] PhotoSwipe 加载失败：", reason);
+  const anchor = img.closest("figure") ?? img;
+  if (anchor.nextElementSibling?.classList.contains("lightbox-error")) return;
 
-    const images = Array.from(document.querySelectorAll<HTMLImageElement>(".prose img"));
-    const index = images.indexOf(img);
+  const tip = document.createElement("p");
+  tip.className = "lightbox-error";
+  tip.setAttribute("role", "status");
+  tip.textContent = ERROR_TEXT;
+  anchor.after(tip);
+  window.setTimeout(() => tip.remove(), ERROR_MS);
+}
 
-    event.preventDefault();
+async function openLightbox(img: HTMLImageElement): Promise<void> {
+  try {
     const PhotoSwipe = await loadPhotoSwipe();
     await ensureDecoded(img);
+    // 点击时现取当前正文图集：私密文章是解密后才注入 <img> 的，构建期拿不到
+    const images = Array.from(document.querySelectorAll<HTMLImageElement>(".prose img"));
     const pswp = new PhotoSwipe({
       dataSource: collectItems(images),
-      index,
+      index: images.indexOf(img),
       bgOpacity: 0.92,
       showHideAnimationType: "zoom",
       counter: true,
@@ -71,5 +90,18 @@ export function initLightbox(): void {
       wheelToZoom: true,
     });
     pswp.init();
+  } catch (err) {
+    showLoadError(img, err);
+  }
+}
+
+export function initLightbox(): void {
+  document.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement | null;
+    const img = target?.closest<HTMLImageElement>(".prose img");
+    if (!img) return;
+
+    event.preventDefault();
+    void openLightbox(img);
   });
 }
