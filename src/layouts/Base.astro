@@ -32,9 +32,11 @@ const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 
 // 字体 CDN：只加载站点实际用到的字重（正文 400 / 引用斜体 400i / 贴纸 600 / 标题 700）。
-// 非阻塞加载：preload + onload 切 rel（配合 font-display: swap 与度量对齐 fallback，
-// 首帧先用 fallback 绘制，字体就绪后替换）。
+// 非阻塞加载：先 preconnect 建连，再 preload + onload 切 rel（配合 font-display: swap
+// 与度量对齐 fallback，首帧先用 fallback 绘制，字体就绪后替换）。
+// preload 与随后的取回必须同为 CORS 模式，否则同一份 CSS 会被下载两次 → 声明 crossorigin。
 const FONT_CDN = "https://fontsapi.zeoseven.com/442";
+const FONT_ORIGIN = new URL(FONT_CDN).origin;
 const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
 ---
 
@@ -60,11 +62,14 @@ const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
     }
     <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href={FONT_ORIGIN} crossorigin />
+    <link rel="dns-prefetch" href={FONT_ORIGIN} />
     {
       FONT_WEIGHTS.map((w) => (
         <link
           rel="preload"
           as="style"
+          crossorigin="anonymous"
           href={`${FONT_CDN}/${w}/result.css`}
           onload="this.onload=null;this.rel='stylesheet'"
         />
