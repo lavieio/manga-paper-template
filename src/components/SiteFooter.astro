@@ -77,6 +77,8 @@ const repoHint = site.repo.replace(/^https?:\/\//, "").replace(/\/+$/, "");
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    /* 行盒只有 21px，把可点区域撑到 24px（WCAG 2.5.8） */
+    min-height: var(--touch-min);
     color: inherit;
     transition: color 0.2s ease;
   }

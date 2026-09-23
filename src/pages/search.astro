@@ -159,6 +159,8 @@ import Base from "../layouts/Base.astro";
     flex: 1;
     /* 同 .seal-box：不清 min-width 会顶出右侧 .hint，溢出部分被裁掉 */
     min-width: 0;
+    /* 输入框本身只有 23px 高，撑到 24px（WCAG 2.5.8：点进去比点击链接更难宽容） */
+    min-height: var(--touch-min);
     border: none;
     outline: none;
     background: transparent;

@@ -45,6 +45,10 @@ const { tag, posts } = Astro.props;
   .tag-head .back {
     margin-left: auto;
     font-size: 13px;
+    /* 行盒只有 22.8px，把可点区域撑到 24px（WCAG 2.5.8） */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
     color: var(--ink-soft);
   }
   .tag-head .back:hover {
