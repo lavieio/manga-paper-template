@@ -8,10 +8,11 @@
     "build": "node scripts/check-site-url.ts && astro build && pagefind --site dist",
     "preview": "astro preview",
     "astro": "astro",
-    "test": "node --test scripts/*.test.ts src/utils/*.test.ts",
+    "test": "node --test \"src/**/*.test.ts\" \"scripts/**/*.test.ts\"",
     "prepare": "husky",
     "verify": "node scripts/verify-dist.ts",
-    "smoke": "node scripts/smoke-dist.ts"
+    "smoke": "node scripts/smoke-dist.ts",
+    "check": "npm run build && npm test && npm run verify && npm run smoke"
   },
   "engines": {
     "node": ">=22 <25"
