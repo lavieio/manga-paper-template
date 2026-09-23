@@ -17,6 +17,8 @@ light/dark themes. Fully static: no backend, no client framework.
 - [x] Paper × comic design language, monospace everywhere
 - [x] **Private posts**: AES-256-GCM encrypted at build time; only ciphertext ships; `/private` gated index
 - [x] Table of contents (sticky right rail, scroll highlighting with vermilion indicator)
+- [x] Copy-to-clipboard on code blocks, image lightbox ([PhotoSwipe](https://photoswipe.com/), loaded on first click)
+- [x] Build-time image sizing (local files and remote image headers) — no layout shift
 - [x] Homepage Featured paper-stack carousel
 - [x] static search ([Pagefind](https://pagefind.app/), CJK-friendly)
 - [x] Archive timeline / tag cloud / category pages
@@ -169,6 +171,7 @@ You can also create the repo first via [**Use this template**](https://github.co
 | `PRIVATE_PASSWORD` | Password for private-post encryption (build time; falls back to `manga-paper`, local use only) |
 | `PUBLIC_UNLOCK_TTL_HOURS` | How long an unlock is remembered, in hours (default 1) |
 | `SITE_URL` | **Required**: site root URL — the single source of truth for canonical / sitemap / RSS. `npm run build` fails when it is missing, malformed, or still `https://your-domain.com` |
+| `SKIP_REMOTE_IMAGE_SIZE` | Optional: set to 1 to skip remote image-size probing at build time (offline / blocked hosts) |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 comments (optional; both required) |
 
 `.env` is gitignored; `.env.example` ships with the repository.

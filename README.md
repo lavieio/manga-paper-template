@@ -17,6 +17,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 - [x] **私密文章**：构建期 AES-256-GCM 加密，页面只存密文；`/private` 加密入口页
 - [x] 文章目录（右侧 sticky TOC，滚动高亮 + 朱砂指示条）
 - [x] 代码块一键复制（构建期注入按钮 + 事件委托；公开与私密文章都有）
+- [x] 图片灯箱（[PhotoSwipe](https://photoswipe.com/)，点击才加载）+ 构建期读图尺寸（站内读文件、外链读图头），无布局抖动
 - [x] 首页 Featured 纸片堆轮播
 - [x] static search（[Pagefind](https://pagefind.app/)，支持中文）
 - [x] 归档时间轴 / 标签云 / 分类页
@@ -41,7 +42,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   ├── content/blog/           # 文章：一级子目录名 = 分类
 │   ├── layouts/Base.astro      # 布局：点阵稿纸底、主题切换、页头页脚
 │   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss
-│   ├── plugins/                # rehype 图片尺寸注入、内容扫描
+│   ├── plugins/                # rehype 图片尺寸/懒加载注入、代码复制按钮、私密与草稿扫描
 │   ├── scripts/                # 灯箱、TOC、私密解锁与密钥缓存（客户端）
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
 │   ├── utils/                  # 内容管线、加密、格式与阅读时长
@@ -164,6 +165,7 @@ cover: /cover.png       # 可选
 | `PRIVATE_PASSWORD` | 私密文章加密密码（构建期；缺省 `manga-paper` 仅本地可用） |
 | `PUBLIC_UNLOCK_TTL_HOURS` | 私密解锁记忆时长（小时），默认 1 |
 | `SITE_URL` | **必填**：站点根 URL（canonical / sitemap / RSS 的唯一真源）。缺失、格式非法或仍是 `https://your-domain.com` 时 `npm run build` 直接失败 |
+| `SKIP_REMOTE_IMAGE_SIZE` | 可选：设为 1 则构建期不抓外链图片尺寸（离线 / 外链域名被墙时用） |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 评论（可选，两项配齐才生效） |
 
 `.env` 已在 `.gitignore` 中，`.env.example` 随仓库分发。
