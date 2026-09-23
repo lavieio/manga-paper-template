@@ -155,6 +155,7 @@ function checkSiteUrl(): void {
 function main(): void {
   // ① 基础产物
   check("dist/index.html 存在", existsSync(join(DIST, "index.html")));
+  check("dist/404.html 存在", existsSync(join(DIST, "404.html")));
 
   const hidden = collectHiddenPosts();
   const privates = hidden.filter((p) => p.isPrivate);
