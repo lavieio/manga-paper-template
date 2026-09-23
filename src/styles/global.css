@@ -31,6 +31,9 @@
   /* 硬阴影（零高斯模糊） */
   --shadow: 4px 4px 0 var(--ink);
   --shadow-lg: 7px 7px 0 var(--ink);
+  /* 触摸目标下限（WCAG 2.2 SC 2.5.8）：非行内链接可点区域不小于 24×24 CSS px。
+     正文字号链接受「行内」豁免（被行高约束），不适用。 */
+  --touch-min: 24px;
   /* --font-mono 定义于 fonts.css（CDN 分片 + fallback 度量对齐） */
 }
 

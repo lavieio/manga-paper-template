@@ -118,6 +118,13 @@ const earliest = posts.at(-1);
     font-size: 16px;
     font-weight: 600;
   }
+  .t-item h2 a {
+    /* 行盒只有 21px，把可点区域撑到 24px（WCAG 2.5.8）；
+       24px 仍在 h2 的 28px 行盒内，行距不变 */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
+  }
   .t-item h2 a:hover {
     color: var(--red-ink);
     border-bottom: 2px solid var(--red-ink);
