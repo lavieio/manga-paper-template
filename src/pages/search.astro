@@ -29,8 +29,12 @@ import Base from "../layouts/Base.astro";
    * - 索引由构建脚本 `pagefind --site dist` 生成；dev 模式无索引 → 明确提示
    * - 300ms 防抖；结果含高亮摘要与分类贴纸
    * - 动态 import 的是 dist 里的公开路径，需 @vite-ignore 跳过打包期解析
+   * - 结果与提示一律用元素/文本节点拼：查询词与索引内容都是外部输入，
+   *   过 innerHTML 就等于把它们当代码执行（M10：自造的 `<img onerror>` 能打穿页面）
    */
   const DEBOUNCE_MS = 300;
+  /** Pagefind 摘要里唯一允许保留的标签（命中高亮），其余当纯文本 */
+  const MARKED = /<mark[^>]*>([\s\S]*?)<\/mark>/gi;
 
   interface PagefindResultData {
     url: string;
@@ -53,8 +57,15 @@ import Base from "../layouts/Base.astro";
     let pagefind: PagefindModule | null = null;
     let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const say = (html: string) => {
-      stateEl.innerHTML = html;
+    /** 状态消息的粗体片段（只有这里需要元素，其余全是文本节点） */
+    const bold = (text: string): HTMLElement => {
+      const el = document.createElement("b");
+      el.textContent = text;
+      return el;
+    };
+
+    const say = (...segments: (string | Node)[]) => {
+      stateEl.replaceChildren(...segments);
       stateEl.hidden = false;
     };
 
@@ -69,7 +80,9 @@ import Base from "../layouts/Base.astro";
         return mod;
       } catch {
         say(
-          '搜索索引未生成——请先运行 <b>npm run build</b>（Pagefind 索引在构建后产出，dev 模式不包含）。',
+          "搜索索引未生成——请先运行 ",
+          bold("npm run build"),
+          "（Pagefind 索引在构建后产出，dev 模式不包含）。",
         );
         return null;
       }
@@ -78,26 +91,58 @@ import Base from "../layouts/Base.astro";
     const stickerClass = (category: string) =>
       ({ 技术: "cyan", 随笔: "pink", 摄影: "yellow" })[category] ?? "blue";
 
+    /** 分类贴纸 */
+    const sticker = (category: string): HTMLElement => {
+      const el = document.createElement("span");
+      el.className = `sticker ${stickerClass(category)}`;
+      el.textContent = category;
+      return el;
+    };
+
+    /** 摘要白名单化：<mark> 变真元素，其余（含别有用心的标签）一律当纯文本 */
+    const excerptNodes = (html: string): DocumentFragment => {
+      const fragment = document.createDocumentFragment();
+      let last = 0;
+      for (const match of html.matchAll(MARKED)) {
+        fragment.append(document.createTextNode(html.slice(last, match.index)));
+        const mark = document.createElement("mark");
+        mark.textContent = match[1];
+        fragment.append(mark);
+        last = match.index + match[0].length;
+      }
+      fragment.append(document.createTextNode(html.slice(last)));
+      return fragment;
+    };
+
+    const hitCard = (item: PagefindResultData): HTMLElement => {
+      const card = document.createElement("a");
+      card.className = "hit";
+      card.href = item.url;
+
+      const head = document.createElement("div");
+      head.className = "head";
+      const category = item.meta.category ?? "";
+      if (category) head.append(sticker(category));
+      const title = document.createElement("h2");
+      title.textContent = item.meta.title ?? item.url;
+      head.append(title);
+
+      const snippet = document.createElement("p");
+      snippet.className = "snip";
+      snippet.append(excerptNodes(item.excerpt));
+
+      card.append(head, snippet);
+      return card;
+    };
+
     const renderResults = (items: PagefindResultData[], query: string) => {
       if (items.length === 0) {
         resultsEl.hidden = true;
-        say(`没有命中「<b>${query}</b>」——换个词试试？`);
+        say("没有命中「", bold(query), "」——换个词试试？");
         return;
       }
       stateEl.hidden = true;
-      resultsEl.innerHTML = items
-        .map((item) => {
-          const category = item.meta.category ?? "";
-          return `
-            <a class="hit" href="${item.url}">
-              <div class="head">
-                ${category ? `<span class="sticker ${stickerClass(category)}">${category}</span>` : ""}
-                <h2>${item.meta.title ?? item.url}</h2>
-              </div>
-              <p class="snip">${item.excerpt}</p>
-            </a>`;
-        })
-        .join("");
+      resultsEl.replaceChildren(...items.map(hitCard));
       resultsEl.hidden = false;
       tipEl.textContent = `命中 ${items.length} 篇`;
     };
