@@ -32,6 +32,14 @@ const PUBLIC_LIST_FILES = [
 
 type HiddenPost = ReturnType<typeof collectHiddenPosts>[number];
 
+/** ⑤ Pagefind 页数 = 公开文章数（总数 - 私密/草稿数） */
+function checkPagefindCount(publicCount: number): void {
+  const entry = read(join(DIST, "pagefind/pagefind-entry.json"));
+  if (!entry) return;
+  const actual = JSON.parse(entry).languages?.["zh-cn"]?.page_count;
+  check(`Pagefind 页数 = 公开文章数 (${publicCount})`, actual === publicCount, `实际 ${actual}`);
+}
+
 /** ④ 私密/草稿不得出现在 sitemap / RSS / 公开列表 */
 function checkHiddenNotPublished(hidden: HiddenPost[]): void {
   const sitemap = read(join(DIST, "sitemap-0.xml"));
@@ -120,11 +128,7 @@ function main(): void {
   checkHiddenNotPublished(hidden);
 
   // ⑤ Pagefind 页数 = 公开文章数（总数 - 私密/草稿数）
-  const entry = read(join(DIST, "pagefind/pagefind-entry.json"));
-  if (entry) {
-    const actual = JSON.parse(entry).languages?.["zh-cn"]?.page_count;
-    check(`Pagefind 页数 = 公开文章数 (${publicCount})`, actual === publicCount, `实际 ${actual}`);
-  }
+  checkPagefindCount(publicCount);
 
   // ⑥ 产物引用的资源都存在（灯箱动态 CSS 曾整片 404）
   checkAssetRefs();
