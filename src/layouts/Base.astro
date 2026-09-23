@@ -5,6 +5,7 @@ import "../styles/card.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import { site } from "../config";
+import { serializeJsonLd, type JsonLdNode } from "../utils/structured-data";
 
 interface Props {
   title?: string;
@@ -19,6 +20,8 @@ interface Props {
    * 否则当站内没有任何 data-pagefind-body 时，Pagefind 会退化成索引全部页面。
    */
   searchable?: boolean;
+  /** schema.org 结构化数据（JSON-LD）；不传就不渲染（私密文章必须不传） */
+  structuredData?: JsonLdNode | readonly JsonLdNode[];
 }
 
 const {
@@ -27,6 +30,7 @@ const {
   noindex = false,
   unlockCheck = false,
   searchable = false,
+  structuredData,
 } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
@@ -64,6 +68,11 @@ const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
     }
     <link rel="canonical" href={canonical} />
     <link rel="alternate" type="application/rss+xml" title={site.name} href={rssFeed} />
+    {
+      structuredData && (
+        <script type="application/ld+json" is:inline set:html={serializeJsonLd(structuredData)} />
+      )
+    }
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href={FONT_ORIGIN} crossorigin />
     <link rel="dns-prefetch" href={FONT_ORIGIN} />
