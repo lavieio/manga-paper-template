@@ -17,6 +17,8 @@ import { tmpdir } from "node:os";
 
 const READY_TIMEOUT_MS = 15_000;
 const POLL_MS = 100;
+/** kill 之后给 Chrome 一点时间真正退出，再去删 user-data-dir（Windows 上很容易删不掉） */
+const EXIT_GRACE_MS = 200;
 
 const MIME: Record<string, string> = {
   ".html": "text/html; charset=utf-8",
@@ -193,11 +195,25 @@ interface TeardownContext {
   userDataDir: string;
 }
 
+/**
+ * 尽力清理临时 user-data-dir。
+ * Chrome 被 kill 后可能还在写 Crashpad 之类的文件，Windows 上这会儿删不掉是常态——
+ * 清理失败不该让冒烟挂掉（临时目录留给系统回收）。
+ */
+function removeTempDir(dir: string): void {
+  try {
+    rmSync(dir, { recursive: true, force: true });
+  } catch {
+    /* 忽略 */
+  }
+}
+
 async function teardown(ctx: TeardownContext): Promise<void> {
   ctx.socket.close();
   ctx.proc.kill();
   await ctx.server.close();
-  rmSync(ctx.userDataDir, { recursive: true, force: true });
+  await sleep(EXIT_GRACE_MS);
+  removeTempDir(ctx.userDataDir);
 }
 
 /** 起静态服务 + headless Chrome，返回可用于 send() 的会话 */
@@ -215,7 +231,7 @@ export async function launchBrowser(chromePath: string, root: string): Promise<B
   } catch (err) {
     proc.kill();
     await server.close();
-    rmSync(userDataDir, { recursive: true, force: true });
+    removeTempDir(userDataDir);
     throw err;
   }
 }
