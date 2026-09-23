@@ -8,6 +8,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { collectHiddenPosts, countAllPosts } from "../src/plugins/private-slugs.ts";
+import { PLACEHOLDER_HOST } from "../src/utils/site-url.ts";
 
 const DIST = "dist";
 const failures: string[] = [];
@@ -61,9 +62,6 @@ const ASSET_REF = /_astro\/[A-Za-z0-9._-]+\.(?:js|css)/g;
 
 /** 站内链接（根相对路径）：外链 / 锚点 / mailto 都不是以 / 开头，天然被排除 */
 const INTERNAL_HREF = /href="(\/[^"]*)"/g;
-
-/** astro.config.mjs 的兑底域名：产物里还留着它就等于没配 SITE_URL */
-const PLACEHOLDER_HOST = "your-domain.com";
 
 /** dist 下的全部文件，统一用 / 分隔，方便与产物里的引用文本直接比对 */
 function outputFiles(): string[] {
