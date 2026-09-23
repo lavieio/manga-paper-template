@@ -5,7 +5,7 @@
  *
  * 用法：npm run build && npm run verify
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { collectHiddenPosts, countAllPosts } from "../src/plugins/private-slugs.ts";
 
@@ -29,6 +29,59 @@ const PUBLIC_LIST_FILES = [
   join(DIST, "archive/index.html"),
   join(DIST, "tags/index.html"),
 ];
+
+type HiddenPost = ReturnType<typeof collectHiddenPosts>[number];
+
+/** ④ 私密/草稿不得出现在 sitemap / RSS / 公开列表 */
+function checkHiddenNotPublished(hidden: HiddenPost[]): void {
+  const sitemap = read(join(DIST, "sitemap-0.xml"));
+  const rss = read(join(DIST, "rss.xml"));
+  for (const post of hidden) {
+    check(`sitemap 无 ${post.slug}`, !sitemap.includes(post.slug));
+    check(`RSS 无 ${post.slug}`, !rss.includes(post.slug) && (!post.title || !rss.includes(post.title)));
+    for (const listFile of PUBLIC_LIST_FILES) {
+      const html = read(listFile);
+      check(`${listFile} 无 ${post.slug}`, !html.includes(post.slug) && !html.includes(`/posts/${post.slug}`));
+    }
+  }
+}
+
+/**
+ * /_astro 下的哈希资源引用：HTML 里写作 /_astro/x，JS chunk 的 __vite__mapDeps 里写作 _astro/x。
+ */
+const ASSET_REF = /_astro\/[A-Za-z0-9._-]+\.(?:js|css)/g;
+
+/** 可能带资源引用的产物：页面 + 打包脚本 */
+function refCandidateFiles(): string[] {
+  return readdirSync(DIST, { recursive: true })
+    .map(String)
+    .map((p) => p.replace(/\\/g, "/"))
+    .filter((p) => p.endsWith(".html") || p.startsWith("_astro/"));
+}
+
+/**
+ * ⑥ 产物引用的 /_astro 资源必须真实存在。
+ * inlineStylesheets 会把 CSS 内联进 <style> 并删掉产物文件；此时只要有代码在运行时动态 import
+ * 这些 CSS，浏览器就拿 404 → 整个动态 import 链 reject → 功能静默失效（正文灯箱曾因此点不开图）。
+ * 把「引用了就必须在」卡在构建期，这类失效模式不必等线上才发现。
+ */
+function checkAssetRefs(): void {
+  const refs = new Map<string, string>();
+  for (const file of refCandidateFiles()) {
+    for (const ref of read(join(DIST, file)).match(ASSET_REF) ?? []) {
+      if (!refs.has(ref)) refs.set(ref, file);
+    }
+  }
+
+  const missing = [...refs].filter(([ref]) => !existsSync(join(DIST, ref)));
+  check(
+    "产物引用的 /_astro 资源全部存在",
+    refs.size > 0 && missing.length === 0,
+    missing.length > 0
+      ? missing.map(([ref, from]) => `${ref}（引用于 ${from}）`).join(" / ")
+      : "未扫描到任何引用，断言会退化成空转",
+  );
+}
 
 function main(): void {
   // ① 基础产物
@@ -64,16 +117,7 @@ function main(): void {
   }
 
   // ④ 私密/草稿不得出现在 sitemap / RSS / 公开列表
-  for (const post of hidden) {
-    const sitemap = read(join(DIST, "sitemap-0.xml"));
-    const rss = read(join(DIST, "rss.xml"));
-    check(`sitemap 无 ${post.slug}`, !sitemap.includes(post.slug));
-    check(`RSS 无 ${post.slug}`, !rss.includes(post.slug) && (!post.title || !rss.includes(post.title)));
-    for (const listFile of PUBLIC_LIST_FILES) {
-      const html = read(listFile);
-      check(`${listFile} 无 ${post.slug}`, !html.includes(post.slug) && !html.includes(`/posts/${post.slug}`));
-    }
-  }
+  checkHiddenNotPublished(hidden);
 
   // ⑤ Pagefind 页数 = 公开文章数（总数 - 私密/草稿数）
   const entry = read(join(DIST, "pagefind/pagefind-entry.json"));
@@ -81,6 +125,9 @@ function main(): void {
     const actual = JSON.parse(entry).languages?.["zh-cn"]?.page_count;
     check(`Pagefind 页数 = 公开文章数 (${publicCount})`, actual === publicCount, `实际 ${actual}`);
   }
+
+  // ⑥ 产物引用的资源都存在（灯箱动态 CSS 曾整片 404）
+  checkAssetRefs();
 
   // 输出
   console.log(`\n✅ 通过 ${passes.length} 项`);
