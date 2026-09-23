@@ -79,7 +79,7 @@ cd my-blog && npm install
 # Option 2: use this repo as a template (for blogging; pick Private)
 # https://github.com/lavieio/manga-paper-template/generate
 
-cp .env.example .env          # fill in as needed — see Environment Variables
+cp .env.example .env          # SITE_URL is required — http://localhost:4321 works for local previews
 npm run dev                   # http://localhost:4321
 ```
 
@@ -93,7 +93,7 @@ All commands are run from the project root:
 | :--------------- | :------------------------------------------------------------------- |
 | `npm install` | Install dependencies (also installs the git hooks via husky) |
 | `npm run dev` | Start the local dev server at `localhost:4321` |
-| `npm run build` | Build the static site + generate the Pagefind index into `dist/` |
+| `npm run build` | Build the static site + generate the Pagefind index into `dist/` (fails when SITE_URL is missing or still the example domain) |
 | `npm run preview` | Preview the build locally (search works here) |
 | `npm test` | Unit/integration tests (date hook, crypto round-trip) |
 | `npm run verify` | Assert build outputs: no private leakage, Pagefind page count, in-site links, placeholder SITE_URL (run after build) |
@@ -173,10 +173,18 @@ You can also create the repo first via [**Use this template**](https://github.co
 | :--- | :--- |
 | `PRIVATE_PASSWORD` | Password for private-post encryption (build time; falls back to `manga-paper`, local use only) |
 | `PUBLIC_UNLOCK_TTL_HOURS` | How long an unlock is remembered, in hours (default 1) |
-| `SITE_URL` | Site root URL — the single source of truth for canonical / sitemap / RSS |
+| `SITE_URL` | **Required**: site root URL — the single source of truth for canonical / sitemap / RSS. `npm run build` fails when it is missing, malformed, or still `https://your-domain.com` |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 comments (optional; both required) |
 
 `.env` is gitignored; `.env.example` ships with the repository.
+
+`SITE_URL` is enforced by the build-time gate in `scripts/check-site-url.ts`: missing, malformed, or
+still the example domain makes `npm run build` fail (that is the command deploy platforms run), while
+`astro dev` / `preview` are unaffected. Override ad hoc with `SITE_URL=http://localhost:4321 npm run build`.
+
+> Astro does not load `.env` into configuration files (see the official docs), so `astro.config.mjs`
+> calls `loadSiteEnv()` itself. That is also the root cause of the old bug where a configured
+> `SITE_URL` still produced `your-domain.com` in canonical / sitemap / RSS.
 
 ## 📝 Comments (optional)
 
