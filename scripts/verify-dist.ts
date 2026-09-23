@@ -59,12 +59,19 @@ function checkHiddenNotPublished(hidden: HiddenPost[]): void {
  */
 const ASSET_REF = /_astro\/[A-Za-z0-9._-]+\.(?:js|css)/g;
 
-/** 可能带资源引用的产物：页面 + 打包脚本 */
-function refCandidateFiles(): string[] {
+/** 站内链接（根相对路径）：外链 / 锚点 / mailto 都不是以 / 开头，天然被排除 */
+const INTERNAL_HREF = /href="(\/[^"]*)"/g;
+
+/** dist 下的全部文件，统一用 / 分隔，方便与产物里的引用文本直接比对 */
+function outputFiles(): string[] {
   return readdirSync(DIST, { recursive: true })
     .map(String)
-    .map((p) => p.replace(/\\/g, "/"))
-    .filter((p) => p.endsWith(".html") || p.startsWith("_astro/"));
+    .map((p) => p.replace(/\\/g, "/"));
+}
+
+/** 可能带资源引用的产物：页面 + 打包脚本 */
+function refCandidateFiles(): string[] {
+  return outputFiles().filter((p) => p.endsWith(".html") || p.startsWith("_astro/"));
 }
 
 /**
@@ -88,6 +95,41 @@ function checkAssetRefs(): void {
     missing.length > 0
       ? missing.map(([ref, from]) => `${ref}（引用于 ${from}）`).join(" / ")
       : "未扫描到任何引用，断言会退化成空转",
+  );
+}
+
+/**
+ * ⑦ 站内链接必须可解析。
+ * 主导航曾长期挂着一个 /about：页面从来没实现，于是每个页面都能点到 404。
+ * 构建期把「链到哪都得有落点」卡住，别再靠人工点。
+ */
+function checkInternalLinks(): void {
+  const hrefs = new Map<string, string>();
+  for (const file of outputFiles().filter((p) => p.endsWith(".html"))) {
+    for (const [, href] of read(join(DIST, file)).matchAll(INTERNAL_HREF)) {
+      const clean = href.split(/[#?]/)[0];
+      if (!hrefs.has(clean)) hrefs.set(clean, file);
+    }
+  }
+
+  const dead = [...hrefs].filter(([href]) => !resolvesInDist(href));
+  check(
+    "站内链接全部可解析",
+    hrefs.size > 0 && dead.length === 0,
+    dead.length > 0
+      ? dead.map(([href, from]) => `${href}（引用于 ${from}）`).join(" / ")
+      : "未扫描到任何站内链接，断言会退化成空转",
+  );
+}
+
+/** href 在 dist 里有没有落点：文件本身、目录页 index.html、或同名 .html */
+function resolvesInDist(href: string): boolean {
+  const rel = decodeURI(href).replace(/^\/+|\/+$/g, "");
+  if (!rel) return existsSync(join(DIST, "index.html"));
+  return (
+    existsSync(join(DIST, rel)) ||
+    existsSync(join(DIST, rel, "index.html")) ||
+    existsSync(join(DIST, `${rel}.html`))
   );
 }
 
@@ -132,6 +174,9 @@ function main(): void {
 
   // ⑥ 产物引用的资源都存在（灯箱动态 CSS 曾整片 404）
   checkAssetRefs();
+
+  // ⑦ 站内链接都有落点（主导航曾挂着一个 404 的 /about）
+  checkInternalLinks();
 
   // 输出
   console.log(`\n✅ 通过 ${passes.length} 项`);
