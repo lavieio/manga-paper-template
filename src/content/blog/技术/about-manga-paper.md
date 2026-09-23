@@ -24,7 +24,7 @@ MangaPaper 是一个**漫画稿纸风格**的博客模板。
 | 归档 / 标签 / 分类 | 时间轴归档、标签云、分类页全部静态生成 |
 | 评论 | remark42（可选，未配置则整块不渲染） |
 | 日期自动化 | git 钩子注入 `date`、刷新 `updated`，支持 `[skip-updated]` |
-| 构建产物断言 | `npm run verify` 校验「私密零泄漏、索引页数、关键产物」 |
+| 构建产物断言 | 本地校验脚本（不进仓）查「私密零泄漏、索引页数、关键产物」 |
 
 ## 技术栈
 
@@ -55,16 +55,14 @@ src/
 
 ```bash
 npm install
-cp .env.example .env     # 按需填写
+cp .env.example .env     # 必填 SITE_URL（本地预览可填 http://localhost:4321）
 npm run dev              # http://localhost:4321
 ```
 
 | 命令 | 作用 |
 | --- | --- |
-| `npm run build` | 构建静态站 + 生成搜索索引 → `dist/` |
+| `npm run build` | 构建静态站 + 生成搜索索引 → `dist/`（SITE_URL 缺失或仍是示例域名会直接失败） |
 | `npm run preview` | 预览构建产物（搜索在此可用） |
-| `npm test` | 单元/集成测试（日期钩子、加密模块） |
-| `npm run verify` | 产物断言：私密零泄漏、索引页数、关键产物 |
 
 ## 写一篇文章
 
