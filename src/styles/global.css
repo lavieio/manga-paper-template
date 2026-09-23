@@ -2,6 +2,10 @@
    浅色值与 demos/comic/base.css 定稿一致；暗色只改变量值（plan §4.2）。 */
 
 :root {
+  /* 声明 color-scheme：滚动条、表单控件、自动填充底色、原生控件默认焦点环都跟着主题走。
+     没有它的时候暗色页面上是一套白色滚动条与亮色表单控件。
+     （无 JS 时没有 data-theme，按亮色渲染，与主题脚本的兜底一致） */
+  color-scheme: light;
   /* 底 */
   --paper: #f7f2e7;
   --dot: rgba(41, 38, 31, 0.1);
@@ -38,6 +42,7 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --paper: #1a1814;
   --dot: rgba(240, 232, 214, 0.07);
   --ink: #efe7d6;
