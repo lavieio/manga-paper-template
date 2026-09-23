@@ -30,6 +30,8 @@ const {
 } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+// RSS auto-discovery（plan §12）：阅读器 / 浏览器扩展靠这条声明自动发现订阅地址
+const rssFeed = new URL("rss.xml", Astro.site);
 
 // 字体 CDN：只加载站点实际用到的字重（正文 400 / 引用斜体 400i / 贴纸 600 / 标题 700）。
 // 非阻塞加载：先 preconnect 建连，再 preload + onload 切 rel（配合 font-display: swap
@@ -61,6 +63,7 @@ const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
       )
     }
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title={site.name} href={rssFeed} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href={FONT_ORIGIN} crossorigin />
     <link rel="dns-prefetch" href={FONT_ORIGIN} />
