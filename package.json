@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build && pagefind --site dist",
+    "build": "node scripts/check-site-url.ts && astro build && pagefind --site dist",
     "preview": "astro preview",
     "astro": "astro",
     "test": "node --test scripts/*.test.ts src/utils/*.test.ts",
