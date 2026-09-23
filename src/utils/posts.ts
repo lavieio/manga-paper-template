@@ -113,3 +113,18 @@ export async function getPrivatePosts(): Promise<DatedPost[]> {
 export function toUrlSegment(value: string): string {
   return encodeURIComponent(value);
 }
+
+export interface SiteStats {
+  posts: number;
+  categories: number;
+  tags: number;
+}
+
+/** 全站统计（首页统计条与关于页共用）：文章 / 分类 / 标签数 */
+export function siteStats(posts: DatedPost[]): SiteStats {
+  return {
+    posts: posts.length,
+    categories: new Set(posts.map(getCategory)).size,
+    tags: new Set(posts.flatMap((post) => post.data.tags)).size,
+  };
+}

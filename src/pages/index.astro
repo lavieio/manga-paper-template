@@ -2,18 +2,14 @@
 import Base from "../layouts/Base.astro";
 import PostCard from "../components/PostCard.astro";
 import FeaturedStack from "../components/FeaturedStack.astro";
-import { getPublishedPosts, getCategory } from "../utils/posts";
+import { getPublishedPosts, siteStats } from "../utils/posts";
 
 const RECENT_COUNT = 3;
 
 const posts = await getPublishedPosts();
 const featured = posts.filter((p) => p.data.featured);
 const recent = posts.filter((p) => !p.data.featured).slice(0, RECENT_COUNT);
-const stats = {
-  posts: posts.length,
-  categories: new Set(posts.map(getCategory)).size,
-  tags: new Set(posts.flatMap((p) => p.data.tags)).size,
-};
+const stats = siteStats(posts);
 ---
 
 <Base>
