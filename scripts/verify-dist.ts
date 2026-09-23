@@ -33,6 +33,12 @@ const PUBLIC_LIST_FILES = [
 
 type HiddenPost = ReturnType<typeof collectHiddenPosts>[number];
 
+/** ① 关键产物存在 */
+function checkArtifacts(): void {
+  check("dist/index.html 存在", existsSync(join(DIST, "index.html")));
+  check("dist/404.html 存在", existsSync(join(DIST, "404.html")));
+}
+
 /** ⑤ Pagefind 页数 = 公开文章数（总数 - 私密/草稿数） */
 function checkPagefindCount(publicCount: number): void {
   const entry = read(join(DIST, "pagefind/pagefind-entry.json"));
@@ -152,10 +158,30 @@ function checkSiteUrl(): void {
   );
 }
 
+/**
+ * ⑨ 每个页面都要有且只有一个 h1。
+ * 首页曾整页没有 h1（axe 报 page-has-heading-one）；私密文章的正文是密文、标题按设计不进明文，
+ * 那几页用通用的 sr-only「私密文章」顶上，所以这里不再有豁免。
+ */
+function checkHeadings(): void {
+  const pages = outputFiles().filter((page) => page.endsWith(".html"));
+  const problems: string[] = [];
+
+  for (const page of pages) {
+    const count = (read(join(DIST, page)).match(/<h1[\s>]/g) ?? []).length;
+    if (count !== 1) problems.push(`${page}（h1 × ${count}）`);
+  }
+
+  check(
+    "每个页面恰好一个 h1",
+    pages.length > 0 && problems.length === 0,
+    problems.length > 0 ? problems.slice(0, 5).join(" / ") : "没扫到任何页面，断言会退化成空转",
+  );
+}
+
 function main(): void {
   // ① 基础产物
-  check("dist/index.html 存在", existsSync(join(DIST, "index.html")));
-  check("dist/404.html 存在", existsSync(join(DIST, "404.html")));
+  checkArtifacts();
 
   const hidden = collectHiddenPosts();
   const privates = hidden.filter((p) => p.isPrivate);
@@ -200,6 +226,9 @@ function main(): void {
 
   // ⑧ 产物里没有占位域名（canonical / sitemap / RSS 全靠 SITE_URL）
   checkSiteUrl();
+
+  // ⑨ 每个页面恰好一个 h1（首页曾整页没有）
+  checkHeadings();
 
   // 输出
   console.log(`\n✅ 通过 ${passes.length} 项`);

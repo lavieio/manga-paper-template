@@ -61,6 +61,9 @@ if (post.data.private) {
   {
     privatePayload ? (
       <>
+        {/* 正文是密文、标题按设计不进明文（verify 有「私密文章零明文」断言），
+            所以这里的 h1 只能是通用标签——不能写 post.data.title */}
+        <h1 class="sr-only">私密文章</h1>
         <article class="prose" data-private-article data-pagefind-ignore hidden />
         <PrivateUnlock payload={privatePayload} />
         <TableOfContents headings={[]} defer />
