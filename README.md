@@ -35,6 +35,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   └── favicon.svg             # 朱砂印章
 ├── scripts/
 │   ├── frontmatter-dates.ts    # git 钩子：date / updated 自动注入
+│   ├── check-site-url.ts       # 构建期闸门：SITE_URL 缺失/非法/占位就拒绝构建
 │   ├── verify-dist.ts          # 构建产物断言（npm run verify）
 │   ├── smoke-dist.ts           # 浏览器冒烟：灯箱能开、窄屏不裁切（npm run smoke）
 │   └── browser.ts              # 冒烟用的零依赖 CDP 客户端 + 静态服务
@@ -95,9 +96,10 @@ npm run dev                   # http://localhost:4321
 | `npm run dev` | 本地开发服务器 `localhost:4321` |
 | `npm run build` | 构建静态站 + 生成 Pagefind 索引 → `dist/`（SITE_URL 缺失或仍是示例域名会直接失败） |
 | `npm run preview` | 预览构建产物（搜索在此可用） |
-| `npm test` | 单元/集成测试（日期钩子、加密模块往返） |
+| `npm test` | 单元测试（`*.test.ts` 与被测代码同目录） |
 | `npm run verify` | 产物断言：私密零泄漏、Pagefind 页数、站内链接、SITE_URL 占位域名（构建后运行） |
 | `npm run smoke` | 浏览器冒烟：正文图片能开灯箱、窄屏不裁切（需本机 Chrome，或指定 `CHROME_PATH`；构建后运行） |
+| `npm run check` | 一条命令跑完全部检查：构建 → 单测 → 产物断言 → 浏览器冒烟（CI / 发布前用） |
 | `npm run astro ...` | Astro CLI（`astro add` 等） |
 
 ## 📖 写文章
