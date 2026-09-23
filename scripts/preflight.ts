@@ -14,7 +14,8 @@
  *
  * 用法：由 npm run build 自动调用，不需要手动跑。
  */
-import { assertDeployableSiteUrl, loadSiteEnv } from "../src/utils/site-url.ts";
+import { loadEnvFiles } from "../src/utils/load-env.ts";
+import { assertDeployableSiteUrl } from "../src/utils/site-url.ts";
 
 /** 检查失败：打印人看得懂的消息并中止构建 */
 function fail(err: unknown): never {
@@ -23,7 +24,7 @@ function fail(err: unknown): never {
 }
 
 function main(): void {
-  loadSiteEnv();
+  loadEnvFiles();
 
   try {
     console.log(`[site] SITE_URL = ${assertDeployableSiteUrl(process.env.SITE_URL)}`);

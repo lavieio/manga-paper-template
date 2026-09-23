@@ -4,12 +4,13 @@ import sitemap from "@astrojs/sitemap";
 import rehypeImageSize from "./src/plugins/rehype-image-size.ts";
 import rehypeCodeCopy from "./src/plugins/rehype-code-copy.ts";
 import { collectHiddenSlugs } from "./src/plugins/private-slugs.ts";
-import { loadSiteEnv, siteUrlOrPlaceholder } from "./src/utils/site-url.ts";
+import { loadEnvFiles } from "./src/utils/load-env.ts";
+import { siteUrlOrPlaceholder } from "./src/utils/site-url.ts";
 
 // Astro 文档：.env files are not loaded inside configuration files。
 // 不先自己加载一遍，下面 process.env.SITE_URL 就永远读不到 .env 里的值，
 // site 会静静落回占位域名（canonical / sitemap / RSS 全跟着错）。
-loadSiteEnv();
+loadEnvFiles();
 
 // sitemap 排除项：私密/草稿文章、noindex 的 /private
 const hiddenSlugs = collectHiddenSlugs();
