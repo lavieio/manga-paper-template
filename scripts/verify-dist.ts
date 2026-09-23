@@ -62,6 +62,9 @@ const ASSET_REF = /_astro\/[A-Za-z0-9._-]+\.(?:js|css)/g;
 /** 站内链接（根相对路径）：外链 / 锚点 / mailto 都不是以 / 开头，天然被排除 */
 const INTERNAL_HREF = /href="(\/[^"]*)"/g;
 
+/** astro.config.mjs 的兑底域名：产物里还留着它就等于没配 SITE_URL */
+const PLACEHOLDER_HOST = "your-domain.com";
+
 /** dist 下的全部文件，统一用 / 分隔，方便与产物里的引用文本直接比对 */
 function outputFiles(): string[] {
   return readdirSync(DIST, { recursive: true })
@@ -133,6 +136,24 @@ function resolvesInDist(href: string): boolean {
   );
 }
 
+/**
+ * ⑧ 产物不得带占位域名。
+ * canonical / sitemap / RSS 全部由 SITE_URL 驱动，忘了改就会把权重指向一个不存在的站，
+ * 而这是不可逆的 SEO 伤害——宁可让 verify 红着提醒，也不要静默上线。
+ */
+function checkSiteUrl(): void {
+  const offenders = outputFiles()
+    .filter((p) => p.endsWith(".html") || p.endsWith(".xml"))
+    .filter((p) => read(join(DIST, p)).includes(PLACEHOLDER_HOST));
+  check(
+    `SITE_URL 已配成真域名（产物无 ${PLACEHOLDER_HOST}）`,
+    offenders.length === 0,
+    offenders.length > 0
+      ? `${offenders.length} 个产物含占位域名（如 ${offenders[0]}）：把 .env 里的 SITE_URL 改成真实域名后重新构建`
+      : "",
+  );
+}
+
 function main(): void {
   // ① 基础产物
   check("dist/index.html 存在", existsSync(join(DIST, "index.html")));
@@ -177,6 +198,9 @@ function main(): void {
 
   // ⑦ 站内链接都有落点（主导航曾挂着一个 404 的 /about）
   checkInternalLinks();
+
+  // ⑧ 产物里没有占位域名（canonical / sitemap / RSS 全靠 SITE_URL）
+  checkSiteUrl();
 
   // 输出
   console.log(`\n✅ 通过 ${passes.length} 项`);
