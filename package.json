@@ -10,7 +10,8 @@
     "astro": "astro",
     "test": "node --test scripts/*.test.ts src/utils/*.test.ts",
     "prepare": "husky",
-    "verify": "node scripts/verify-dist.ts"
+    "verify": "node scripts/verify-dist.ts",
+    "smoke": "node scripts/smoke-dist.ts"
   },
   "engines": {
     "node": ">=22 <25"
