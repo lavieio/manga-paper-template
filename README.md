@@ -40,12 +40,12 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # 文章：一级子目录名 = 分类
 │   ├── layouts/Base.astro      # 布局：点阵稿纸底、主题切换、页头页脚
-│   ├── pages/                  # index / posts / archive / tags / category / search / private / rss
+│   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss
 │   ├── plugins/                # rehype 图片尺寸注入、内容扫描
 │   ├── scripts/                # 灯箱、TOC、私密解锁与密钥缓存（客户端）
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
 │   ├── utils/                  # 内容管线、加密、格式与阅读时长
-│   ├── config.ts               # 站名 / 作者 / 页脚仓库链接 / remark42 配置（唯一站点入口）
+│   ├── config.ts               # 站名 / 作者 / 关于页文案与联系方式 / 页脚仓库链接 / remark42（唯一站点入口）
 │   └── content.config.ts       # 内容 schema（zod）
 └── astro.config.mjs
 ```

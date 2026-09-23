@@ -40,12 +40,12 @@ light/dark themes. Fully static: no backend, no client framework.
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # posts: first-level directory name = category
 │   ├── layouts/Base.astro      # dotted paper background, theme toggle, header & footer
-│   ├── pages/                  # index / posts / archive / tags / category / search / private / rss
+│   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss
 │   ├── plugins/                # rehype image sizing, content scanning
 │   ├── scripts/                # lightbox, TOC, private unlock & key cache (client-side)
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
 │   ├── utils/                  # content pipeline, crypto, formatting, reading time
-│   ├── config.ts               # site name / author / remark42 (single source of truth)
+│   ├── config.ts               # site name / author / about-page copy & contacts / remark42 (single source of truth)
 │   └── content.config.ts       # content schema (zod)
 └── astro.config.mjs
 ```
