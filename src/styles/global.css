@@ -124,6 +124,15 @@ a {
   text-decoration: none;
 }
 
+/* 品牌化焦点环（WCAG 2.4.7 可见焦点 + 1.4.11 非文本对比 ≥3:1）。
+   之前完全靠 Chromium 的双色环兜底：形状与颜色都不在主题体系里。
+   颜色用 --red-ink 而非 --red——暗色纸上的 #b5342e 只有 2.9:1（见 token 注释），
+   亮色下 --red-ink 就等于 --red，与设计定稿的朱砂一致。 */
+:focus-visible {
+  outline: 3px solid var(--red-ink);
+  outline-offset: 2px;
+}
+
 html,
 body {
   /* 精选纸片「甩出」时会横向探出版心：在根节点裁掉横向溢出，
