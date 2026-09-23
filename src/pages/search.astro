@@ -157,6 +157,8 @@ import Base from "../layouts/Base.astro";
   }
   .search-box input {
     flex: 1;
+    /* 同 .seal-box：不清 min-width 会顶出右侧 .hint，溢出部分被裁掉 */
+    min-width: 0;
     border: none;
     outline: none;
     background: transparent;
