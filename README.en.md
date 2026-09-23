@@ -17,6 +17,8 @@ light/dark themes. Fully static: no backend, no client framework.
 - [x] Paper × comic design language, monospace everywhere
 - [x] **Private posts**: AES-256-GCM encrypted at build time; only ciphertext ships; `/private` gated index
 - [x] Table of contents (sticky right rail, scroll highlighting with vermilion indicator)
+- [x] Copy-to-clipboard on code blocks, image lightbox ([PhotoSwipe](https://photoswipe.com/), loaded on first click)
+- [x] Build-time image sizing (local files and remote image headers) — no layout shift
 - [x] Homepage Featured paper-stack carousel
 - [x] static search ([Pagefind](https://pagefind.app/), CJK-friendly)
 - [x] Archive timeline / tag cloud / category pages
@@ -35,9 +37,7 @@ light/dark themes. Fully static: no backend, no client framework.
 │   └── favicon.svg             # vermilion seal
 ├── scripts/
 │   ├── frontmatter-dates.ts    # git hook: inject date / refresh updated
-│   ├── verify-dist.ts          # build-output assertions (npm run verify)
-│   ├── smoke-dist.ts           # browser smoke: lightbox opens, narrow screens unclipped (npm run smoke)
-│   └── browser.ts              # dependency-free CDP client + static server for the smoke run
+│   └── preflight.ts            # required checks before a build (currently SITE_URL)
 ├── src/
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # posts: first-level directory name = category
@@ -79,7 +79,7 @@ cd my-blog && npm install
 # Option 2: use this repo as a template (for blogging; pick Private)
 # https://github.com/lavieio/manga-paper-template/generate
 
-cp .env.example .env          # fill in as needed — see Environment Variables
+cp .env.example .env          # SITE_URL is required — http://localhost:4321 works for local previews
 npm run dev                   # http://localhost:4321
 ```
 
@@ -93,11 +93,8 @@ All commands are run from the project root:
 | :--------------- | :------------------------------------------------------------------- |
 | `npm install` | Install dependencies (also installs the git hooks via husky) |
 | `npm run dev` | Start the local dev server at `localhost:4321` |
-| `npm run build` | Build the static site + generate the Pagefind index into `dist/` |
+| `npm run build` | Build the static site + generate the Pagefind index into `dist/` (fails when SITE_URL is missing or still the example domain) |
 | `npm run preview` | Preview the build locally (search works here) |
-| `npm test` | Unit/integration tests (date hook, crypto round-trip) |
-| `npm run verify` | Assert build outputs: no private leakage, Pagefind page count, in-site links, placeholder SITE_URL (run after build) |
-| `npm run smoke` | Browser smoke: article images open the lightbox, nothing is clipped on narrow screens (needs a local Chrome or `CHROME_PATH`; run after build) |
 | `npm run astro ...` | Astro CLI (e.g. `astro add`) |
 
 ## 📖 Writing Posts
@@ -173,10 +170,19 @@ You can also create the repo first via [**Use this template**](https://github.co
 | :--- | :--- |
 | `PRIVATE_PASSWORD` | Password for private-post encryption (build time; falls back to `manga-paper`, local use only) |
 | `PUBLIC_UNLOCK_TTL_HOURS` | How long an unlock is remembered, in hours (default 1) |
-| `SITE_URL` | Site root URL — the single source of truth for canonical / sitemap / RSS |
+| `SITE_URL` | **Required**: site root URL — the single source of truth for canonical / sitemap / RSS. `npm run build` fails when it is missing, malformed, or still `https://your-domain.com` |
+| `SKIP_REMOTE_IMAGE_SIZE` | Optional: set to 1 to skip remote image-size probing at build time (offline / blocked hosts) |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 comments (optional; both required) |
 
 `.env` is gitignored; `.env.example` ships with the repository.
+
+`SITE_URL` is enforced by the pre-build check in `scripts/preflight.ts`: missing, malformed, or
+still the example domain makes `npm run build` fail (that is the command deploy platforms run), while
+`astro dev` / `preview` are unaffected. Override ad hoc with `SITE_URL=http://localhost:4321 npm run build`.
+
+> Astro does not load `.env` into configuration files (see the official docs), so `astro.config.mjs`
+> calls `loadSiteEnv()` itself. That is also the root cause of the old bug where a configured
+> `SITE_URL` still produced `your-domain.com` in canonical / sitemap / RSS.
 
 ## 📝 Comments (optional)
 

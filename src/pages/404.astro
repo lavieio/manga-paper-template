@@ -1,0 +1,56 @@
+---
+/**
+ * 404 兜底页（plan §7 路由表之外的路径）。
+ * 纯静态站由托管平台在找不到路由时返回 /404.html（Vercel / Cloudflare Pages / Netlify 都认）。
+ *
+ * 构图照 demos/404.html：一张微微歪着的稿纸（不规整的裁边 + 内侧虚线框 + draft 角标）里嵌一个
+ * 漫画分镜，分镜上是铅笔描边的巨型 404（被朱砂划掉）、一句手写气泡，下面是标题与说明；
+ * 纸外散着两道铅笔痕，纸下是一个回首页的按钮。样式在 src/styles/404.css。
+ *
+ * 与 demo 的两处有意偏离：
+ * 1. demo 的铅笔痕放在 .paper 内部，而 .paper 有 clip-path（会裁掉溢出纸外的后代），
+ *    那两道痕在 demo 里其实画不出来；这里挪到纸外的容器里。
+ * 2. clip-path 会连 box-shadow 一起裁掉，demo 的纸影几乎不可见；这里用同一套撕边多边形
+ *    错位铺一层墨色纸影，既保留手裁纸边、又拿到站点标志性的硬阴影。
+ */
+import "../styles/404.css";
+import Base from "../layouts/Base.astro";
+---
+
+<Base title="404" noindex>
+  <section class="nf" aria-labelledby="nf-title">
+    <div class="nf-stack">
+      {/* 纸外的铅笔痕 */}
+      <span class="nf-mark nf-mark-top" aria-hidden="true"></span>
+      <span class="nf-mark nf-mark-bottom" aria-hidden="true"></span>
+
+      <div class="nf-paper">
+        <span class="nf-draft" aria-hidden="true">draft / 404</span>
+
+        <div class="nf-frame">
+          <span class="nf-label" aria-hidden="true">MANUSCRIPT / 404</span>
+
+          <div class="nf-number-wrap">
+            <p class="nf-number" aria-hidden="true">404<span class="nf-slash"></span></p>
+            <p class="nf-bubble" aria-hidden="true">……？</p>
+          </div>
+
+          <div class="nf-message">
+            <h1 class="nf-title" id="nf-title">这一页走丢了</h1>
+            <p class="nf-desc">
+              这一格没有找到。<br />
+              可能被擦掉了，也可能还没画完。
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nf-actions">
+      <a class="nf-btn" href="/">
+        <span class="nf-arrow" aria-hidden="true">←</span>
+        <span>回到首页</span>
+      </a>
+    </div>
+  </section>
+</Base>

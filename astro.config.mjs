@@ -4,10 +4,13 @@ import sitemap from "@astrojs/sitemap";
 import rehypeImageSize from "./src/plugins/rehype-image-size.ts";
 import rehypeCodeCopy from "./src/plugins/rehype-code-copy.ts";
 import { collectHiddenSlugs } from "./src/plugins/private-slugs.ts";
+import { loadEnvFiles } from "./src/utils/load-env.ts";
+import { siteUrlOrPlaceholder } from "./src/utils/site-url.ts";
 
-// 站点根 URL 唯一真源是 env SITE_URL；占位值仅兜底，上线前必须配置。
-// 驱动 canonical URL / sitemap / RSS 链接。
-const SITE = process.env.SITE_URL ?? "https://your-domain.com";
+// Astro 文档：.env files are not loaded inside configuration files。
+// 不先自己加载一遍，下面 process.env.SITE_URL 就永远读不到 .env 里的值，
+// site 会静静落回占位域名（canonical / sitemap / RSS 全跟着错）。
+loadEnvFiles();
 
 // sitemap 排除项：私密/草稿文章、noindex 的 /private
 const hiddenSlugs = collectHiddenSlugs();
@@ -15,7 +18,10 @@ const SITEMAP_EXCLUDED = ["/private", "/search"];
 
 export default defineConfig({
   output: "static",
-  site: SITE,
+  // 唯一真源 env SITE_URL（canonical / sitemap / RSS）。
+  // 没配就用占位域名兜底（dev / preview 照常跑）；
+  // 拒绝占位域名的构建前检查在 scripts/preflight.ts，挂在 npm run build 链上。
+  site: siteUrlOrPlaceholder(process.env.SITE_URL),
   integrations: [
     sitemap({
       filter: (page) => {
@@ -41,7 +47,10 @@ export default defineConfig({
     // Astro 7 默认 Sätteri；rehype 插件需声明 unified 处理器（官方回退路径）
     processor: unified({ rehypePlugins: [rehypeImageSize, rehypeCodeCopy] }),
     shikiConfig: {
-      themes: { light: "github-light", dark: "github-dark-dimmed" },
+      // 暗色用 github-dark-default：dimmed 的注释色 #768390 在 #22272e 上只有 3.88:1，
+      // 低于 AA（老版 github-dark 更差，3.05）；default 的注释是 6.15:1。
+      // 代价是代码块底色由 #22272e 换成 #0d1117、配色整体更亮一些。
+      themes: { light: "github-light", dark: "github-dark-default" },
     },
   },
 });

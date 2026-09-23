@@ -1,0 +1,299 @@
+/**
+ * 404 页样式（构图照 demos/404.html，配色与线宽改用站点 tokens）。
+ * 类名一律带 .nf- 前缀：这是全局样式表（.astro 的 <style> 才有作用域），
+ * 而 .paper / .title / .number 这种名字容易和别的页面撞车。
+ */
+
+.nf {
+  padding: 64px 0 80px;
+  text-align: center;
+}
+
+/* ── 稿纸：不规整裁边 + 错位的墨色纸影 ─────────────────── */
+
+.nf-stack {
+  position: relative;
+  /* 同一套撕边给纸与纸影共用 */
+  --nf-tear: polygon(0.5% 1%, 99.2% 0, 100% 98.5%, 0 100%);
+  --nf-tilt: -0.35deg;
+  width: min(100%, 610px);
+  margin: 0 auto 38px;
+}
+/* 硬阴影：同一块纸错位铺在下面（clip-path 会连 box-shadow 一起裁掉，只能这样画） */
+.nf-stack::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ink);
+  clip-path: var(--nf-tear);
+  transform: translate(7px, 9px) rotate(var(--nf-tilt));
+}
+
+.nf-paper {
+  position: relative;
+  padding: 62px 46px 54px;
+  border: 3px solid var(--ink);
+  background: var(--card);
+  clip-path: var(--nf-tear);
+  transform: rotate(var(--nf-tilt));
+}
+/* 内侧虚线框：漫画原稿的版心线 */
+.nf-paper::before {
+  content: "";
+  position: absolute;
+  inset: 23px;
+  border: 1px dashed var(--ink-soft);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.nf-draft {
+  position: absolute;
+  top: 13px;
+  right: 25px;
+  color: var(--ink-soft);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  transform: rotate(2deg);
+}
+
+/* ── 纸外的铅笔痕 ────────────────────────────────────── */
+
+.nf-mark {
+  position: absolute;
+  color: var(--ink-soft);
+  opacity: 0.45;
+  pointer-events: none;
+}
+.nf-mark-top {
+  top: 42px;
+  left: -25px;
+  width: 78px;
+  height: 30px;
+  transform: rotate(-17deg);
+}
+.nf-mark-bottom {
+  right: -26px;
+  bottom: 31px;
+  width: 70px;
+  height: 50px;
+  transform: rotate(15deg);
+}
+.nf-mark::before,
+.nf-mark::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: currentColor;
+}
+.nf-mark-top::before { top: 10px; }
+.nf-mark-top::after {
+  top: 17px;
+  transform: rotate(3deg);
+}
+.nf-mark-bottom::before,
+.nf-mark-bottom::after { top: 23px; }
+.nf-mark-bottom::before { transform: rotate(18deg); }
+.nf-mark-bottom::after { transform: rotate(-18deg); }
+
+/* ── 漫画分镜 ────────────────────────────────────────── */
+
+.nf-frame {
+  position: relative;
+  width: min(100%, 440px);
+  margin: 0 auto;
+  padding: 30px 20px 28px;
+  border: 2px solid var(--ink);
+  /* 斜向网纹：用站点自己的点线色，明暗都跟着走 */
+  background-image: repeating-linear-gradient(135deg, transparent 0 21px, var(--dot) 21px 22px);
+  box-shadow: var(--shadow);
+  transform: rotate(0.55deg);
+}
+
+.nf-label {
+  position: absolute;
+  top: -10px;
+  left: 13px;
+  padding: 2px 8px;
+  border: 2px solid var(--ink);
+  background: var(--card);
+  color: var(--ink-soft);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  transform: rotate(-3deg);
+}
+
+/* ── 巨型 404：铅笔描边 + 朱砂划掉 ────────────────────── */
+
+.nf-number-wrap {
+  position: relative;
+  display: inline-block;
+}
+.nf-number {
+  position: relative;
+  display: inline-block;
+  margin: 0;
+  font-size: clamp(108px, 19vw, 168px);
+  line-height: 0.82;
+  font-weight: 700;
+  letter-spacing: -0.12em;
+  color: var(--ink);
+  user-select: none;
+  transform: rotate(-2deg);
+}
+/* 第二层铅笔轮廓 */
+.nf-number::after {
+  content: "404";
+  position: absolute;
+  top: 5px;
+  left: 6px;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ink-soft);
+  transform: rotate(1.2deg);
+  pointer-events: none;
+}
+/* 划掉：朱砂一道 */
+.nf-slash {
+  position: absolute;
+  top: 51%;
+  left: -18px;
+  right: -18px;
+  height: 3px;
+  background: var(--red);
+  transform-origin: left center;
+  transform: rotate(-7deg) scaleX(0);
+  animation: nf-draw-slash 0.75s 0.35s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+}
+@keyframes nf-draw-slash {
+  100% {
+    transform: rotate(-7deg) scaleX(1);
+  }
+}
+
+/* 手写气泡 */
+.nf-bubble {
+  position: absolute;
+  top: 15px;
+  right: 5px;
+  margin: 0;
+  padding: 7px 12px;
+  border: 2px solid var(--ink);
+  border-radius: 48% 44% 47% 42%;
+  background: var(--card);
+  color: var(--ink-soft);
+  font-size: 11px;
+  transform: rotate(5deg);
+}
+.nf-bubble::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 13px;
+  width: 9px;
+  height: 9px;
+  border-left: 2px solid var(--ink);
+  border-bottom: 2px solid var(--ink);
+  background: var(--card);
+  transform: rotate(-25deg) skew(10deg);
+}
+
+/* ── 文案 ────────────────────────────────────────────── */
+
+.nf-message { margin-top: 32px; }
+.nf-title {
+  margin: 0 0 9px;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -0.04em;
+}
+.nf-desc {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 2;
+}
+
+/* ── 回到首页 ────────────────────────────────────────── */
+
+.nf-actions {
+  display: flex;
+  justify-content: center;
+}
+.nf-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 3px solid var(--ink);
+  box-shadow: var(--shadow);
+  background: var(--yellow);
+  color: var(--on-light-fill);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.nf-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: var(--shadow-lg);
+}
+.nf-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.nf-arrow {
+  transition: transform 0.15s ease;
+}
+.nf-btn:hover .nf-arrow {
+  transform: translateX(-3px);
+}
+
+@media (max-width: 640px) {
+  .nf {
+    padding: 44px 0 68px;
+  }
+  .nf-stack {
+    margin-bottom: 32px;
+  }
+  .nf-paper {
+    padding: 48px 22px 43px;
+  }
+  .nf-paper::before {
+    inset: 15px;
+  }
+  .nf-draft {
+    top: 9px;
+    right: 17px;
+  }
+  .nf-mark-top {
+    top: 34px;
+    left: -14px;
+  }
+  .nf-mark-bottom {
+    right: -14px;
+  }
+  .nf-frame {
+    padding: 27px 12px 24px;
+  }
+  .nf-number {
+    font-size: clamp(88px, 29vw, 130px);
+  }
+  .nf-bubble {
+    top: 7px;
+    right: 3px;
+  }
+  .nf-title {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 380px) {
+  .nf-paper {
+    padding-left: 17px;
+    padding-right: 17px;
+  }
+}

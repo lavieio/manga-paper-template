@@ -17,6 +17,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 - [x] **私密文章**：构建期 AES-256-GCM 加密，页面只存密文；`/private` 加密入口页
 - [x] 文章目录（右侧 sticky TOC，滚动高亮 + 朱砂指示条）
 - [x] 代码块一键复制（构建期注入按钮 + 事件委托；公开与私密文章都有）
+- [x] 图片灯箱（[PhotoSwipe](https://photoswipe.com/)，点击才加载）+ 构建期读图尺寸（站内读文件、外链读图头），无布局抖动
 - [x] 首页 Featured 纸片堆轮播
 - [x] static search（[Pagefind](https://pagefind.app/)，支持中文）
 - [x] 归档时间轴 / 标签云 / 分类页
@@ -35,15 +36,13 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   └── favicon.svg             # 朱砂印章
 ├── scripts/
 │   ├── frontmatter-dates.ts    # git 钩子：date / updated 自动注入
-│   ├── verify-dist.ts          # 构建产物断言（npm run verify）
-│   ├── smoke-dist.ts           # 浏览器冒烟：灯箱能开、窄屏不裁切（npm run smoke）
-│   └── browser.ts              # 冒烟用的零依赖 CDP 客户端 + 静态服务
+│   └── preflight.ts            # 构建前必须通过的检查（目前是 SITE_URL）
 ├── src/
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # 文章：一级子目录名 = 分类
 │   ├── layouts/Base.astro      # 布局：点阵稿纸底、主题切换、页头页脚
 │   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss
-│   ├── plugins/                # rehype 图片尺寸注入、内容扫描
+│   ├── plugins/                # rehype 图片尺寸/懒加载注入、代码复制按钮、私密与草稿扫描
 │   ├── scripts/                # 灯箱、TOC、私密解锁与密钥缓存（客户端）
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
 │   ├── utils/                  # 内容管线、加密、格式与阅读时长
@@ -79,7 +78,7 @@ cd my-blog && npm install
 # 方式二：以本仓为模板创建自己的仓库（写博客用，推荐 Private）
 # GitHub 上打开 https://github.com/lavieio/manga-paper-template/generate 或点 README 的 Use this template
 
-cp .env.example .env          # 按需填写，见「环境变量」
+cp .env.example .env          # 必填 SITE_URL（本地预览可填 http://localhost:4321）
 npm run dev                   # http://localhost:4321
 ```
 
@@ -93,11 +92,8 @@ npm run dev                   # http://localhost:4321
 | :--------------- | :------------------------------------------------------------------- |
 | `npm install` | 安装依赖（会通过 husky 安装 git 钩子） |
 | `npm run dev` | 本地开发服务器 `localhost:4321` |
-| `npm run build` | 构建静态站 + 生成 Pagefind 索引 → `dist/` |
+| `npm run build` | 构建静态站 + 生成 Pagefind 索引 → `dist/`（SITE_URL 缺失或仍是示例域名会直接失败） |
 | `npm run preview` | 预览构建产物（搜索在此可用） |
-| `npm test` | 单元/集成测试（日期钩子、加密模块往返） |
-| `npm run verify` | 产物断言：私密零泄漏、Pagefind 页数、站内链接、SITE_URL 占位域名（构建后运行） |
-| `npm run smoke` | 浏览器冒烟：正文图片能开灯箱、窄屏不裁切（需本机 Chrome，或指定 `CHROME_PATH`；构建后运行） |
 | `npm run astro ...` | Astro CLI（`astro add` 等） |
 
 ## 📖 写文章
@@ -168,10 +164,19 @@ cover: /cover.png       # 可选
 | :--- | :--- |
 | `PRIVATE_PASSWORD` | 私密文章加密密码（构建期；缺省 `manga-paper` 仅本地可用） |
 | `PUBLIC_UNLOCK_TTL_HOURS` | 私密解锁记忆时长（小时），默认 1 |
-| `SITE_URL` | 站点根 URL（canonical / sitemap / RSS 的唯一真源） |
+| `SITE_URL` | **必填**：站点根 URL（canonical / sitemap / RSS 的唯一真源）。缺失、格式非法或仍是 `https://your-domain.com` 时 `npm run build` 直接失败 |
+| `SKIP_REMOTE_IMAGE_SIZE` | 可选：设为 1 则构建期不抓外链图片尺寸（离线 / 外链域名被墙时用） |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 评论（可选，两项配齐才生效） |
 
 `.env` 已在 `.gitignore` 中，`.env.example` 随仓库分发。
+
+`SITE_URL` 由构建前检查 `scripts/preflight.ts` 把关：缺失、非法 URL 或仍是示例域名都会让
+`npm run build` 失败（部署平台跑的正是这条命令），`astro dev` / `preview` 不受影响。
+临时覆盖：`SITE_URL=http://localhost:4321 npm run build`。
+
+> Astro 不会把 `.env` 读进配置文件（官方文档：.env files are not loaded inside configuration files），
+> 所以 `astro.config.mjs` 先用 `loadSiteEnv()` 自己读一遍——这也是以前「.env 里配了域名，
+> 产物 canonical 却还是 your-domain.com」的根因。
 
 ## 📝 评论（可选）
 
