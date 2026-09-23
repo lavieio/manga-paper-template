@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro";
 import PostCard from "../components/PostCard.astro";
 import FeaturedStack from "../components/FeaturedStack.astro";
+import { site } from "../config";
 import { getPublishedPosts, siteStats } from "../utils/posts";
 
 const RECENT_COUNT = 3;
@@ -13,6 +14,10 @@ const stats = siteStats(posts);
 ---
 
 <Base>
+  {/* 首页按设计没有可见标题（demo 也没有），但 h1 得有一个：
+      否则 axe 报 page-has-heading-one，读屏用户也拿不到站点身份 */}
+  <h1 class="sr-only">{site.name} · {site.tagline}</h1>
+
   {/* 精选统一由 FeaturedStack 渲染；单篇时组件内部降级为单张大卡 */}
   {featured.length > 0 && <FeaturedStack posts={featured} />}
 
