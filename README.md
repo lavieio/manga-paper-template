@@ -35,17 +35,19 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   └── favicon.svg             # 朱砂印章
 ├── scripts/
 │   ├── frontmatter-dates.ts    # git 钩子：date / updated 自动注入
-│   └── verify-dist.ts          # 构建产物断言（npm run verify）
+│   ├── verify-dist.ts          # 构建产物断言（npm run verify）
+│   ├── smoke-dist.ts           # 浏览器冒烟：灯箱能开、窄屏不裁切（npm run smoke）
+│   └── browser.ts              # 冒烟用的零依赖 CDP 客户端 + 静态服务
 ├── src/
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # 文章：一级子目录名 = 分类
 │   ├── layouts/Base.astro      # 布局：点阵稿纸底、主题切换、页头页脚
-│   ├── pages/                  # index / posts / archive / tags / category / search / private / rss
+│   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss
 │   ├── plugins/                # rehype 图片尺寸注入、内容扫描
 │   ├── scripts/                # 灯箱、TOC、私密解锁与密钥缓存（客户端）
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
 │   ├── utils/                  # 内容管线、加密、格式与阅读时长
-│   ├── config.ts               # 站名 / 作者 / 页脚仓库链接 / remark42 配置（唯一站点入口）
+│   ├── config.ts               # 站名 / 作者 / 关于页文案与联系方式 / 页脚仓库链接 / remark42（唯一站点入口）
 │   └── content.config.ts       # 内容 schema（zod）
 └── astro.config.mjs
 ```
@@ -94,7 +96,8 @@ npm run dev                   # http://localhost:4321
 | `npm run build` | 构建静态站 + 生成 Pagefind 索引 → `dist/` |
 | `npm run preview` | 预览构建产物（搜索在此可用） |
 | `npm test` | 单元/集成测试（日期钩子、加密模块往返） |
-| `npm run verify` | 产物断言：私密零泄漏、Pagefind 页数、关键产物（构建后运行） |
+| `npm run verify` | 产物断言：私密零泄漏、Pagefind 页数、站内链接、SITE_URL 占位域名（构建后运行） |
+| `npm run smoke` | 浏览器冒烟：正文图片能开灯箱、窄屏不裁切（需本机 Chrome，或指定 `CHROME_PATH`；构建后运行） |
 | `npm run astro ...` | Astro CLI（`astro add` 等） |
 
 ## 📖 写文章

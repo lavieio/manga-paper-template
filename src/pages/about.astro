@@ -1,0 +1,166 @@
+---
+/**
+ * 关于页（视觉基准 demos/comic/about.html）
+ * 文案全部来自 src/config.ts 的 site：换站只改配置，不动页面代码。
+ */
+import Base from "../layouts/Base.astro";
+import { site } from "../config";
+import { getPublishedPosts, siteStats } from "../utils/posts";
+
+const stats = siteStats(await getPublishedPosts());
+/** 作者印章取站点名首字——与页头 logo 的「M」同一个语义 */
+const seal = site.name.slice(0, 1);
+---
+
+<Base title="关于" description={site.bio}>
+  <div class="page-head">
+    <h1>关于</h1>
+  </div>
+
+  <section class="author">
+    <div class="seal-big" aria-hidden="true">{seal}</div>
+    <div>
+      <h2>{site.author}</h2>
+      <p class="who">{site.bio}</p>
+    </div>
+  </section>
+
+  <div class="prose-lite">
+    {site.about.map((paragraph) => <p>{paragraph}</p>)}
+  </div>
+
+  <div class="contacts">
+    {site.email && <a class="btn" href={`mailto:${site.email}`}>Email</a>}
+    {
+      site.repo && (
+        <a class="btn cyan" href={site.repo} target="_blank" rel="noopener noreferrer">
+          GitHub <span aria-hidden="true">↗</span>
+        </a>
+      )
+    }
+    <a class="btn alt" href="/rss.xml">RSS</a>
+  </div>
+
+  <div class="stats" role="group" aria-label="站点统计">
+    <div class="stat"><b>{stats.posts}</b>篇文章</div>
+    <div class="stat"><b>{stats.categories}</b>个分类</div>
+    <div class="stat"><b>{stats.tags}</b>枚标签</div>
+  </div>
+</Base>
+
+<style>
+  .page-head {
+    margin: 8px 0 28px;
+  }
+  .page-head h1 {
+    font-size: 30px;
+    font-weight: 700;
+  }
+
+  .author {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 22px;
+    align-items: center;
+    padding: 26px;
+    border: 3px solid var(--ink);
+    background: var(--card);
+    box-shadow: var(--shadow-lg);
+  }
+  .author .seal-big {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 72px;
+    height: 72px;
+    font-size: 36px;
+    font-weight: 700;
+    background: var(--red);
+    /* 朱砂底上的字：必须用 on-dark-fill，不能用 --card——
+       --card 在暗色主题是深色，落在朱砂上只有 2.5:1 */
+    color: var(--on-dark-fill);
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    transform: rotate(-3deg);
+  }
+  .author h2 {
+    font-size: 20px;
+    font-weight: 700;
+  }
+  .author .who {
+    margin-top: 6px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+
+  @media (max-width: 560px) {
+    .author {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .prose-lite {
+    margin-top: 36px;
+    font-size: 16px;
+    line-height: 1.9;
+  }
+  .prose-lite p {
+    margin: 16px 0;
+  }
+
+  .contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 28px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    border: 3px solid var(--ink);
+    box-shadow: var(--shadow);
+    background: var(--yellow);
+    color: var(--on-light-fill);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease;
+  }
+  .btn.alt {
+    background: var(--pink);
+  }
+  .btn.cyan {
+    background: var(--cyan);
+  }
+  .btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: var(--shadow-lg);
+  }
+  .btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 44px;
+  }
+  .stat {
+    padding: 10px 18px;
+    border: 3px solid var(--ink);
+    background: var(--card);
+    box-shadow: var(--shadow);
+    font-size: 13px;
+  }
+  .stat b {
+    display: block;
+    font-size: 20px;
+    line-height: 1.3;
+  }
+</style>

@@ -35,17 +35,19 @@ light/dark themes. Fully static: no backend, no client framework.
 │   └── favicon.svg             # vermilion seal
 ├── scripts/
 │   ├── frontmatter-dates.ts    # git hook: inject date / refresh updated
-│   └── verify-dist.ts          # build-output assertions (npm run verify)
+│   ├── verify-dist.ts          # build-output assertions (npm run verify)
+│   ├── smoke-dist.ts           # browser smoke: lightbox opens, narrow screens unclipped (npm run smoke)
+│   └── browser.ts              # dependency-free CDP client + static server for the smoke run
 ├── src/
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # posts: first-level directory name = category
 │   ├── layouts/Base.astro      # dotted paper background, theme toggle, header & footer
-│   ├── pages/                  # index / posts / archive / tags / category / search / private / rss
+│   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss
 │   ├── plugins/                # rehype image sizing, content scanning
 │   ├── scripts/                # lightbox, TOC, private unlock & key cache (client-side)
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
 │   ├── utils/                  # content pipeline, crypto, formatting, reading time
-│   ├── config.ts               # site name / author / remark42 (single source of truth)
+│   ├── config.ts               # site name / author / about-page copy & contacts / remark42 (single source of truth)
 │   └── content.config.ts       # content schema (zod)
 └── astro.config.mjs
 ```
@@ -94,7 +96,8 @@ All commands are run from the project root:
 | `npm run build` | Build the static site + generate the Pagefind index into `dist/` |
 | `npm run preview` | Preview the build locally (search works here) |
 | `npm test` | Unit/integration tests (date hook, crypto round-trip) |
-| `npm run verify` | Assert build outputs: no private leakage, Pagefind page count, artifacts (run after build) |
+| `npm run verify` | Assert build outputs: no private leakage, Pagefind page count, in-site links, placeholder SITE_URL (run after build) |
+| `npm run smoke` | Browser smoke: article images open the lightbox, nothing is clipped on narrow screens (needs a local Chrome or `CHROME_PATH`; run after build) |
 | `npm run astro ...` | Astro CLI (e.g. `astro add`) |
 
 ## 📖 Writing Posts

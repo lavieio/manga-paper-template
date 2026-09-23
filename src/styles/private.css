@@ -89,6 +89,9 @@
 }
 .seal-box input {
   flex: 1;
+  /* 不清 min-width：input 的 min-content（默认 size=20，约 300px）会把同一行的按钮顶出
+     .seal-box，再被 html/body 的 overflow-x: clip 切掉——≤412px 时按钮只剩几十像素点不到 */
+  min-width: 0;
   padding: 10px 12px;
   font-family: var(--font-mono);
   font-size: 14px;
@@ -105,6 +108,16 @@
   color: var(--red);
   font-size: 12px;
   margin: 12px 0 0;
+}
+
+/* 窄屏：输入框与按钮并排时输入框只剩一百来像素，改为纵向堆叠、按钮撑满 */
+@media (max-width: 480px) {
+  .seal-box .row {
+    flex-direction: column;
+  }
+  .seal-box .gate-btn {
+    width: 100%;
+  }
 }
 
 /* 首帧前已检测到解锁缓存：整体隐藏占位区，页面呈纸张背景，

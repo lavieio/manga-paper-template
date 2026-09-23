@@ -1,4 +1,6 @@
-/* PhotoSwipe 稿纸风覆盖样式（随灯箱 JS 一起懒加载） */
+/* PhotoSwipe 稿纸风覆盖样式 + 加载失败提示
+   注意：本文件由 lightbox.ts 静态导入，Astro 会随页面 CSS 一起内联——
+   绝不能改回动态 import（内联会删掉产物文件，动态注入的 <link> 必然 404）。 */
 
 .pswp {
   /* 墨色半透明遮罩（不是默认纯黑），让稿纸微透 */
@@ -78,6 +80,19 @@
 
 .pswp__img {
   border-radius: 2px;
+}
+
+/* ── 加载失败提示：贴在图片下方，不静默 ── */
+.lightbox-error {
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  border: 2px solid var(--ink);
+  background: var(--card);
+  box-shadow: var(--shadow);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 @media (prefers-reduced-motion: reduce) {

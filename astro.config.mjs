@@ -32,6 +32,11 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    // 页面级 CSS 未压缩仅 6 KB 上下，默认 'auto' 的 4 KB 阈值不会内联，
+    // 两个 <link rel="stylesheet"> 因此成为渲染阻塞请求；一律内联消掉这两个 RTT。
+    inlineStylesheets: "always",
+  },
   markdown: {
     // Astro 7 默认 Sätteri；rehype 插件需声明 unified 处理器（官方回退路径）
     processor: unified({ rehypePlugins: [rehypeImageSize, rehypeCodeCopy] }),
