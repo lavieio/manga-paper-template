@@ -35,10 +35,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   └── favicon.svg             # 朱砂印章
 ├── scripts/
 │   ├── frontmatter-dates.ts    # git 钩子：date / updated 自动注入
-│   ├── check-site-url.ts       # 构建期闸门：SITE_URL 缺失/非法/占位就拒绝构建
-│   ├── verify-dist.ts          # 构建产物断言（npm run verify）
-│   ├── smoke-dist.ts           # 浏览器冒烟：灯箱能开、窄屏不裁切（npm run smoke）
-│   └── browser.ts              # 冒烟用的零依赖 CDP 客户端 + 静态服务
+│   └── preflight.ts            # 构建前必须通过的检查（目前是 SITE_URL）
 ├── src/
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # 文章：一级子目录名 = 分类
@@ -96,10 +93,6 @@ npm run dev                   # http://localhost:4321
 | `npm run dev` | 本地开发服务器 `localhost:4321` |
 | `npm run build` | 构建静态站 + 生成 Pagefind 索引 → `dist/`（SITE_URL 缺失或仍是示例域名会直接失败） |
 | `npm run preview` | 预览构建产物（搜索在此可用） |
-| `npm test` | 单元测试（`*.test.ts` 与被测代码同目录） |
-| `npm run verify` | 产物断言：私密零泄漏、Pagefind 页数、站内链接、SITE_URL 占位域名（构建后运行） |
-| `npm run smoke` | 浏览器冒烟：正文图片能开灯箱、窄屏不裁切（需本机 Chrome，或指定 `CHROME_PATH`；构建后运行） |
-| `npm run check` | 一条命令跑完全部检查：构建 → 单测 → 产物断言 → 浏览器冒烟（CI / 发布前用） |
 | `npm run astro ...` | Astro CLI（`astro add` 等） |
 
 ## 📖 写文章
@@ -175,7 +168,7 @@ cover: /cover.png       # 可选
 
 `.env` 已在 `.gitignore` 中，`.env.example` 随仓库分发。
 
-`SITE_URL` 由构建期闸门 `scripts/check-site-url.ts` 校验：缺失、非法 URL 或仍是示例域名都会让
+`SITE_URL` 由构建前检查 `scripts/preflight.ts` 把关：缺失、非法 URL 或仍是示例域名都会让
 `npm run build` 失败（部署平台跑的正是这条命令），`astro dev` / `preview` 不受影响。
 临时覆盖：`SITE_URL=http://localhost:4321 npm run build`。
 
