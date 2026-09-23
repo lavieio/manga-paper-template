@@ -35,10 +35,7 @@ light/dark themes. Fully static: no backend, no client framework.
 │   └── favicon.svg             # vermilion seal
 ├── scripts/
 │   ├── frontmatter-dates.ts    # git hook: inject date / refresh updated
-│   ├── check-site-url.ts       # build-time gate: reject a missing/malformed/placeholder SITE_URL
-│   ├── verify-dist.ts          # build-output assertions (npm run verify)
-│   ├── smoke-dist.ts           # browser smoke: lightbox opens, narrow screens unclipped (npm run smoke)
-│   └── browser.ts              # dependency-free CDP client + static server for the smoke run
+│   └── preflight.ts            # required checks before a build (currently SITE_URL)
 ├── src/
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # posts: first-level directory name = category
@@ -96,10 +93,6 @@ All commands are run from the project root:
 | `npm run dev` | Start the local dev server at `localhost:4321` |
 | `npm run build` | Build the static site + generate the Pagefind index into `dist/` (fails when SITE_URL is missing or still the example domain) |
 | `npm run preview` | Preview the build locally (search works here) |
-| `npm test` | Unit tests (`*.test.ts`, colocated with the code under test) |
-| `npm run verify` | Assert build outputs: no private leakage, Pagefind page count, in-site links, placeholder SITE_URL (run after build) |
-| `npm run smoke` | Browser smoke: article images open the lightbox, nothing is clipped on narrow screens (needs a local Chrome or `CHROME_PATH`; run after build) |
-| `npm run check` | Everything at once: build → unit tests → output assertions → browser smoke (for CI / before a release) |
 | `npm run astro ...` | Astro CLI (e.g. `astro add`) |
 
 ## 📖 Writing Posts
@@ -180,7 +173,7 @@ You can also create the repo first via [**Use this template**](https://github.co
 
 `.env` is gitignored; `.env.example` ships with the repository.
 
-`SITE_URL` is enforced by the build-time gate in `scripts/check-site-url.ts`: missing, malformed, or
+`SITE_URL` is enforced by the pre-build check in `scripts/preflight.ts`: missing, malformed, or
 still the example domain makes `npm run build` fail (that is the command deploy platforms run), while
 `astro dev` / `preview` are unaffected. Override ad hoc with `SITE_URL=http://localhost:4321 npm run build`.
 

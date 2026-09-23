@@ -8,7 +8,7 @@
  * 2. `siteUrlOrPlaceholder()`：给 astro.config.mjs 用。有配置就校验格式（Astro 的 canonical
  *    走 `new URL(pathname, site)`，非法值会静默产出坏链接），没配置就退回占位域名，
  *    这样 `astro dev` / `preview` 不会被「还没配域名」挡住。
- * 3. `assertDeployableSiteUrl()`：给构建期闸门 scripts/check-site-url.ts 用。缺失、空值、
+ * 3. `assertDeployableSiteUrl()`：给构建前检查 scripts/preflight.ts 用。缺失、空值、
  *    非法 URL、占位域名一律拒绝；而 `npm run build` 正是 Vercel / Cloudflare Pages 的入口。
  */
 import { join } from "node:path";

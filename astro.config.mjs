@@ -19,7 +19,7 @@ export default defineConfig({
   output: "static",
   // 唯一真源 env SITE_URL（canonical / sitemap / RSS）。
   // 没配就用占位域名兜底（dev / preview 照常跑）；
-  // 拒绝占位域名的构建期闸门在 scripts/check-site-url.ts，挂在 npm run build 链上。
+  // 拒绝占位域名的构建前检查在 scripts/preflight.ts，挂在 npm run build 链上。
   site: siteUrlOrPlaceholder(process.env.SITE_URL),
   integrations: [
     sitemap({
