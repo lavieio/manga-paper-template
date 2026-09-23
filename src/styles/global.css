@@ -2,6 +2,10 @@
    浅色值与 demos/comic/base.css 定稿一致；暗色只改变量值（plan §4.2）。 */
 
 :root {
+  /* 声明 color-scheme：滚动条、表单控件、自动填充底色、原生控件默认焦点环都跟着主题走。
+     没有它的时候暗色页面上是一套白色滚动条与亮色表单控件。
+     （无 JS 时没有 data-theme，按亮色渲染，与主题脚本的兜底一致） */
+  color-scheme: light;
   /* 底 */
   --paper: #f7f2e7;
   --dot: rgba(41, 38, 31, 0.1);
@@ -38,6 +42,7 @@
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --paper: #1a1814;
   --dot: rgba(240, 232, 214, 0.07);
   --ink: #efe7d6;
@@ -117,6 +122,15 @@ body {
 a {
   color: inherit;
   text-decoration: none;
+}
+
+/* 品牌化焦点环（WCAG 2.4.7 可见焦点 + 1.4.11 非文本对比 ≥3:1）。
+   之前完全靠 Chromium 的双色环兜底：形状与颜色都不在主题体系里。
+   颜色用 --red-ink 而非 --red——暗色纸上的 #b5342e 只有 2.9:1（见 token 注释），
+   亮色下 --red-ink 就等于 --red，与设计定稿的朱砂一致。 */
+:focus-visible {
+  outline: 3px solid var(--red-ink);
+  outline-offset: 2px;
 }
 
 html,

@@ -206,7 +206,8 @@ import Base from "../layouts/Base.astro";
     /* 输入框本身只有 23px 高，撑到 24px（WCAG 2.5.8：点进去比点击链接更难宽容） */
     min-height: var(--touch-min);
     border: none;
-    outline: none;
+    /* 不要写 outline: none：那会把全局的 :focus-visible 品牌焦点环一并抹掉，
+       搜索框是键盘用户在这个页面上第一个要用的控件，不能没有焦点指示 */
     background: transparent;
     font-family: var(--font-mono);
     font-size: 18px;
