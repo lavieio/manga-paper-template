@@ -74,7 +74,7 @@
 }
 .prose h3::before {
   content: "§ ";
-  color: var(--red);
+  color: var(--red-ink);
 }
 .prose h4 {
   font-size: 17px;
@@ -84,8 +84,8 @@
   color: var(--ink-soft);
 }
 .prose a {
-  color: var(--red);
-  border-bottom: 2px solid var(--red);
+  color: var(--red-ink);
+  border-bottom: 2px solid var(--red-ink);
 }
 .prose a:hover {
   background: rgba(181, 52, 46, 0.1);
@@ -162,7 +162,7 @@
   box-shadow: 3px 3px 0 var(--ink);
 }
 .code-copy:hover:not(.is-done):not(.is-fail) {
-  color: var(--red);
+  color: var(--red-ink);
 }
 .code-copy:active {
   transform: translate(1px, 1px);
@@ -174,8 +174,8 @@
   color: var(--on-light-fill);
 }
 .code-copy.is-fail {
-  border-color: var(--red);
-  color: var(--red);
+  border-color: var(--red-ink);
+  color: var(--red-ink);
 }
 /* 有真指针的设备：hover / 键盘聚焦才出现，别挡着读代码；触屏设备常显 */
 @media (hover: hover) {
@@ -197,7 +197,7 @@
 .prose blockquote {
   margin: 22px 0;
   padding: 14px 20px;
-  border-left: 4px solid var(--red);
+  border-left: 4px solid var(--red-ink);
   background: rgba(181, 52, 46, 0.06);
   font-style: italic;
 }
@@ -320,7 +320,7 @@
   color: var(--ink);
 }
 .toc-list a.on {
-  color: var(--red);
+  color: var(--red-ink);
   font-weight: 600;
 }
 /* 朱砂竖条指示器 */
@@ -331,7 +331,7 @@
   top: 6px;
   bottom: 6px;
   width: 3px;
-  background: var(--red);
+  background: var(--red-ink);
   opacity: 0;
   transform: scaleY(0.3);
   transition:
