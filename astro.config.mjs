@@ -46,7 +46,10 @@ export default defineConfig({
     // Astro 7 默认 Sätteri；rehype 插件需声明 unified 处理器（官方回退路径）
     processor: unified({ rehypePlugins: [rehypeImageSize, rehypeCodeCopy] }),
     shikiConfig: {
-      themes: { light: "github-light", dark: "github-dark-dimmed" },
+      // 暗色用 github-dark-default：dimmed 的注释色 #768390 在 #22272e 上只有 3.88:1，
+      // 低于 AA（老版 github-dark 更差，3.05）；default 的注释是 6.15:1。
+      // 代价是代码块底色由 #22272e 换成 #0d1117、配色整体更亮一些。
+      themes: { light: "github-light", dark: "github-dark-default" },
     },
   },
 });
