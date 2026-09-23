@@ -32,9 +32,12 @@ const stacked = sheets.length > 1;
           class="sheet"
           data-index={i}
           href={`/posts/${getPostSlug(post)}`}
-          aria-label={`精选文章：${post.data.title}`}
+          aria-label={`精选文章：${post.data.title}（${getCategory(post)} · ${formatDate(post.data.date)} · ${estimateReadTime(post.body ?? "")} 分钟）`}
         >
-          <div class="window">
+          {/* 卡面是代码窗装饰（假源码、文件名、纸堆层次）：整块不进无障碍树，
+              否则读屏会把 90 多字的假代码念成链接名（WCAG 2.5.3）；
+              标题/分类/日期/时长因此写进上面的 aria-label。 */}
+          <div class="window" aria-hidden="true">
             <div class="cap">
               <span class="tl r" />
               <span class="tl y" />
