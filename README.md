@@ -79,7 +79,7 @@ cd my-blog && npm install
 # 方式二：以本仓为模板创建自己的仓库（写博客用，推荐 Private）
 # GitHub 上打开 https://github.com/lavieio/manga-paper-template/generate 或点 README 的 Use this template
 
-cp .env.example .env          # 按需填写，见「环境变量」
+cp .env.example .env          # 必填 SITE_URL（本地预览可填 http://localhost:4321）
 npm run dev                   # http://localhost:4321
 ```
 
@@ -93,7 +93,7 @@ npm run dev                   # http://localhost:4321
 | :--------------- | :------------------------------------------------------------------- |
 | `npm install` | 安装依赖（会通过 husky 安装 git 钩子） |
 | `npm run dev` | 本地开发服务器 `localhost:4321` |
-| `npm run build` | 构建静态站 + 生成 Pagefind 索引 → `dist/` |
+| `npm run build` | 构建静态站 + 生成 Pagefind 索引 → `dist/`（SITE_URL 缺失或仍是示例域名会直接失败） |
 | `npm run preview` | 预览构建产物（搜索在此可用） |
 | `npm test` | 单元/集成测试（日期钩子、加密模块往返） |
 | `npm run verify` | 产物断言：私密零泄漏、Pagefind 页数、站内链接、SITE_URL 占位域名（构建后运行） |
@@ -168,10 +168,18 @@ cover: /cover.png       # 可选
 | :--- | :--- |
 | `PRIVATE_PASSWORD` | 私密文章加密密码（构建期；缺省 `manga-paper` 仅本地可用） |
 | `PUBLIC_UNLOCK_TTL_HOURS` | 私密解锁记忆时长（小时），默认 1 |
-| `SITE_URL` | 站点根 URL（canonical / sitemap / RSS 的唯一真源） |
+| `SITE_URL` | **必填**：站点根 URL（canonical / sitemap / RSS 的唯一真源）。缺失、格式非法或仍是 `https://your-domain.com` 时 `npm run build` 直接失败 |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 评论（可选，两项配齐才生效） |
 
 `.env` 已在 `.gitignore` 中，`.env.example` 随仓库分发。
+
+`SITE_URL` 由构建期闸门 `scripts/check-site-url.ts` 校验：缺失、非法 URL 或仍是示例域名都会让
+`npm run build` 失败（部署平台跑的正是这条命令），`astro dev` / `preview` 不受影响。
+临时覆盖：`SITE_URL=http://localhost:4321 npm run build`。
+
+> Astro 不会把 `.env` 读进配置文件（官方文档：.env files are not loaded inside configuration files），
+> 所以 `astro.config.mjs` 先用 `loadSiteEnv()` 自己读一遍——这也是以前「.env 里配了域名，
+> 产物 canonical 却还是 your-domain.com」的根因。
 
 ## 📝 评论（可选）
 
