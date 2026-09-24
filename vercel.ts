@@ -6,13 +6,18 @@
  * 静态的 `vercel.json` 做不到这件事（Vercel 也不插值 env），
  * 用 TS 就不用把任何生成物提交进 git。
  *
- * 同一份策略还会渲染成 `dist/_headers` 给 Cloudflare Pages / Netlify 用；
- * 唯一来源是 `src/utils/header-policy.ts`，devtools 的产物断言会核对两边一致。
+ * 同一份策略还会渲染成 `dist/_headers` 与 `dist/_redirects` 给 Cloudflare Pages / Netlify 用；
+ * 唯一来源是 `src/utils/deploy-policy.ts`，devtools 的产物断言会核对两个出口一致。
  *
  * 刻意不装 `@vercel/config`：这里只用 config 的原始形状（与 `vercel.json` 同构），
  * 装了只是编辑器里多一层类型提示。
  */
-import { buildHeaderRules, toVercelHeaders } from "./src/utils/header-policy.ts";
+import {
+  buildHeaderRules,
+  buildRedirectRules,
+  toVercelHeaders,
+  toVercelRedirects,
+} from "./src/utils/deploy-policy.ts";
 import { loadEnvFiles } from "./src/utils/load-env.ts";
 
 // Vercel 构建时环境变量已经注入（优先级更高），这里负责本机 / 其他 CI 退回读 .env
@@ -24,4 +29,5 @@ export const config = {
   buildCommand: "npm run build",
   outputDirectory: "dist",
   headers: toVercelHeaders(buildHeaderRules(process.env.PUBLIC_REMARK42_HOST)),
+  redirects: toVercelRedirects(buildRedirectRules()),
 };

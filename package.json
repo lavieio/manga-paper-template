@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "astro dev",
-    "build": "node scripts/preflight.ts && astro build && node scripts/build-headers.ts && pagefind --site dist",
+    "build": "node scripts/preflight.ts && astro build && node scripts/build-deploy-config.ts && pagefind --site dist",
     "preview": "astro preview",
     "astro": "astro",
     "prepare": "husky"

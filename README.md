@@ -35,7 +35,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   ├── default-og.svg          # README 头图 / 社交分享图
 │   └── favicon.svg             # 朱砂印章
 ├── scripts/
-│   ├── build-headers.ts        # 生成安全响应头（dist/_headers + vercel.json）
+│   ├── build-deploy-config.ts  # 生成 dist/_headers + dist/_redirects
 │   ├── frontmatter-dates.ts    # git 钩子：date / updated 自动注入
 │   └── preflight.ts            # 构建前必须通过的检查（目前是 SITE_URL）
 ├── src/
@@ -146,7 +146,7 @@ cover: /cover.png       # 可选
 
 安全响应头两边都随 `.env` 走，只是入口不同：
 
-- **Cloudflare Pages / Netlify** 读发布目录里的 `dist/_headers`，由 `scripts/build-headers.ts` 构建期生成；
+- **Cloudflare Pages / Netlify** 读发布目录里的 `dist/_headers`，由 `scripts/build-deploy-config.ts` 构建期生成；
 - **Vercel** 不认 `_headers`，读仓根的 **`vercel.ts`** —— 它在 Vercel 构建时执行，自己读环境变量。
 
 两种写法都是「构建期拿到 env」时才成型的，所以**仓库里不存生成物**：
@@ -171,7 +171,7 @@ cover: /cover.png       # 可选
 ### 安全响应头
 
 开箱即用的头：HSTS、`X-Content-Type-Options`、`Referrer-Policy`、`X-Frame-Options`、`Permissions-Policy`，
-以及一份 **`Content-Security-Policy-Report-Only`**。策略写在 `src/utils/header-policy.ts`（唯一来源），
+以及一份 **`Content-Security-Policy-Report-Only`**。策略写在 `src/utils/deploy-policy.ts`（唯一来源），
 两个出口对应两个平台的读法：构建期生成 `dist/_headers`（Cloudflare Pages / Netlify 读发布目录），
 仓根 `vercel.ts` 在 Vercel 构建时执行（Vercel 不认 `_headers`）。两边对不上时 `npm run verify` 会红。
 
@@ -182,7 +182,7 @@ cover: /cover.png       # 可选
 CSP 现在是 Report-Only：只往控制台发报告、不拦任何资源，上线不会因为策略写得太严而白屏。收紧顺序：
 
 1. 部署后在浏览器控制台看 CSP 报告；
-2. 把报告里出现的来源补进 `src/utils/header-policy.ts` 的白名单（字体 CDN 与 remark42 已放行）；
+2. 把报告里出现的来源补进 `src/utils/deploy-policy.ts` 的白名单（字体 CDN 与 remark42 已放行）；
 3. 确认干净后把策略名从 `Content-Security-Policy-Report-Only` 改成 `Content-Security-Policy`，才开始强制。
 
 `script-src` 留了 `'unsafe-inline'`：Astro 会把小于 4KB 的客户端脚本内联进 HTML（主题首帧、
@@ -193,6 +193,12 @@ CSP 现在是 Report-Only：只往控制台发报告、不拦任何资源，上�
 
 > `devtools/` 里的产物断言会核对：两个出口逐条一致、CSP 仍为 Report-Only、产物里用到的外部来源
 > （字体 CDN 等）都被对应指令放行、配了 remark42 就一定放行了它。
+
+### 重定向（301）
+
+分页第一页的正式地址是 `/posts/1`（`src/pages/posts/[page].astro`），`/posts/` 是旧地址，
+构建期会生成一条真 301：`/posts/ → /posts/1`——Cloudflare Pages / Netlify 读 `dist/_redirects`，
+Vercel 读 `vercel.ts` 的 `redirects`。站内链接一律直接指向 `/posts/1`，不白吃一跳。
 
 ### 环境变量
 

@@ -22,8 +22,8 @@ function pageItems(current: number, last: number): (number | "…")[] {
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
-/** 第 1 页住在 /posts/，其后在 /posts/N */
-const pageUrl = (n: number) => (n <= 1 ? "/posts/" : `/posts/${n}`);
+/** 编号页一律 /posts/N（第 1 页在 /posts/1，`/posts/` 由 _redirects 301 过去） */
+const pageUrl = (n: number) => `/posts/${n}`;
 const items = pageItems(currentPage, lastPage);
 ---
 
