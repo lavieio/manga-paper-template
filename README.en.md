@@ -36,7 +36,7 @@ light/dark themes. Fully static: no backend, no client framework.
 │   ├── default-og.svg          # README hero / social preview
 │   └── favicon.svg             # vermilion seal
 ├── scripts/
-│   ├── build-headers.ts        # emits the security headers (dist/_headers + vercel.json)
+│   ├── build-deploy-config.ts  # emits dist/_headers + dist/_redirects
 │   ├── frontmatter-dates.ts    # git hook: inject date / refresh updated
 │   └── preflight.ts            # required checks before a build (currently SITE_URL)
 ├── src/
@@ -149,7 +149,7 @@ Both platforms consume the same `dist/` — **deploy to one only**.
 
 Security headers follow `.env` on both platforms, through different entry points:
 
-- **Cloudflare Pages / Netlify** read `dist/_headers` from the publish directory, emitted at build time by `scripts/build-headers.ts`;
+- **Cloudflare Pages / Netlify** read `dist/_headers` from the publish directory, emitted at build time by `scripts/build-deploy-config.ts`;
 - **Vercel** ignores `_headers` and reads the repo-root **`vercel.ts`**, which runs at Vercel build time and reads env variables itself.
 
 Both are only materialised once the build has the env, so **nothing generated is stored in git**:
@@ -177,7 +177,7 @@ You can also create the repo first via [**Use this template**](https://github.co
 ### Security headers
 
 Out of the box: HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`,
-plus a **`Content-Security-Policy-Report-Only`**. The policy lives in `src/utils/header-policy.ts` (single source)
+plus a **`Content-Security-Policy-Report-Only`**. The policy lives in `src/utils/deploy-policy.ts` (single source)
 and has two outlets, one per platform: `dist/_headers` is emitted at build time (Cloudflare Pages / Netlify read
 the publish directory) while the repo-root `vercel.ts` runs at Vercel build time (Vercel ignores `_headers`).
 `npm run verify` turns red whenever the two disagree.
@@ -190,7 +190,7 @@ The CSP is report-only right now: it reports to the console and blocks nothing, 
 cannot white-screen your site. Tighten it in this order:
 
 1. Deploy, then watch the CSP reports in the browser console;
-2. Add whatever origins show up to the allowlist in `src/utils/header-policy.ts` (the font CDN and remark42 are already there);
+2. Add whatever origins show up to the allowlist in `src/utils/deploy-policy.ts` (the font CDN and remark42 are already there);
 3. Once the reports are clean, rename `Content-Security-Policy-Report-Only` to `Content-Security-Policy` and start enforcing.
 
 `script-src` keeps `'unsafe-inline'` because Astro inlines client scripts smaller than 4 KB into the HTML
@@ -203,6 +203,12 @@ hard-coded hashes would drift on every build. For a stricter policy, use Astro's
 > The assertion tooling in `devtools/` cross-checks that both outlets match header by header, that the CSP is still
 > report-only, that every external origin the build actually uses (the font CDN, for instance) is allowed by the
 > matching directive, and that a configured remark42 is allowlisted.
+
+### Redirects (301)
+
+The first page of the post list lives at `/posts/1` (`src/pages/posts/[page].astro`); `/posts/` is the legacy
+address, so the build emits one real 301: `/posts/ → /posts/1` — Cloudflare Pages / Netlify read `dist/_redirects`
+while Vercel reads the `redirects` of `vercel.ts`. In-site links point straight at `/posts/1` and never pay the hop.
 
 ### Environment Variables
 
