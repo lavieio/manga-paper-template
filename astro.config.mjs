@@ -3,6 +3,7 @@ import { unified } from "@astrojs/markdown-remark";
 import sitemap from "@astrojs/sitemap";
 import rehypeImageSize from "./src/plugins/rehype-image-size.ts";
 import rehypeCodeCopy from "./src/plugins/rehype-code-copy.ts";
+import rehypeTableScroll from "./src/plugins/rehype-table-scroll.ts";
 import { collectHiddenSlugs } from "./src/plugins/private-slugs.ts";
 import { loadEnvFiles } from "./src/utils/load-env.ts";
 import { siteUrlOrPlaceholder } from "./src/utils/site-url.ts";
@@ -45,7 +46,7 @@ export default defineConfig({
   },
   markdown: {
     // Astro 7 默认 Sätteri；rehype 插件需声明 unified 处理器（官方回退路径）
-    processor: unified({ rehypePlugins: [rehypeImageSize, rehypeCodeCopy] }),
+    processor: unified({ rehypePlugins: [rehypeImageSize, rehypeCodeCopy, rehypeTableScroll] }),
     shikiConfig: {
       // 暗色用 github-dark-default：dimmed 的注释色 #768390 在 #22272e 上只有 3.88:1，
       // 低于 AA（老版 github-dark 更差，3.05）；default 的注释是 6.15:1。
