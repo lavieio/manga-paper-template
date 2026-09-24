@@ -15,7 +15,10 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
 const earliest = posts.at(-1);
 ---
 
-<Base title="归档">
+<Base
+  title="归档"
+  description={`共 ${posts.length} 篇文章的时间线（跨 ${years.length} 个年份），按发布时间倒序。`}
+>
   <div class="page-head">
     <h1>时间轴</h1>
   </div>
