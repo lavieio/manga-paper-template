@@ -112,9 +112,15 @@ const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
     </script>
   </head>
   <body data-pagefind-ignore={searchable ? undefined : ""}>
+    {/*
+      跳过链接（P3-1）：键盘用户 Tab 第一下就直达正文，不必每次穿过页头那串导航。
+      未聚焦时与 .sr-only 一样藏着（仍在无障碍树里），聚焦后在页内左上角现身。
+    */}
+    <a class="skip-link" href="#main">跳到正文</a>
     <div class="wrap">
       <SiteHeader current={Astro.url.pathname} />
-      <main>
+      {/* tabindex="-1"：跳到正文后焦点要真的落到这里，否则只滚屏幕、读屏还停在导航上（不占 Tab 顺序） */}
+      <main id="main" tabindex="-1">
         <slot />
       </main>
       <SiteFooter />
