@@ -4,6 +4,7 @@ import PostCard from "../components/PostCard.astro";
 import FeaturedStack from "../components/FeaturedStack.astro";
 import { site } from "../config";
 import { getPublishedPosts, siteStats } from "../utils/posts";
+import { blogJsonLd, siteFacts, websiteJsonLd } from "../utils/structured-data";
 
 const RECENT_COUNT = 3;
 
@@ -11,9 +12,13 @@ const posts = await getPublishedPosts();
 const featured = posts.filter((p) => p.data.featured);
 const recent = posts.filter((p) => !p.data.featured).slice(0, RECENT_COUNT);
 const stats = siteStats(posts);
+
+// 首页承担站点身份：WebSite（站点本体）+ Blog（博客本体）两个节点
+const jsonLdSite = siteFacts(site, Astro.site);
+const jsonLd = [websiteJsonLd(jsonLdSite), blogJsonLd(jsonLdSite)];
 ---
 
-<Base>
+<Base structuredData={jsonLd}>
   {/* 首页按设计没有可见标题（demo 也没有），但 h1 得有一个：
       否则 axe 报 page-has-heading-one，读屏用户也拿不到站点身份 */}
   <h1 class="sr-only">{site.name} · {site.tagline}</h1>
@@ -30,10 +35,11 @@ const stats = siteStats(posts);
   </section>
 
   <div class="actions">
-    <a class="btn" href="/posts/">查看全部文章 →</a>
+    <a class="btn" href="/posts/1">查看全部文章 →</a>
   </div>
 
-  <div class="stats" aria-label="站点统计">
+  {/* role="group"：aria-label 挂在无 role 的 div 上会被 axe 判 aria-prohibited-attr（与 /about 的统计条一致） */}
+  <div class="stats" role="group" aria-label="站点统计">
     <div class="stat"><b>{stats.posts}</b>篇文章</div>
     <div class="stat"><b>{stats.categories}</b>个分类</div>
     <div class="stat"><b>{stats.tags}</b>枚标签</div>

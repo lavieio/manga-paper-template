@@ -17,7 +17,10 @@ const { page, categories } = Astro.props;
 const total = page.total;
 ---
 
-<Base title="全部文章">
+<Base
+  title={page.currentPage === 1 ? "全部文章" : `全部文章 · 第 ${page.currentPage} 页`}
+  description={`共 ${page.total} 篇文章（每页 ${PAGE_SIZE} 篇），这是第 ${page.currentPage} / ${page.lastPage} 页。`}
+>
   <div class="page-head">
     <h1>全部文章</h1>
     <span class="count">共 {total} 篇 · 第 {page.currentPage} / {page.lastPage} 页</span>

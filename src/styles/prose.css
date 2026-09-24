@@ -207,10 +207,18 @@
   border-top: 2px dashed var(--ink-soft);
   opacity: 0.5;
 }
+/* 宽表格的横向滚动容器（由 rehype-table-scroll 在构建期套上）：
+   窄屏放不下 6 列时就横滚，而不是被 html/body 的 overflow-x: clip 裁掉。
+   容器可聚焦，焦点环由全局 :focus-visible 提供——键盘用户 Tab 进来即可用方向键滚。 */
+.table-scroll {
+  margin: 22px 0;
+  overflow-x: auto;
+}
 .prose table {
   width: 100%;
   border-collapse: collapse;
-  margin: 22px 0;
+  /* 外边距移到 .table-scroll 上（滚动容器才是块级子元素） */
+  margin: 0;
   font-size: 14px;
 }
 .prose th,

@@ -5,6 +5,7 @@ import "../styles/card.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import { site } from "../config";
+import { serializeJsonLd, type JsonLdNode } from "../utils/structured-data";
 
 interface Props {
   title?: string;
@@ -19,6 +20,8 @@ interface Props {
    * 否则当站内没有任何 data-pagefind-body 时，Pagefind 会退化成索引全部页面。
    */
   searchable?: boolean;
+  /** schema.org 结构化数据（JSON-LD）；不传就不渲染（私密文章必须不传） */
+  structuredData?: JsonLdNode | readonly JsonLdNode[];
 }
 
 const {
@@ -27,9 +30,12 @@ const {
   noindex = false,
   unlockCheck = false,
   searchable = false,
+  structuredData,
 } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+// RSS auto-discovery（plan §12）：阅读器 / 浏览器扩展靠这条声明自动发现订阅地址
+const rssFeed = new URL("rss.xml", Astro.site);
 
 // 字体 CDN：只加载站点实际用到的字重（正文 400 / 引用斜体 400i / 贴纸 600 / 标题 700）。
 // 非阻塞加载：先 preconnect 建连，再 preload + onload 切 rel（配合 font-display: swap
@@ -61,6 +67,12 @@ const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
       )
     }
     <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title={site.name} href={rssFeed} />
+    {
+      structuredData && (
+        <script type="application/ld+json" is:inline set:html={serializeJsonLd(structuredData)} />
+      )
+    }
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="preconnect" href={FONT_ORIGIN} crossorigin />
     <link rel="dns-prefetch" href={FONT_ORIGIN} />
@@ -100,9 +112,15 @@ const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
     </script>
   </head>
   <body data-pagefind-ignore={searchable ? undefined : ""}>
+    {/*
+      跳过链接（P3-1）：键盘用户 Tab 第一下就直达正文，不必每次穿过页头那串导航。
+      未聚焦时与 .sr-only 一样藏着（仍在无障碍树里），聚焦后在页内左上角现身。
+    */}
+    <a class="skip-link" href="#main">跳到正文</a>
     <div class="wrap">
       <SiteHeader current={Astro.url.pathname} />
-      <main>
+      {/* tabindex="-1"：跳到正文后焦点要真的落到这里，否则只滚屏幕、读屏还停在导航上（不占 Tab 顺序） */}
+      <main id="main" tabindex="-1">
         <slot />
       </main>
       <SiteFooter />

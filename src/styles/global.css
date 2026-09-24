@@ -2,6 +2,10 @@
    浅色值与 demos/comic/base.css 定稿一致；暗色只改变量值（plan §4.2）。 */
 
 :root {
+  /* 声明 color-scheme：滚动条、表单控件、自动填充底色、原生控件默认焦点环都跟着主题走。
+     没有它的时候暗色页面上是一套白色滚动条与亮色表单控件。
+     （无 JS 时没有 data-theme，按亮色渲染，与主题脚本的兜底一致） */
+  color-scheme: light;
   /* 底 */
   --paper: #f7f2e7;
   --dot: rgba(41, 38, 31, 0.1);
@@ -31,10 +35,14 @@
   /* 硬阴影（零高斯模糊） */
   --shadow: 4px 4px 0 var(--ink);
   --shadow-lg: 7px 7px 0 var(--ink);
+  /* 触摸目标下限（WCAG 2.2 SC 2.5.8）：非行内链接可点区域不小于 24×24 CSS px。
+     正文字号链接受「行内」豁免（被行高约束），不适用。 */
+  --touch-min: 24px;
   /* --font-mono 定义于 fonts.css（CDN 分片 + fallback 度量对齐） */
 }
 
 [data-theme="dark"] {
+  color-scheme: dark;
   --paper: #1a1814;
   --dot: rgba(240, 232, 214, 0.07);
   --ink: #efe7d6;
@@ -116,6 +124,15 @@ a {
   text-decoration: none;
 }
 
+/* 品牌化焦点环（WCAG 2.4.7 可见焦点 + 1.4.11 非文本对比 ≥3:1）。
+   之前完全靠 Chromium 的双色环兜底：形状与颜色都不在主题体系里。
+   颜色用 --red-ink 而非 --red——暗色纸上的 #b5342e 只有 2.9:1（见 token 注释），
+   亮色下 --red-ink 就等于 --red，与设计定稿的朱砂一致。 */
+:focus-visible {
+  outline: 3px solid var(--red-ink);
+  outline-offset: 2px;
+}
+
 html,
 body {
   /* 精选纸片「甩出」时会横向探出版心：在根节点裁掉横向溢出，
@@ -131,7 +148,10 @@ body {
 }
 
 /* 只给读屏与搜索引擎看的文本（页面在视觉上没有标题时用它补 h1） */
-.sr-only {
+/* 只给读屏与搜索引擎看的文本（页面在视觉上没有标题时用它补 h1）。
+   .skip-link 未聚焦时用同一套隐藏法：视觉上不可见，但仍在无障碍树里。 */
+.sr-only,
+.skip-link {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -141,6 +161,27 @@ body {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* 跳过链接聚焦后现身：页内左上角的黄底贴纸，与站点语言一致（P3-1）。
+   用 :focus-visible 而不是 :focus —— 它唯一能被聚焦的途径就是键盘。 */
+.skip-link:focus-visible {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 100;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 10px 16px;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  border: 3px solid var(--ink);
+  background: var(--yellow);
+  color: var(--on-light-fill);
+  box-shadow: var(--shadow);
+  font-weight: 600;
 }
 
 @media (prefers-reduced-motion: reduce) {

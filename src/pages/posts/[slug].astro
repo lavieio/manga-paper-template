@@ -7,6 +7,7 @@ import TableOfContents from "../../components/TableOfContents.astro";
 import BackToTop from "../../components/BackToTop.astro";
 import Comments from "../../components/Comments.astro";
 import PrivateUnlock from "../../components/PrivateUnlock.astro";
+import { site } from "../../config";
 import { encryptText, getPrivatePassword, type EncryptedPayload } from "../../utils/private-crypto";
 import {
   getPublishedPosts,
@@ -17,6 +18,7 @@ import {
 import { categoryColor } from "../../utils/category";
 import { estimateReadTime } from "../../utils/readtime";
 import { formatDate } from "../../utils/format";
+import { blogPostingJsonLd, siteFacts } from "../../utils/structured-data";
 
 export async function getStaticPaths() {
   // 详情页路由取全量（含私密）；上一篇/下一篇只取公开文章（不泄露私密标题）
@@ -49,6 +51,22 @@ if (post.data.private) {
   const html = await container.renderToString(Content);
   privatePayload = await encryptText(html, getPrivatePassword(post.id));
 }
+
+// 私密文章不输出 JSON-LD：标题/描述按设计不能出现在明文里
+const jsonLd = privatePayload
+  ? undefined
+  : blogPostingJsonLd(
+      {
+        url: new URL(`/posts/${getPostSlug(post)}/`, Astro.site).href,
+        title: post.data.title,
+        description: post.data.description,
+        published: post.data.date,
+        updated: post.data.updated,
+        section: category,
+        keywords: post.data.tags,
+      },
+      siteFacts(site, Astro.site),
+    );
 ---
 
 <Base
@@ -57,6 +75,7 @@ if (post.data.private) {
   noindex={!!privatePayload}
   unlockCheck={!!privatePayload}
   searchable={!privatePayload}
+  structuredData={jsonLd}
 >
   {
     privatePayload ? (

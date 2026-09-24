@@ -15,7 +15,10 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
 const earliest = posts.at(-1);
 ---
 
-<Base title="归档">
+<Base
+  title="归档"
+  description={`共 ${posts.length} 篇文章的时间线（跨 ${years.length} 个年份），按发布时间倒序。`}
+>
   <div class="page-head">
     <h1>时间轴</h1>
   </div>
@@ -117,6 +120,13 @@ const earliest = posts.at(-1);
   .t-item h2 {
     font-size: 16px;
     font-weight: 600;
+  }
+  .t-item h2 a {
+    /* 行盒只有 21px，把可点区域撑到 24px（WCAG 2.5.8）；
+       24px 仍在 h2 的 28px 行盒内，行距不变 */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
   }
   .t-item h2 a:hover {
     color: var(--red-ink);

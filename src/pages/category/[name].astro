@@ -15,7 +15,10 @@ export async function getStaticPaths() {
 const { name, posts } = Astro.props;
 ---
 
-<Base title={`分类 · ${name}`}>
+<Base
+  title={`分类 · ${name}`}
+  description={`分类「${name}」下的 ${posts.length} 篇文章，按发布时间倒序。`}
+>
   <div class="cat-head">
     <h1>{name}</h1>
     <span class="sticker">{posts.length} 篇</span>
@@ -42,6 +45,10 @@ const { name, posts } = Astro.props;
   .cat-head .back {
     margin-left: auto;
     font-size: 13px;
+    /* 行盒只有 22.8px，把可点区域撑到 24px（WCAG 2.5.8） */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
     color: var(--ink-soft);
   }
   .cat-head .back:hover {
