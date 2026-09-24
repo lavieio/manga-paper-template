@@ -36,6 +36,7 @@ light/dark themes. Fully static: no backend, no client framework.
 │   ├── default-og.svg          # README hero / social preview
 │   └── favicon.svg             # vermilion seal
 ├── scripts/
+│   ├── build-headers.ts        # emits the security headers (dist/_headers + vercel.json)
 │   ├── frontmatter-dates.ts    # git hook: inject date / refresh updated
 │   └── preflight.ts            # required checks before a build (currently SITE_URL)
 ├── src/
@@ -46,9 +47,10 @@ light/dark themes. Fully static: no backend, no client framework.
 │   ├── plugins/                # rehype image sizing, content scanning
 │   ├── scripts/                # lightbox, TOC, private unlock & key cache (client-side)
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
-│   ├── utils/                  # content pipeline, crypto, formatting, reading time
+│   ├── utils/                  # content pipeline, crypto, formatting, reading time, header policy
 │   ├── config.ts               # site name / author / about-page copy & contacts / remark42 (single source of truth)
 │   └── content.config.ts       # content schema (zod)
+├── vercel.ts                   # Vercel project config (runs at Vercel build time, reads env; nothing generated in git)
 └── astro.config.mjs
 ```
 
@@ -143,7 +145,15 @@ the timezone is pinned to `Asia/Shanghai`.
 
 ## 🌐 Deployment
 
-Both platforms consume the same `dist/`. **Deploy to one only** — no platform-specific config file is needed.
+Both platforms consume the same `dist/` — **deploy to one only**.
+
+Security headers follow `.env` on both platforms, through different entry points:
+
+- **Cloudflare Pages / Netlify** read `dist/_headers` from the publish directory, emitted at build time by `scripts/build-headers.ts`;
+- **Vercel** ignores `_headers` and reads the repo-root **`vercel.ts`**, which runs at Vercel build time and reads env variables itself.
+
+Both are only materialised once the build has the env, so **nothing generated is stored in git**:
+configuring remark42 (`PUBLIC_REMARK42_HOST`) allowlists its host automatically, with no config file to edit by hand.
 
 ### Deploy to Vercel
 
@@ -163,6 +173,36 @@ You can also create the repo first via [**Use this template**](https://github.co
 2. Build settings: Build command `npm run build`, Output directory `dist`
 3. Environment variables: at least `NODE_VERSION=22` (plus the others from the table below)
 4. Save and deploy
+
+### Security headers
+
+Out of the box: HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy`,
+plus a **`Content-Security-Policy-Report-Only`**. The policy lives in `src/utils/header-policy.ts` (single source)
+and has two outlets, one per platform: `dist/_headers` is emitted at build time (Cloudflare Pages / Netlify read
+the publish directory) while the repo-root `vercel.ts` runs at Vercel build time (Vercel ignores `_headers`).
+`npm run verify` turns red whenever the two disagree.
+
+**The CSP allowlist follows `.env`**: with remark42 configured (`PUBLIC_REMARK42_HOST`) its host is written into
+`script-src` / `connect-src` / `frame-src` — the embed script, the WebSocket and the iframe all need it.
+A static file cannot know that, which is why both outlets are only materialised at build time.
+
+The CSP is report-only right now: it reports to the console and blocks nothing, so a mis-tuned policy
+cannot white-screen your site. Tighten it in this order:
+
+1. Deploy, then watch the CSP reports in the browser console;
+2. Add whatever origins show up to the allowlist in `src/utils/header-policy.ts` (the font CDN and remark42 are already there);
+3. Once the reports are clean, rename `Content-Security-Policy-Report-Only` to `Content-Security-Policy` and start enforcing.
+
+`script-src` keeps `'unsafe-inline'` because Astro inlines client scripts smaller than 4 KB into the HTML
+(theme bootstrap, year fix, unlock check, plus a few component scripts) and that set changes with your content —
+hard-coded hashes would drift on every build. For a stricter policy, use Astro's built-in
+[`security.csp`](https://docs.astro.build/en/reference/configuration-reference/#securitycsp), which hashes at build time.
+
+`/_astro/*` holds content-hashed assets, so the configs give it `Cache-Control: public, max-age=31536000, immutable`.
+
+> The assertion tooling in `devtools/` cross-checks that both outlets match header by header, that the CSP is still
+> report-only, that every external origin the build actually uses (the font CDN, for instance) is allowed by the
+> matching directive, and that a configured remark42 is allowlisted.
 
 ### Environment Variables
 
@@ -192,6 +232,8 @@ With `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` configured, public posts
 - Lazy-loaded (the script is injected only when scrolled near); Chinese UI; **theme follows the site's light/dark**
 - ⚠️ remark42 renders inside a cross-origin iframe (style isolation), so page CSS cannot reach it. Matching it fully
   to the paper look requires rewriting its stylesheet behind a reverse proxy, or rebuilding its frontend — out of scope here
+- ⚠️ Once comments are configured, that host lands in the CSP allowlist of `dist/_headers` and `vercel.ts`
+  automatically (`script-src` / `connect-src` / `frame-src`) — nothing to remember
 
 ## 🔤 Fonts
 
