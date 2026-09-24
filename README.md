@@ -35,6 +35,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   ├── default-og.svg          # README 头图 / 社交分享图
 │   └── favicon.svg             # 朱砂印章
 ├── scripts/
+│   ├── build-headers.ts        # 生成安全响应头（dist/_headers + vercel.json）
 │   ├── frontmatter-dates.ts    # git 钩子：date / updated 自动注入
 │   └── preflight.ts            # 构建前必须通过的检查（目前是 SITE_URL）
 ├── src/
@@ -45,9 +46,10 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   ├── plugins/                # rehype 图片尺寸/懒加载注入、代码复制按钮、私密与草稿扫描
 │   ├── scripts/                # 灯箱、TOC、私密解锁与密钥缓存（客户端）
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
-│   ├── utils/                  # 内容管线、加密、格式与阅读时长
+│   ├── utils/                  # 内容管线、加密、格式与阅读时长、响应头策略
 │   ├── config.ts               # 站名 / 作者 / 关于页文案与联系方式 / 页脚仓库链接 / remark42（唯一站点入口）
 │   └── content.config.ts       # 内容 schema（zod）
+├── vercel.ts                   # Vercel 项目配置（Vercel 构建时执行，自己读 env；不存生成物）
 └── astro.config.mjs
 ```
 
@@ -140,7 +142,15 @@ cover: /cover.png       # 可选
 
 ## 🌐 部署
 
-两个平台共用同一份 `dist/`，**只部署其中一个**即可，无需任何平台专属配置文件。
+两个平台共用同一份 `dist/`，**只部署其中一个**即可。
+
+安全响应头两边都随 `.env` 走，只是入口不同：
+
+- **Cloudflare Pages / Netlify** 读发布目录里的 `dist/_headers`，由 `scripts/build-headers.ts` 构建期生成；
+- **Vercel** 不认 `_headers`，读仓根的 **`vercel.ts`** —— 它在 Vercel 构建时执行，自己读环境变量。
+
+两种写法都是「构建期拿到 env」时才成型的，所以**仓库里不存生成物**：
+配了 remark42（`PUBLIC_REMARK42_HOST`）就自动放行它的域名，不用手改配置。
 
 ### Vercel 部署
 
@@ -157,6 +167,32 @@ cover: /cover.png       # 可选
 2. 构建设置：Build command `npm run build`，Output directory `dist`
 3. 环境变量：至少加 `NODE_VERSION=22`（以及环境变量表中的其它项）
 4. 保存并部署
+
+### 安全响应头
+
+开箱即用的头：HSTS、`X-Content-Type-Options`、`Referrer-Policy`、`X-Frame-Options`、`Permissions-Policy`，
+以及一份 **`Content-Security-Policy-Report-Only`**。策略写在 `src/utils/header-policy.ts`（唯一来源），
+两个出口对应两个平台的读法：构建期生成 `dist/_headers`（Cloudflare Pages / Netlify 读发布目录），
+仓根 `vercel.ts` 在 Vercel 构建时执行（Vercel 不认 `_headers`）。两边对不上时 `npm run verify` 会红。
+
+**CSP 白名单跟着 `.env` 走**：配了 remark42（`PUBLIC_REMARK42_HOST`）就自动把它的域名写进
+`script-src` / `connect-src` / `frame-src`——embed 脚本、WebSocket、iframe 三处都要，
+静态文件自己没办法知道这件事，这也是两个出口都必须「构建期成型」的原因。
+
+CSP 现在是 Report-Only：只往控制台发报告、不拦任何资源，上线不会因为策略写得太严而白屏。收紧顺序：
+
+1. 部署后在浏览器控制台看 CSP 报告；
+2. 把报告里出现的来源补进 `src/utils/header-policy.ts` 的白名单（字体 CDN 与 remark42 已放行）；
+3. 确认干净后把策略名从 `Content-Security-Policy-Report-Only` 改成 `Content-Security-Policy`，才开始强制。
+
+`script-src` 留了 `'unsafe-inline'`：Astro 会把小于 4KB 的客户端脚本内联进 HTML（主题首帧、
+年份修正、解锁检查 + 若干组件脚本），而且随内容变化，写死 hash 会随每次构建漂移。
+想更严就用 Astro 内置的 [`security.csp`](https://docs.astro.build/en/reference/configuration-reference/#securitycsp)（构建期自动算 hash）。
+
+`/_astro/*` 是带内容哈希的静态资源，配置里给了 `Cache-Control: public, max-age=31536000, immutable`。
+
+> `devtools/` 里的产物断言会核对：两个出口逐条一致、CSP 仍为 Report-Only、产物里用到的外部来源
+> （字体 CDN 等）都被对应指令放行、配了 remark42 就一定放行了它。
 
 ### 环境变量
 
@@ -186,6 +222,8 @@ cover: /cover.png       # 可选
 - 懒加载（滚动接近时才注入脚本）；界面中文；**明暗主题跟随站点**
 - ⚠️ remark42 在跨源 iframe 中渲染（样式隔离），页面 CSS 无法覆盖。想让它与稿纸风完全一致，
   只能在自托管侧反代替换其样式表或重建前端——模板不提供此能力
+- ⚠️ 配了评论后，它的域名会自动进 `dist/_headers` 与 `vercel.ts` 的 CSP 白名单
+  （`script-src` / `connect-src` / `frame-src`）——忘不了
 
 ## 🔤 字体
 
