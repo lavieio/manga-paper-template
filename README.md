@@ -64,7 +64,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 
 - **框架** — [Astro](https://astro.build/)（`output: 'static'`，无 SSR adapter）
 - **源码语言** — TypeScript（Node 原生类型剥离，构建前无需编译步骤）
-- **字体** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font)（OFL-1.1）+ [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/)
+- **字体** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font)（OFL-1.1，自托管子集）
 - **静态搜索** — [Pagefind](https://pagefind.app/)
 - **灯箱** — [PhotoSwipe](https://photoswipe.com/)
 - **评论** — [remark42](https://remark42.com/)（自托管，可选）
@@ -186,17 +186,18 @@ cover: /cover.png       # 可选
 CSP 现在是 Report-Only：只往控制台发报告、不拦任何资源，上线不会因为策略写得太严而白屏。收紧顺序：
 
 1. 部署后在浏览器控制台看 CSP 报告；
-2. 把报告里出现的来源补进 `src/utils/deploy-policy.ts` 的白名单（字体 CDN 与 remark42 已放行）；
+2. 把报告里出现的来源补进 `src/utils/deploy-policy.ts` 的白名单（remark42 已放行）；
 3. 确认干净后把策略名从 `Content-Security-Policy-Report-Only` 改成 `Content-Security-Policy`，才开始强制。
 
 `script-src` 留了 `'unsafe-inline'`：Astro 会把小于 4KB 的客户端脚本内联进 HTML（主题首帧、
 年份修正、解锁检查 + 若干组件脚本），而且随内容变化，写死 hash 会随每次构建漂移。
 想更严就用 Astro 内置的 [`security.csp`](https://docs.astro.build/en/reference/configuration-reference/#securitycsp)（构建期自动算 hash）。
 
-`/_astro/*` 是带内容哈希的静态资源，配置里给了 `Cache-Control: public, max-age=31536000, immutable`。
+内容哈希命名的产物（`/_astro/*`、`/fonts/*`、`/pagefind/index/*`、`/pagefind/fragment/*`）配了
+`Cache-Control: public, max-age=31536000, immutable`；其余路径（HTML、Pagefind 的固定文件名运行时）
+不写规则，走平台默认。
 
-> `devtools/` 里的产物断言会核对：两个出口逐条一致、CSP 仍为 Report-Only、产物里用到的外部来源
-> （字体 CDN 等）都被对应指令放行、配了 remark42 就一定放行了它。
+> 两个出口（`dist/_headers` 与 `vercel.ts`）必须逐条一致：策略只在 `src/utils/deploy-policy.ts` 里改。
 
 ### 重定向（301）
 
