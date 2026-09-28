@@ -15,6 +15,8 @@ export const REPORT_ONLY_CSP = "Content-Security-Policy-Report-Only";
 export const ENFORCING_CSP = "Content-Security-Policy";
 /** 带内容哈希的资源目录：可以永久缓存 */
 export const ASTRO_ASSETS_SOURCE = "/_astro/*";
+/** 自托管字体子集（P1-1）：文件名带内容哈希，同样可以永久缓存 */
+export const FONT_ASSETS_SOURCE = "/fonts/*";
 export const GLOBAL_SOURCE = "/*";
 export const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
 /** 安全头里必须始终存在的几项（devtools 的产物断言也按这个清单核） */
@@ -25,13 +27,6 @@ export const REQUIRED_HEADERS = [
   "X-Frame-Options",
   REPORT_ONLY_CSP,
 ] as const;
-
-/**
- * 字体 CDN 与 src/layouts/Base.astro 的 FONT_CDN 同源。
- * 它是 CSP 必须放行的外部来源（stylesheet + font + preconnect）；
- * 改了 Base.astro 那边忘了改这里，devtools 的产物断言会红（它拿产物里的真实来源对白名单）。
- */
-const FONT_CDN = "https://fontsapi.zeoseven.com";
 
 export interface HeaderEntry {
   readonly name: string;
@@ -74,6 +69,10 @@ export function buildHeaderRules(remark42Host: string | undefined): HeaderRule[]
       source: ASTRO_ASSETS_SOURCE,
       headers: [{ name: "Cache-Control", value: IMMUTABLE_CACHE }],
     },
+    {
+      source: FONT_ASSETS_SOURCE,
+      headers: [{ name: "Cache-Control", value: IMMUTABLE_CACHE }],
+    },
   ];
 }
 
@@ -90,9 +89,7 @@ export function cspOrigin(value: string | undefined): string | null {
 }
 
 /**
- * 指令集是「产物真实需要什么」的清单：
- * - `font-src` / `style-src` / `connect-src`：字体 CDN（styles.css 走 style-src，字体文件走 font-src，
- *   `preconnect` 走 connect-src）；
+ * 指令集是「产物真实需要什么」的清单（字体已经自托管，没有第三方来源，P1-1）：
  * - `img-src https:`：文章里的外链图来自任意 https 域名（构建期只探测尺寸，不自托管）；
  * - `worker-src` + `'wasm-unsafe-eval'`：Pagefind 用 worker + WebAssembly 建索引；
  * - `'unsafe-inline'`：Astro 把小于 4KB 的客户端脚本内联进 HTML，且随内容变化；
@@ -103,10 +100,10 @@ function buildCsp(remark42Origin: string | null): string {
   const directives = [
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${remark42}`,
-    `style-src 'self' 'unsafe-inline' ${FONT_CDN}`,
-    `font-src 'self' ${FONT_CDN}`,
+    "style-src 'self' 'unsafe-inline'",
+    "font-src 'self'",
     "img-src 'self' data: https:",
-    `connect-src 'self' ${FONT_CDN}${remark42}`,
+    `connect-src 'self'${remark42}`,
     "worker-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
