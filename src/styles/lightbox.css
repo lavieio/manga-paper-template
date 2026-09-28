@@ -12,10 +12,10 @@
 }
 
 /* ── 关闭键：漫画印章方块（朱砂底 + 墨黑硬边框 + 硬阴影 + 黑色×）──
-   ① 用 .pswp 前缀提升优先级：PhotoSwipe 默认有
-      `.pswp__button:hover/:active/:focus { background:none; border:0; box-shadow:none }`
-      会把方块在交互时抹掉
-   ② base/hover/active/focus 四态都要重新声明，否则同样被覆盖 */
+   a.用 .pswp 前缀提升优先级：PhotoSwipe 默认有
+     `.pswp__button:hover/:active/:focus { background:none; border:0; box-shadow:none }`
+     会把方块在交互时抹掉
+   b. base/hover/active/focus 四态都要重新声明，否则同样被覆盖 */
 .pswp .pswp__button--close,
 .pswp .pswp__button--close:hover,
 .pswp .pswp__button--close:active,

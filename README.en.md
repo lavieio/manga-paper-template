@@ -14,7 +14,7 @@ light/dark themes. Fully static: no backend, no client framework.
 
 ## 🔥 Features
 
-- [x] Paper × comic design language, monospace everywhere
+- [x] Paper × comic design language, monospace everywhere (full fonts in the repo, subsets cut at build time: ≈1 MB / 3 font requests per article)
 - [x] **Private posts**: AES-256-GCM encrypted at build time; only ciphertext ships; `/private` gated index
 - [x] Table of contents (sticky right rail, scroll highlighting with vermilion indicator)
 - [x] Copy-to-clipboard on code blocks, image lightbox ([PhotoSwipe](https://photoswipe.com/), loaded on first click)
@@ -32,11 +32,15 @@ light/dark themes. Fully static: no backend, no client framework.
 
 ```bash
 /
+├── assets/
+│   └── fonts/                  # full fonts: four weight TTFs + LICENSE (OFL-1.1; subset from here at build time)
 ├── public/
+│   ├── fonts/                  # font subset artifacts (npm run fonts; not committed)
 │   ├── default-og.svg          # README hero / social preview
 │   └── favicon.svg             # vermilion seal
 ├── scripts/
 │   ├── build-deploy-config.ts  # emits dist/_headers + dist/_redirects
+│   ├── build-fonts.ts          # builds the self-hosted font subset (npm run fonts)
 │   ├── frontmatter-dates.ts    # git hook: inject date / refresh updated
 │   └── preflight.ts            # required checks before a build (currently SITE_URL)
 ├── src/
@@ -243,15 +247,31 @@ With `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` configured, public posts
 
 ## 🔤 Fonts
 
-By default fonts come from the [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/) (cn-font-split chunks,
-OFL-1.1, hinted) — no font files to self-host. Only four weights are loaded (body 400 / italic 400i / stickers 600 /
-headings 700), and they load **non-blocking** (`preload` + `onload` switching `rel`, with a `<noscript>` fallback).
+Self-hosted **Maple Mono NF CN** ([SIL OFL 1.1](https://github.com/subframe7536/maple-font), v7.9) — no font
+CDN involved. The recipe is **full fonts in the repo, subsets cut at build time**: `assets/fonts/` holds the four
+original weight TTFs (body 400 / italic 400i / stickers 600 / headings 700, ≈83 MB total) and the build reduces
+them to the glyphs this site actually needs. The artifacts (`public/fonts/*.woff2`, 84 files / ≈3.5 MB) are
+**not committed**. Layered by `unicode-range`:
 
-To self-host instead: download Maple Mono NF CN, subset it yourself, emit `public/fonts/**`,
-then swap the CDN `<link>` tags in `src/layouts/Base.astro` for local `@font-face` rules
-(keep the metric-matched fallback in `src/styles/fonts.css`). ZeoSeven also ships a
-[ZSFT CLI](https://fonts.zeoseven.com/docs/cli/) for private deployments. Offline, fonts fall back to
-metric-adjusted Consolas.
+- **core**: site characters + common symbols (ASCII / CJK punctuation / full-width / arrows·math·box…), one file
+  per weight (≈350–380 KB each); only the 400 and 700 cores are preloaded;
+- **tail**: the rest of GB2312 level 1, sliced per zone (94 chars), built for 400/700 only; the browser fetches a
+  slice only when such a character actually appears → **nothing inside GB2312 level 1 is ever missing**, and the
+  first load pays nothing for it;
+- Anything outside (GB2312 level 2, rare glyphs, plus glyphs the font simply lacks such as `✅❌➕` and Kangxi
+  radicals) falls back to the **metric-aligned** Consolas declared in `src/styles/fonts.css`
+  (`size-adjust: 109.1%`) — same advance width, no layout shift.
+
+Measured (412px, cold cache): an article's font payload drops from ≈2.5 MB / 55 shards (CDN) to
+**≈1.05 MB / 3 requests** (400 + 700 + the 600 used by stickers).
+
+**No manual step**: `npm run fonts` is part of `npm run build` and `npm run dev`; it recomputes the character set
+from the current content (including private/draft post sources) and skips the whole step when nothing changed
+(fingerprint in `.cache/fonts/plan.json`: ~0.2s on later builds, ≈20s on the first build of a fresh clone).
+To change weights or coverage edit `scripts/lib/font-charsets.ts`; to upgrade the font, drop the upstream files
+(same names) into `assets/fonts/` — they come out of `MapleMono-NF-CN.zip` in the
+[releases](https://github.com/subframe7536/maple-font/releases).
+
 
 ## ✨ Feedback & Suggestions
 

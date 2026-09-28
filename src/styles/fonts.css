@@ -1,6 +1,9 @@
-/* Maple Mono NF CN — ZeoSeven Fonts CDN（见 Base.astro 的并行 <link>）
-   仅加载 4 个字重：400（正文）/ 400i（引用斜体）/ 600（贴纸）/ 700（标题）
-   cn-font-split 按 unicode-range 分包，按需加载；OFL-1.1。
+/* Maple Mono NF CN —— 自托管子集（P1-1），不依赖任何字体 CDN。
+   字体文件与 @font-face 清单都是构建期生成的（`npm run fonts`）：
+   core 装站点字符 + 常用符号（首屏 preload 400/700），tail 按 unicode-range 兜住
+   GB2312 一级里 core 之外的剩余字。字符集与切片策略见 scripts/lib/font-charsets.ts，
+   生成物都在 .gitignore 里（public/fonts/、fonts-face.css、font-assets.ts）。 */
+@import "./fonts-face.css";
 
 /* Fallback 度量对齐（实测值，来源见下注释）——
    MapleMono: upm 1000 / asc 1020 / desc -300 / gap 0 / avgWidth 600（0.6em）

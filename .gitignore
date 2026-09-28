@@ -27,6 +27,14 @@ node_modules/
 # ── Astro 缓存 ─────────────────────────────────────
 .astro/
 
+# ── 字体（P1-1）─────────────────────────────────────
+# 提交进仓的是「完整字体」assets/fonts/*.ttf（+ LICENSE.txt）；
+# 下面几个是构建期产物（npm run fonts），不进仓。
+.cache/
+public/fonts/
+src/styles/fonts-face.css
+src/utils/font-assets.ts
+
 # ── 日志 ────────────────────────────────────────────
 *.log
 logs/
