@@ -2,7 +2,7 @@ import { defineCollection, z } from "astro:content";
 import { glob } from "astro/loaders";
 
 /**
- * 博客内容模型（plan §5）。
+ * 博客内容模型。
  * 草稿可省略 date；发布文章必须有 date（钩子会注入，注入失败即报错）。
  * category 为自由字符串，不写死枚举。
  */

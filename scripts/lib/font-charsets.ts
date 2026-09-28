@@ -1,5 +1,5 @@
 /**
- * P1-1 字体子集：字符集与切片策略（唯一来源）。
+ * 字体子集：字符集与切片策略（唯一来源）。
  *
  * 仓库里放的是**完整字体**（`assets/fonts/` 的 4 个字重，上游原文件），构建期按当前内容现切：
  * - **core** = 站点字符 ∪ 常用符号 → 4 个字重各一份，首屏 preload 400/700；
@@ -38,7 +38,7 @@ export const TAIL_LABELS: readonly string[] = ["400", "700"];
 /** GB2312 一级汉字的区号范围（16–55）；tail 的切片单位就是「区」 */
 export const GB2312_LEVEL1_AREA = { first: 16, last: 55 } as const;
 
-/** core 里的常用符号块（口径同 P1-1 可行性评估的 A2：便宜且能挡住未来的代码类文章） */
+/** core 里的常用符号块：ASCII / latin-1 / 箭头·数学·制表…（体积便宜，还能挡住未来的代码类文章） */
 const SYMBOL_RANGES: readonly (readonly [number, number])[] = [
   [0x0020, 0x007e], // ASCII
   [0x00a0, 0x04ff], // latin-1 补充 + 拉丁扩展 + 国际音标 + 希腊 + 西里尔

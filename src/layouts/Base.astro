@@ -35,7 +35,7 @@ const {
 } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-// RSS auto-discovery（plan §12）：阅读器 / 浏览器扩展靠这条声明自动发现订阅地址
+// RSS auto-discovery：阅读器 / 浏览器扩展靠这条声明自动发现订阅地址
 const rssFeed = new URL("rss.xml", Astro.site);
 ---
 
@@ -68,7 +68,7 @@ const rssFeed = new URL("rss.xml", Astro.site);
     }
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     {/*
-      字体 preload（P1-1）：自托管子集只 preload core 的 400 / 700（正文 + 标题），
+      字体 preload：自托管子集只 preload core 的 400 / 700（正文 + 标题），
       其余字重与 tail 分片交给 unicode-range 按需取；清单来自构建期生成的 font-assets.ts。
       `as="font"` 的 preload 一律走 CORS 模式，同源也必须写 crossorigin，否则会被取两次。
     */}
@@ -78,7 +78,7 @@ const rssFeed = new URL("rss.xml", Astro.site);
       ))
     }
     <script is:inline>
-      // 首帧前决定主题，避免 FOUC（plan §4.3）
+      // 首帧前决定主题，避免 FOUC
       (function () {
         var saved = null;
         try {
@@ -96,7 +96,7 @@ const rssFeed = new URL("rss.xml", Astro.site);
   </head>
   <body data-pagefind-ignore={searchable ? undefined : ""}>
     {/*
-      跳过链接（P3-1）：键盘用户 Tab 第一下就直达正文，不必每次穿过页头那串导航。
+      跳过链接：键盘用户 Tab 第一下就直达正文，不必每次穿过页头那串导航。
       未聚焦时与 .sr-only 一样藏着（仍在无障碍树里），聚焦后在页内左上角现身。
     */}
     <a class="skip-link" href="#main">跳到正文</a>

@@ -8,7 +8,7 @@
  *
  * 为什么卡在 `npm run build` 而不写在 astro.config.mjs：
  * 1. 部署平台（Vercel / Cloudflare Pages）跑的正是 `npm run build`，卡这一层才堵得住部署路径；
- *    直接 `npx astro build` 能绕过本脚本，但本地 devtools/verify-dist.ts 仍会从产物里扫出占位域名。
+ *    直接 `npx astro build` 能绕过本脚本——那样产物里会留着占位域名，部署前必须自查。
  * 2. 这个进程里没有 Astro 的命令上下文，能干净地区分「构建」与「本地 dev / preview」——
  *    后者必须放行，否则本地没配域名就什么都跑不起来。
  *

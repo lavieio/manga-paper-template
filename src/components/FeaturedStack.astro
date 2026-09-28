@@ -1,6 +1,6 @@
 ---
 /**
- * Featured 纸片堆轮播（对齐 demos/05-comic-paper.html 定稿）
+ * Featured 纸片堆轮播（纸片堆 + 错位 + 甩卡动画）
  * - 最多 5 张 featured，自动轮播 + 编号方块 + 双向 hover 联动 + 甩卡动画
  * - 顶层卡片点击进详情；后层卡片点击将其抽到顶层
  * - 只有 1 张时不轮播：隐藏编号方块，仍是同一套纸片样式与点击行为
@@ -235,7 +235,7 @@ const stacked = sheets.length > 1;
 
   .window {
     /* 撑满网格行高（行高=最高那张纸片的自然高度）：所有纸片等高，
-       后层上移叠上去时不会露出下边角（plan §10 实测：不等高会露边） */
+       后层上移叠上去时不会露出下边角（实测：不等高会露边） */
     height: 100%;
     display: flex;
     flex-direction: column;

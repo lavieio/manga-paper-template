@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 博客 frontmatter 的 date / updated 自动注入（plan §6），双钩子协作：
+ * 博客 frontmatter 的 date / updated 自动注入，双钩子协作：
  *
  * - pre-commit：A（新增）文件注入 date；半成品暂存报错中止；缺 frontmatter 报错。
  *   此阶段的 git add 会进入提交（lint-staged 同款时机）。

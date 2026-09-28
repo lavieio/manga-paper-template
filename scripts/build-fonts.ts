@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * P1-1 字体：按当前内容把提交进仓的完整字体切成上线要用的子集（core + tail）。
+ * 字体子集：按当前内容把提交进仓的完整字体切成上线要用的子集（core + tail）。
  *
  * - **输入**：`assets/fonts/` 里 4 个完整字重的 TTF（上游原文件，OFL-1.1，随仓库提交）；
  * - **产物**：`public/fonts/*.woff2` + `src/styles/fonts-face.css` + `src/utils/font-assets.ts`，
@@ -147,7 +147,7 @@ function writeOutputs(plan: FontPlan, names: readonly string[], key: string): vo
 /**
  * 缺字报告：**每次运行都重写**，包括「跳过生成」那条路径。
  * 它是按当前内容现算的观测值，不是产物——只在重生时才写的话，报告会比内容旧，
- * 而下游（devtools 的覆盖断言、排查用的人眼）拿到的就是过期结论。
+ * 而下游（覆盖断言、排查用的人眼）拿到的就是过期结论。
  */
 function writeCoverage(plan: FontPlan): void {
   mkdirSync(CACHE_DIR, { recursive: true });

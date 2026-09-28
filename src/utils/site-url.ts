@@ -1,5 +1,5 @@
 /**
- * SITE_URL 闸门。SITE_URL 是 canonical / sitemap / RSS 的唯一真源（plan §2）。
+ * SITE_URL 闸门。SITE_URL 是 canonical / sitemap / RSS 的唯一真源。
  *
  * 两个函数（.env 的加载见 src/utils/load-env.ts）：
  * 1. `siteUrlOrPlaceholder()`：给 astro.config.mjs 用。有配置就校验格式（Astro 的 canonical

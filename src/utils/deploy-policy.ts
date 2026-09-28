@@ -1,5 +1,5 @@
 /**
- * 部署层策略的唯一来源（plan §13）：安全响应头 + 重定向。
+ * 部署层策略的唯一来源：安全响应头 + 重定向。
  *
  * 同一份策略有两个出口，因为两个平台看的地方不同：
  * - `dist/_headers`、`dist/_redirects`：Cloudflare Pages / Netlify 读**发布目录**里的这两个文件，
@@ -15,7 +15,7 @@ export const REPORT_ONLY_CSP = "Content-Security-Policy-Report-Only";
 export const ENFORCING_CSP = "Content-Security-Policy";
 /** 带内容哈希的资源目录：可以永久缓存 */
 export const ASTRO_ASSETS_SOURCE = "/_astro/*";
-/** 自托管字体子集（P1-1）：文件名带内容哈希 */
+/** 自托管字体子集：文件名带内容哈希 */
 export const FONT_ASSETS_SOURCE = "/fonts/*";
 /**
  * Pagefind 的索引与分片：文件名由**内容**算出来（实测：给一篇文章加一句话重编，
@@ -28,12 +28,12 @@ export const FONT_ASSETS_SOURCE = "/fonts/*";
 export const PAGEFIND_HASHED_SOURCES = ["/pagefind/index/*", "/pagefind/fragment/*"] as const;
 /**
  * 所有可以 `immutable` 的路径：响应头的两个出口（`dist/_headers` 与 `vercel.ts`）
- * 与 devtools 的产物断言共用这一份，新增哈希目录只改这里，免得策略与断言漂移。
+ * 与产物断言共用这一份，新增哈希目录只改这里，免得策略与断言漂移。
  */
 export const IMMUTABLE_SOURCES: readonly string[] = [ASTRO_ASSETS_SOURCE, FONT_ASSETS_SOURCE, ...PAGEFIND_HASHED_SOURCES];
 export const GLOBAL_SOURCE = "/*";
 export const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
-/** 安全头里必须始终存在的几项（devtools 的产物断言也按这个清单核） */
+/** 安全头里必须始终存在的几项（产物断言按这个清单核） */
 export const REQUIRED_HEADERS = [
   "Strict-Transport-Security",
   "X-Content-Type-Options",
@@ -99,7 +99,7 @@ export function cspOrigin(value: string | undefined): string | null {
 }
 
 /**
- * 指令集是「产物真实需要什么」的清单（字体已经自托管，没有第三方来源，P1-1）：
+ * 指令集是「产物真实需要什么」的清单（字体已自托管，没有第三方来源）：
  * - `img-src https:`：文章里的外链图来自任意 https 域名（构建期只探测尺寸，不自托管）；
  * - `worker-src` + `'wasm-unsafe-eval'`：Pagefind 用 worker + WebAssembly 建索引；
  * - `'unsafe-inline'`：Astro 把小于 4KB 的客户端脚本内联进 HTML，且随内容变化；
@@ -155,7 +155,7 @@ export function toVercelHeaders(rules: readonly HeaderRule[]): VercelHeaderRule[
 }
 
 /* ── 重定向 ─────────────────────────────────────────────────────────────
-   分页第一页住在 /posts/1（plan §6）：/posts/ 是 Astro 不再生成的旧地址，
+   分页第一页住在 /posts/1：/posts/ 是 Astro 不再生成的旧地址，
    用真 301 收口，免得它变成 404 或者和第一页内容重复。 */
 
 /** 文章列表第一页的地址（`[...page].astro` 改成 `[page].astro` 后就住在这里） */

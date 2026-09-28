@@ -65,7 +65,7 @@ All posts live in `src/content/blog/`; the **first-level directory name becomes 
 
 - **Framework** — [Astro](https://astro.build/) (`output: 'static'`, no SSR adapter)
 - **Source language** — TypeScript (Node native type stripping — no build step before running)
-- **Fonts** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font) (OFL-1.1) via [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/)
+- **Fonts** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font) (OFL-1.1, self-hosted subset)
 - **Static search** — [Pagefind](https://pagefind.app/)
 - **Lightbox** — [PhotoSwipe](https://photoswipe.com/)
 - **Comments** — [remark42](https://remark42.com/) (self-hosted, optional)
@@ -194,7 +194,7 @@ The CSP is report-only right now: it reports to the console and blocks nothing, 
 cannot white-screen your site. Tighten it in this order:
 
 1. Deploy, then watch the CSP reports in the browser console;
-2. Add whatever origins show up to the allowlist in `src/utils/deploy-policy.ts` (the font CDN and remark42 are already there);
+2. Add whatever origins show up to the allowlist in `src/utils/deploy-policy.ts` (remark42 is already there);
 3. Once the reports are clean, rename `Content-Security-Policy-Report-Only` to `Content-Security-Policy` and start enforcing.
 
 `script-src` keeps `'unsafe-inline'` because Astro inlines client scripts smaller than 4 KB into the HTML
@@ -202,11 +202,12 @@ cannot white-screen your site. Tighten it in this order:
 hard-coded hashes would drift on every build. For a stricter policy, use Astro's built-in
 [`security.csp`](https://docs.astro.build/en/reference/configuration-reference/#securitycsp), which hashes at build time.
 
-`/_astro/*` holds content-hashed assets, so the configs give it `Cache-Control: public, max-age=31536000, immutable`.
+Content-hashed assets (`/_astro/*`, `/fonts/*`, `/pagefind/index/*`, `/pagefind/fragment/*`) get
+`Cache-Control: public, max-age=31536000, immutable`; everything else (HTML, Pagefind's fixed-name runtime)
+is left to the platform default.
 
-> The assertion tooling in `devtools/` cross-checks that both outlets match header by header, that the CSP is still
-> report-only, that every external origin the build actually uses (the font CDN, for instance) is allowed by the
-> matching directive, and that a configured remark42 is allowlisted.
+> Both outlets (`dist/_headers` and `vercel.ts`) must match header by header — `src/utils/deploy-policy.ts` is the
+> only place to edit the policy.
 
 ### Redirects (301)
 
