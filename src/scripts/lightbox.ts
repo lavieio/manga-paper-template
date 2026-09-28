@@ -1,5 +1,5 @@
 /**
- * PhotoSwipe 灯箱（plan §9）
+ * PhotoSwipe 灯箱
  * - 事件委托：正文（含私密文章解密后注入的内容）任意 <img> 点击即开
  * - 只有 PhotoSwipe 本体懒加载（首次点击才 import()），首屏零负担
  * - **样式必须静态导入**：Astro 的 inlineStylesheets 会把页面 CSS 内联成 <style> 并删掉产物

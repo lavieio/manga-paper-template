@@ -44,7 +44,7 @@ const { Content, headings } = await render(post);
 const category = getCategory(post);
 const minutes = estimateReadTime(post.body ?? "");
 
-// 私密文章：构建期加密正文（plan §8）——同一条渲染管线，只存密文
+// 私密文章：构建期加密正文——同一条渲染管线，只存密文
 let privatePayload: EncryptedPayload | null = null;
 if (post.data.private) {
   const container = await AstroContainer.create();

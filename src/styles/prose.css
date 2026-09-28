@@ -1,5 +1,5 @@
 /* MangaPaper · 文章详情排版（prose）+ 标题区 + TOC + 篇目导航
-   对齐 demos/comic/article.css 定稿，全量走 token */
+   全量走 token */
 
 /* TOC 悬浮于正文容器（980px）右缘外侧，不占正文栏位；
    视口 ≥1400px 才能完整容纳（正文半宽 462 + 间隙 16 + TOC 220）。
@@ -126,7 +126,7 @@
   font-weight: var(--shiki-dark-font-weight) !important;
   text-decoration: var(--shiki-dark-text-decoration) !important;
 }
-/* ── 代码块「复制」按钮（plan §7.4）──
+/* ── 代码块「复制」按钮 ──
    包裹层把按钮留在滚动容器之外：.astro-code 自己 overflow-x: auto，
    绝对定位的后代会被一起横向滚走；按钮压在代码块上边框上（top: -11px），
    只压到内边距，一行代码都不挡。 */

@@ -1,4 +1,4 @@
-/* Maple Mono NF CN —— 自托管子集（P1-1），不依赖任何字体 CDN。
+/* Maple Mono NF CN —— 自托管子集，不依赖任何字体 CDN。
    字体文件与 @font-face 清单都是构建期生成的（`npm run fonts`）：
    core 装站点字符 + 常用符号（首屏 preload 400/700），tail 按 unicode-range 兜住
    GB2312 一级里 core 之外的剩余字。字符集与切片策略见 scripts/lib/font-charsets.ts，

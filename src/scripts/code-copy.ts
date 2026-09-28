@@ -1,5 +1,5 @@
 /**
- * 代码块「复制」按钮（plan §7.4）
+ * 代码块「复制」按钮
  * - 事件委托：公开文章的按钮由构建期注入（rehype-code-copy），私密文章解密后注入的内容同样是
  *   .code-copy，所以这里不需要任何初始化、也不怕解密后重建。
  * - 复制纯文本：优先 Clipboard API（HTTPS / localhost），失败退到 execCommand 兜底；

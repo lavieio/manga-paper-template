@@ -1,5 +1,5 @@
 /* MangaPaper · 漫画稿纸 —— 设计 tokens + 基础排版
-   浅色值与 demos/comic/base.css 定稿一致；暗色只改变量值（plan §4.2）。 */
+   浅色值即设计定稿；暗色只改变量值。 */
 
 :root {
   /* 声明 color-scheme：滚动条、表单控件、自动填充底色、原生控件默认焦点环都跟着主题走。
@@ -163,7 +163,7 @@ body {
   border: 0;
 }
 
-/* 跳过链接聚焦后现身：页内左上角的黄底贴纸，与站点语言一致（P3-1）。
+/* 跳过链接聚焦后现身：页内左上角的黄底贴纸，与站点语言一致。
    用 :focus-visible 而不是 :focus —— 它唯一能被聚焦的途径就是键盘。 */
 .skip-link:focus-visible {
   position: fixed;

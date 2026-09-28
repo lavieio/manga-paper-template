@@ -5,7 +5,7 @@
 import type { FacePlan } from "./font-plan.ts";
 
 export const FACE_CSS_HEADER = [
-  "/* Maple Mono NF CN 的自托管子集（P1-1）。",
+  "/* Maple Mono NF CN 的自托管子集。",
   "   ⚠️ 生成物：`npm run fonts`（scripts/build-fonts.ts）——改这里会被下次构建覆盖，",
   "   要改字符集与切片策略请改 scripts/lib/font-charsets.ts。",
   "   core = 站点字符 + 常用符号（首屏 preload 400/700）；",

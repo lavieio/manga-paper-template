@@ -1,7 +1,7 @@
 import type { SiteConfig } from "../config";
 
 /**
- * JSON-LD 结构化数据（plan §2 可发现性）：首页 WebSite + Blog、公开文章页 BlogPosting。
+ * JSON-LD 结构化数据（可发现性）：首页 WebSite + Blog、公开文章页 BlogPosting。
  *
  * 私密文章的标题与正文按设计不进明文，那几页一概不传 structuredData（判断权在调用方）。
  * 序列化必须走 serializeJsonLd()：JSON.stringify 不转义 `<`，

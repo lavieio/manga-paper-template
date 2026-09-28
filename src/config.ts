@@ -1,4 +1,4 @@
-/** 站点全局配置：唯一入口（plan §2）。占位值随时可改。 */
+/** 站点全局配置：唯一入口。占位值随时可改。 */
 export const site = {
   name: "MangaPaper",
   tagline: "A loose-leaf, comic-paper, monospace blog theme",
@@ -16,7 +16,7 @@ export const site = {
 } as const;
 
 /**
- * remark42 评论（plan §11）：全部从 env 读取，不设硬编码占位。
+ * remark42 评论：全部从 env 读取，不设硬编码占位。
  * 未配置时整个评论区不渲染（而非显示空壳）。
  */
 export const remark42 = {
