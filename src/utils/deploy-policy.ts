@@ -15,8 +15,22 @@ export const REPORT_ONLY_CSP = "Content-Security-Policy-Report-Only";
 export const ENFORCING_CSP = "Content-Security-Policy";
 /** 带内容哈希的资源目录：可以永久缓存 */
 export const ASTRO_ASSETS_SOURCE = "/_astro/*";
-/** 自托管字体子集（P1-1）：文件名带内容哈希，同样可以永久缓存 */
+/** 自托管字体子集（P1-1）：文件名带内容哈希 */
 export const FONT_ASSETS_SOURCE = "/fonts/*";
+/**
+ * Pagefind 的索引与分片：文件名由**内容**算出来（实测：给一篇文章加一句话重编，
+ * 这 19 个文件的名字全变、且没有任何同名文件换了内容），搜索时由 `pagefind-entry.json`
+ * 按哈希去取，所以可以永久缓存。
+ * **只有这两层**——`pagefind.js`、`pagefind-ui.css`、`pagefind-worker.js` 与
+ * `pagefind-entry.json` 是固定文件名，升级 Pagefind 就换内容，immutable 会让老浏览器
+ * 长期用旧运行时（可能与新索引格式不兼容），那些留给平台默认的 `must-revalidate`。
+ */
+export const PAGEFIND_HASHED_SOURCES = ["/pagefind/index/*", "/pagefind/fragment/*"] as const;
+/**
+ * 所有可以 `immutable` 的路径：响应头的两个出口（`dist/_headers` 与 `vercel.ts`）
+ * 与 devtools 的产物断言共用这一份，新增哈希目录只改这里，免得策略与断言漂移。
+ */
+export const IMMUTABLE_SOURCES: readonly string[] = [ASTRO_ASSETS_SOURCE, FONT_ASSETS_SOURCE, ...PAGEFIND_HASHED_SOURCES];
 export const GLOBAL_SOURCE = "/*";
 export const IMMUTABLE_CACHE = "public, max-age=31536000, immutable";
 /** 安全头里必须始终存在的几项（devtools 的产物断言也按这个清单核） */
@@ -65,14 +79,10 @@ export function buildHeaderRules(remark42Host: string | undefined): HeaderRule[]
         { name: REPORT_ONLY_CSP, value: buildCsp(cspOrigin(remark42Host)) },
       ],
     },
-    {
-      source: ASTRO_ASSETS_SOURCE,
+    ...IMMUTABLE_SOURCES.map((source) => ({
+      source,
       headers: [{ name: "Cache-Control", value: IMMUTABLE_CACHE }],
-    },
-    {
-      source: FONT_ASSETS_SOURCE,
-      headers: [{ name: "Cache-Control", value: IMMUTABLE_CACHE }],
-    },
+    })),
   ];
 }
 
@@ -124,6 +134,8 @@ const HEADERS_DOC = [
   "# 再去掉 -Report-Only 强制。script-src 留 'unsafe-inline' 是因为 Astro 会把小于 4KB 的",
   "# 客户端脚本内联进 HTML 且随内容变化，写死 hash 必然漂移；更严的做法是 Astro 内置 security.csp。",
   "# 配了 remark42（PUBLIC_REMARK42_HOST）时，它的域名已自动写进 script-src / connect-src / frame-src。",
+  "# 内容哈希命名的产物（/_astro/*、/fonts/*、/pagefind/index|fragment/*）配了 immutable 长缓存；",
+  "# 其余路径（HTML、/pagefind 下固定文件名的运行时）不写规则，走平台默认。",
 ].join("\n");
 
 /** `_headers`：路径行 + 两个空格缩进的头行 */
