@@ -1,5 +1,5 @@
 # MangaPaper 🖋
-![MangaPaper](public/default-og.svg)
+![MangaPaper](public/og.png)
 
 ![Astro](https://img.shields.io/badge/Astro-7.x-FF5D01?style=for-the-badge&logo=astro&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
@@ -23,6 +23,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 - [x] 归档时间轴 / 标签云 / 分类页
 - [x] draft posts & pagination（每页 8 篇）
 - [x] sitemap & rss feed（私密与草稿自动排除）
+- [x] 分享卡片：每篇公开文章构建期渲染一张 1200×630 OG 图（[Satori](https://github.com/vercel/satori) + resvg-js；私密/草稿绝不生成）
 - [x] 评论（[remark42](https://remark42.com/)，可选；未配置则整块不渲染）
 - [x] 日期自动化：git 钩子注入 `date` / 刷新 `updated`
 - [x] 一键部署（Vercel / Cloudflare Pages）
@@ -35,7 +36,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   └── fonts/                  # 完整字体：4 个字重 TTF + LICENSE（OFL-1.1；构建期从这里切子集）
 ├── public/
 │   ├── fonts/                  # 字体子集产物（npm run fonts 生成，不进仓）
-│   ├── default-og.svg          # README 头图 / 社交分享图
+│   ├── og.png                  # README 头图（站点默认卡片的快照；卡片本体由 /og/*.png 构建期生成）
 │   └── favicon.svg             # 朱砂印章
 ├── scripts/
 │   ├── build-deploy-config.ts  # 生成 dist/_headers + dist/_redirects
@@ -46,11 +47,11 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # 文章：一级子目录名 = 分类
 │   ├── layouts/Base.astro      # 布局：点阵稿纸底、主题切换、页头页脚
-│   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss
+│   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss / og（分享卡片）
 │   ├── plugins/                # rehype 图片尺寸/懒加载注入、代码复制按钮、私密与草稿扫描
 │   ├── scripts/                # 灯箱、TOC、私密解锁与密钥缓存（客户端）
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
-│   ├── utils/                  # 内容管线、加密、格式与阅读时长、响应头策略
+│   ├── utils/                  # 内容管线、加密、格式与阅读时长、响应头策略、og 卡片（版式/文本/装饰/字体子集）
 │   ├── config.ts               # 站名 / 作者 / 关于页文案与联系方式 / 页脚仓库链接 / remark42（唯一站点入口）
 │   └── content.config.ts       # 内容 schema（zod）
 ├── vercel.ts                   # Vercel 项目配置（Vercel 构建时执行，自己读 env；不存生成物）
@@ -66,6 +67,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 - **源码语言** — TypeScript（Node 原生类型剥离，构建前无需编译步骤）
 - **字体** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font)（OFL-1.1，自托管子集）
 - **静态搜索** — [Pagefind](https://pagefind.app/)
+- **分享图** — [Satori](https://github.com/vercel/satori) + [resvg-js](https://github.com/thx/resvg-js)（构建期渲染，不进产物）
 - **灯箱** — [PhotoSwipe](https://photoswipe.com/)
 - **评论** — [remark42](https://remark42.com/)（自托管，可选）
 - **加密** — WebCrypto（PBKDF2 600k + AES-256-GCM）

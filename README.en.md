@@ -1,5 +1,5 @@
 # MangaPaper 🖋
-![MangaPaper](public/default-og.svg)
+![MangaPaper](public/og.png)
 
 ![Astro](https://img.shields.io/badge/Astro-7.x-FF5D01?style=for-the-badge&logo=astro&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
@@ -24,6 +24,7 @@ light/dark themes. Fully static: no backend, no client framework.
 - [x] Archive timeline / tag cloud / category pages
 - [x] draft posts & pagination (8 per page)
 - [x] sitemap & rss feed (private and draft posts excluded)
+- [x] Social cards: a 1200×630 OG image per public post, rendered at build time ([Satori](https://github.com/vercel/satori) + resvg-js; never generated for private/draft posts)
 - [x] Comments ([remark42](https://remark42.com/), optional — not rendered unless configured)
 - [x] Automatic dates: a git hook injects `date` and refreshes `updated`
 - [x] One-click deploy (Vercel / Cloudflare Pages)
@@ -36,7 +37,7 @@ light/dark themes. Fully static: no backend, no client framework.
 │   └── fonts/                  # full fonts: four weight TTFs + LICENSE (OFL-1.1; subset from here at build time)
 ├── public/
 │   ├── fonts/                  # font subset artifacts (npm run fonts; not committed)
-│   ├── default-og.svg          # README hero / social preview
+│   ├── og.png                  # README hero (snapshot of the default card; cards are generated at build time)
 │   └── favicon.svg             # vermilion seal
 ├── scripts/
 │   ├── build-deploy-config.ts  # emits dist/_headers + dist/_redirects
@@ -67,7 +68,7 @@ All posts live in `src/content/blog/`; the **first-level directory name becomes 
 - **Source language** — TypeScript (Node native type stripping — no build step before running)
 - **Fonts** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font) (OFL-1.1, self-hosted subset)
 - **Static search** — [Pagefind](https://pagefind.app/)
-- **Lightbox** — [PhotoSwipe](https://photoswipe.com/)
+- **Social cards** — [Satori](https://github.com/vercel/satori) + [resvg-js](https://github.com/thx/resvg-js) (build-time only, nothing ships)
 - **Comments** — [remark42](https://remark42.com/) (self-hosted, optional)
 - **Encryption** — WebCrypto (PBKDF2 600k + AES-256-GCM)
 - **Git hooks** — [husky](https://typicode.github.io/husky/)
