@@ -4,8 +4,11 @@
  */
 declare module "subset-font" {
   interface SubsetOptions {
-    /** 产物格式；我们只用 woff2 */
-    readonly targetFormat?: "woff" | "woff2";
+    /**
+     * 产物格式。网页字体走 woff2；OG 卡片必须给 sfnt（TTF）——
+     * Satori 只吃 TTF / OTF / WOFF，不吃 woff2。
+     */
+    readonly targetFormat?: "sfnt" | "truetype" | "woff" | "woff2";
     /** 要保留的 name ID（不传就按 harfbuzz 默认） */
     readonly preserveNameIds?: readonly number[];
     /** 只保留这些 OpenType 特性；不传等于全留（等宽连字是 Maple Mono 的卖点） */

@@ -19,6 +19,7 @@ import { categoryColor } from "../../utils/category";
 import { estimateReadTime } from "../../utils/readtime";
 import { formatDate } from "../../utils/format";
 import { blogPostingJsonLd, siteFacts } from "../../utils/structured-data";
+import { postShareImage } from "../../utils/share-image";
 
 export async function getStaticPaths() {
   // 详情页路由取全量（含私密）；上一篇/下一篇只取公开文章（不泄露私密标题）
@@ -53,6 +54,12 @@ if (post.data.private) {
 }
 
 // 私密文章不输出 JSON-LD：标题/描述按设计不能出现在明文里
+// 分享图：私密文章的标题不能进图，postShareImage() 会回落站点默认卡片
+const shareImage = postShareImage(
+  { slug: getPostSlug(post), title: post.data.title, cover: post.data.cover, isPrivate: !!privatePayload },
+  { siteUrl: Astro.site, siteName: site.name },
+);
+
 const jsonLd = privatePayload
   ? undefined
   : blogPostingJsonLd(
@@ -76,6 +83,8 @@ const jsonLd = privatePayload
   unlockCheck={!!privatePayload}
   searchable={!privatePayload}
   structuredData={jsonLd}
+  shareImage={shareImage}
+  shareType="article"
 >
   {
     privatePayload ? (
