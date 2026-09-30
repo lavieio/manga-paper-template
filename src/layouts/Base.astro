@@ -5,7 +5,9 @@ import "../styles/card.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import { site } from "../config";
+import { FONT_PRELOAD } from "../utils/font-assets";
 import { serializeJsonLd, type JsonLdNode } from "../utils/structured-data";
+import { siteShareImage, type ShareImage } from "../utils/share-image";
 
 interface Props {
   title?: string;
@@ -22,6 +24,10 @@ interface Props {
   searchable?: boolean;
   /** schema.org 结构化数据（JSON-LD）；不传就不渲染（私密文章必须不传） */
   structuredData?: JsonLdNode | readonly JsonLdNode[];
+  /** 分享图（og:image）；文章页传自己的卡片，其余页面用站点默认卡片 */
+  shareImage?: ShareImage;
+  /** og:type：文章页给 article，其余页面给 website */
+  shareType?: "website" | "article";
 }
 
 const {
@@ -31,19 +37,15 @@ const {
   unlockCheck = false,
   searchable = false,
   structuredData,
+  shareImage = siteShareImage({ siteUrl: Astro.site, siteName: site.name }),
+  shareType = "website",
 } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
+// og:title 不带「· 站点名」后缀：平台会自己补站点信息，重复一遍反而变长
+const shareTitle = title ?? site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
-// RSS auto-discovery（plan §12）：阅读器 / 浏览器扩展靠这条声明自动发现订阅地址
+// RSS auto-discovery：阅读器 / 浏览器扩展靠这条声明自动发现订阅地址
 const rssFeed = new URL("rss.xml", Astro.site);
-
-// 字体 CDN：只加载站点实际用到的字重（正文 400 / 引用斜体 400i / 贴纸 600 / 标题 700）。
-// 非阻塞加载：先 preconnect 建连，再 preload + onload 切 rel（配合 font-display: swap
-// 与度量对齐 fallback，首帧先用 fallback 绘制，字体就绪后替换）。
-// preload 与随后的取回必须同为 CORS 模式，否则同一份 CSS 会被下载两次 → 声明 crossorigin。
-const FONT_CDN = "https://fontsapi.zeoseven.com/442";
-const FONT_ORIGIN = new URL(FONT_CDN).origin;
-const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
 ---
 
 <!doctype html>
@@ -67,6 +69,25 @@ const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
       )
     }
     <link rel="canonical" href={canonical} />
+    {/*
+      分享卡片：og:url 跟随 canonical（同一份地址来源），图片一律绝对地址——
+      Open Graph 不接受相对路径，平台会直接丢掉整张图。
+    */}
+    <meta property="og:type" content={shareType} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:title" content={shareTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={shareImage.url} />
+    {shareImage.width && <meta property="og:image:width" content={String(shareImage.width)} />}
+    {shareImage.height && <meta property="og:image:height" content={String(shareImage.height)} />}
+    <meta property="og:image:alt" content={shareImage.alt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={shareTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={shareImage.url} />
+    <meta name="twitter:image:alt" content={shareImage.alt} />
     <link rel="alternate" type="application/rss+xml" title={site.name} href={rssFeed} />
     {
       structuredData && (
@@ -74,28 +95,18 @@ const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
       )
     }
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preconnect" href={FONT_ORIGIN} crossorigin />
-    <link rel="dns-prefetch" href={FONT_ORIGIN} />
+    {/*
+      字体 preload：自托管子集只 preload core 的 400 / 700（正文 + 标题），
+      其余字重与 tail 分片交给 unicode-range 按需取；清单来自构建期生成的 font-assets.ts。
+      `as="font"` 的 preload 一律走 CORS 模式，同源也必须写 crossorigin，否则会被取两次。
+    */}
     {
-      FONT_WEIGHTS.map((w) => (
-        <link
-          rel="preload"
-          as="style"
-          crossorigin="anonymous"
-          href={`${FONT_CDN}/${w}/result.css`}
-          onload="this.onload=null;this.rel='stylesheet'"
-        />
+      FONT_PRELOAD.map((href) => (
+        <link rel="preload" as="font" type="font/woff2" crossorigin="anonymous" href={href} />
       ))
     }
-    <noscript>
-      {
-        FONT_WEIGHTS.map((w) => (
-          <link rel="stylesheet" href={`${FONT_CDN}/${w}/result.css`} />
-        ))
-      }
-    </noscript>
     <script is:inline>
-      // 首帧前决定主题，避免 FOUC（plan §4.3）
+      // 首帧前决定主题，避免 FOUC
       (function () {
         var saved = null;
         try {
@@ -113,7 +124,7 @@ const FONT_WEIGHTS = ["main", "italic", "semi-bold", "bold"] as const;
   </head>
   <body data-pagefind-ignore={searchable ? undefined : ""}>
     {/*
-      跳过链接（P3-1）：键盘用户 Tab 第一下就直达正文，不必每次穿过页头那串导航。
+      跳过链接：键盘用户 Tab 第一下就直达正文，不必每次穿过页头那串导航。
       未聚焦时与 .sr-only 一样藏着（仍在无障碍树里），聚焦后在页内左上角现身。
     */}
     <a class="skip-link" href="#main">跳到正文</a>

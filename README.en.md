@@ -1,5 +1,5 @@
 # MangaPaper 🖋
-![MangaPaper](public/default-og.svg)
+![MangaPaper](public/og.png)
 
 ![Astro](https://img.shields.io/badge/Astro-7.x-FF5D01?style=for-the-badge&logo=astro&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
@@ -14,7 +14,7 @@ light/dark themes. Fully static: no backend, no client framework.
 
 ## 🔥 Features
 
-- [x] Paper × comic design language, monospace everywhere
+- [x] Paper × comic design language, monospace everywhere (full fonts in the repo, subsets cut at build time: ≈1 MB / 3 font requests per article)
 - [x] **Private posts**: AES-256-GCM encrypted at build time; only ciphertext ships; `/private` gated index
 - [x] Table of contents (sticky right rail, scroll highlighting with vermilion indicator)
 - [x] Copy-to-clipboard on code blocks, image lightbox ([PhotoSwipe](https://photoswipe.com/), loaded on first click)
@@ -24,6 +24,7 @@ light/dark themes. Fully static: no backend, no client framework.
 - [x] Archive timeline / tag cloud / category pages
 - [x] draft posts & pagination (8 per page)
 - [x] sitemap & rss feed (private and draft posts excluded)
+- [x] Social cards: a 1200×630 OG image per public post, rendered at build time ([Satori](https://github.com/vercel/satori) + resvg-js; never generated for private/draft posts)
 - [x] Comments ([remark42](https://remark42.com/), optional — not rendered unless configured)
 - [x] Automatic dates: a git hook injects `date` and refreshes `updated`
 - [x] One-click deploy (Vercel / Cloudflare Pages)
@@ -32,11 +33,15 @@ light/dark themes. Fully static: no backend, no client framework.
 
 ```bash
 /
+├── assets/
+│   └── fonts/                  # full fonts: four weight TTFs + LICENSE (OFL-1.1; subset from here at build time)
 ├── public/
-│   ├── default-og.svg          # README hero / social preview
+│   ├── fonts/                  # font subset artifacts (npm run fonts; not committed)
+│   ├── og.png                  # README hero (snapshot of the default card; cards are generated at build time)
 │   └── favicon.svg             # vermilion seal
 ├── scripts/
 │   ├── build-deploy-config.ts  # emits dist/_headers + dist/_redirects
+│   ├── build-fonts.ts          # builds the self-hosted font subset (npm run fonts)
 │   ├── frontmatter-dates.ts    # git hook: inject date / refresh updated
 │   └── preflight.ts            # required checks before a build (currently SITE_URL)
 ├── src/
@@ -61,9 +66,9 @@ All posts live in `src/content/blog/`; the **first-level directory name becomes 
 
 - **Framework** — [Astro](https://astro.build/) (`output: 'static'`, no SSR adapter)
 - **Source language** — TypeScript (Node native type stripping — no build step before running)
-- **Fonts** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font) (OFL-1.1) via [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/)
+- **Fonts** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font) (OFL-1.1, self-hosted subset)
 - **Static search** — [Pagefind](https://pagefind.app/)
-- **Lightbox** — [PhotoSwipe](https://photoswipe.com/)
+- **Social cards** — [Satori](https://github.com/vercel/satori) + [resvg-js](https://github.com/thx/resvg-js) (build-time only, nothing ships)
 - **Comments** — [remark42](https://remark42.com/) (self-hosted, optional)
 - **Encryption** — WebCrypto (PBKDF2 600k + AES-256-GCM)
 - **Git hooks** — [husky](https://typicode.github.io/husky/)
@@ -190,7 +195,7 @@ The CSP is report-only right now: it reports to the console and blocks nothing, 
 cannot white-screen your site. Tighten it in this order:
 
 1. Deploy, then watch the CSP reports in the browser console;
-2. Add whatever origins show up to the allowlist in `src/utils/deploy-policy.ts` (the font CDN and remark42 are already there);
+2. Add whatever origins show up to the allowlist in `src/utils/deploy-policy.ts` (remark42 is already there);
 3. Once the reports are clean, rename `Content-Security-Policy-Report-Only` to `Content-Security-Policy` and start enforcing.
 
 `script-src` keeps `'unsafe-inline'` because Astro inlines client scripts smaller than 4 KB into the HTML
@@ -198,11 +203,12 @@ cannot white-screen your site. Tighten it in this order:
 hard-coded hashes would drift on every build. For a stricter policy, use Astro's built-in
 [`security.csp`](https://docs.astro.build/en/reference/configuration-reference/#securitycsp), which hashes at build time.
 
-`/_astro/*` holds content-hashed assets, so the configs give it `Cache-Control: public, max-age=31536000, immutable`.
+Content-hashed assets (`/_astro/*`, `/fonts/*`, `/pagefind/index/*`, `/pagefind/fragment/*`) get
+`Cache-Control: public, max-age=31536000, immutable`; everything else (HTML, Pagefind's fixed-name runtime)
+is left to the platform default.
 
-> The assertion tooling in `devtools/` cross-checks that both outlets match header by header, that the CSP is still
-> report-only, that every external origin the build actually uses (the font CDN, for instance) is allowed by the
-> matching directive, and that a configured remark42 is allowlisted.
+> Both outlets (`dist/_headers` and `vercel.ts`) must match header by header — `src/utils/deploy-policy.ts` is the
+> only place to edit the policy.
 
 ### Redirects (301)
 
@@ -243,15 +249,31 @@ With `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` configured, public posts
 
 ## 🔤 Fonts
 
-By default fonts come from the [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/) (cn-font-split chunks,
-OFL-1.1, hinted) — no font files to self-host. Only four weights are loaded (body 400 / italic 400i / stickers 600 /
-headings 700), and they load **non-blocking** (`preload` + `onload` switching `rel`, with a `<noscript>` fallback).
+Self-hosted **Maple Mono NF CN** ([SIL OFL 1.1](https://github.com/subframe7536/maple-font), v7.9) — no font
+CDN involved. The recipe is **full fonts in the repo, subsets cut at build time**: `assets/fonts/` holds the four
+original weight TTFs (body 400 / italic 400i / stickers 600 / headings 700, ≈83 MB total) and the build reduces
+them to the glyphs this site actually needs. The artifacts (`public/fonts/*.woff2`, 84 files / ≈3.5 MB) are
+**not committed**. Layered by `unicode-range`:
 
-To self-host instead: download Maple Mono NF CN, subset it yourself, emit `public/fonts/**`,
-then swap the CDN `<link>` tags in `src/layouts/Base.astro` for local `@font-face` rules
-(keep the metric-matched fallback in `src/styles/fonts.css`). ZeoSeven also ships a
-[ZSFT CLI](https://fonts.zeoseven.com/docs/cli/) for private deployments. Offline, fonts fall back to
-metric-adjusted Consolas.
+- **core**: site characters + common symbols (ASCII / CJK punctuation / full-width / arrows·math·box…), one file
+  per weight (≈350–380 KB each); only the 400 and 700 cores are preloaded;
+- **tail**: the rest of GB2312 level 1, sliced per zone (94 chars), built for 400/700 only; the browser fetches a
+  slice only when such a character actually appears → **nothing inside GB2312 level 1 is ever missing**, and the
+  first load pays nothing for it;
+- Anything outside (GB2312 level 2, rare glyphs, plus glyphs the font simply lacks such as `✅❌➕` and Kangxi
+  radicals) falls back to the **metric-aligned** Consolas declared in `src/styles/fonts.css`
+  (`size-adjust: 109.1%`) — same advance width, no layout shift.
+
+Measured (412px, cold cache): an article's font payload drops from ≈2.5 MB / 55 shards (CDN) to
+**≈1.05 MB / 3 requests** (400 + 700 + the 600 used by stickers).
+
+**No manual step**: `npm run fonts` is part of `npm run build` and `npm run dev`; it recomputes the character set
+from the current content (including private/draft post sources) and skips the whole step when nothing changed
+(fingerprint in `.cache/fonts/plan.json`: ~0.2s on later builds, ≈20s on the first build of a fresh clone).
+To change weights or coverage edit `scripts/lib/font-charsets.ts`; to upgrade the font, drop the upstream files
+(same names) into `assets/fonts/` — they come out of `MapleMono-NF-CN.zip` in the
+[releases](https://github.com/subframe7536/maple-font/releases).
+
 
 ## ✨ Feedback & Suggestions
 

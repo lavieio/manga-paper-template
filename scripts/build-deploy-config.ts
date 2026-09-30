@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 生成 Cloudflare Pages / Netlify 要的部署配置（构建链，plan §13）：
+ * 生成 Cloudflare Pages / Netlify 要的部署配置（构建链）：
  * - `dist/_headers`：安全响应头（CSP 白名单按 `.env` 现算）；
  * - `dist/_redirects`：真 301（`/posts/ → /posts/1`）。
  *

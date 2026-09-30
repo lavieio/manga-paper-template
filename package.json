@@ -1,11 +1,12 @@
 {
   "name": "manga-paper",
   "type": "module",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "scripts": {
-    "dev": "astro dev",
-    "build": "node scripts/preflight.ts && astro build && node scripts/build-deploy-config.ts && pagefind --site dist",
+    "dev": "npm run fonts && astro dev",
+    "build": "node scripts/preflight.ts && npm run fonts && astro build && node scripts/build-deploy-config.ts && pagefind --site dist",
+    "fonts": "node scripts/build-fonts.ts",
     "preview": "astro preview",
     "astro": "astro",
     "prepare": "husky"
@@ -22,7 +23,10 @@
     "photoswipe": "^5.4.4"
   },
   "devDependencies": {
+    "@resvg/resvg-js": "^2.6.2",
     "husky": "^9.1.7",
-    "pagefind": "^1.5.2"
+    "pagefind": "^1.5.2",
+    "satori": "^0.33.5",
+    "subset-font": "^2.9.0"
   }
 }

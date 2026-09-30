@@ -1,6 +1,6 @@
 ---
 /**
- * Featured 纸片堆轮播（对齐 demos/05-comic-paper.html 定稿）
+ * Featured 纸片堆轮播（纸片堆 + 错位 + 甩卡动画）
  * - 最多 5 张 featured，自动轮播 + 编号方块 + 双向 hover 联动 + 甩卡动画
  * - 顶层卡片点击进详情；后层卡片点击将其抽到顶层
  * - 只有 1 张时不轮播：隐藏编号方块，仍是同一套纸片样式与点击行为
@@ -49,7 +49,8 @@ const stacked = sheets.length > 1;
               </span>
             </div>
             <div class="body">
-              {/* 定高代码窗：行数固定，超出部分底部淡出（避免纸堆里每张纸高度不一） */}
+              {/* 代码窗：高度跟着最高的那张纸片走（CSS flex 撑平，不靠脚本量行数），
+                  最多 --code-cap 行，超出部分底部淡出；详见 .code-clamp */}
               <div class="code-clamp">
                 <pre class="code"><span class="k">const</span> post = {"{"}
   title: <span class="s">'{post.data.title}'</span>,
@@ -92,23 +93,6 @@ const stacked = sheets.length > 1;
   // 单张时不轮播，但仍需顶层样式与点击进入详情（走同一条路径）
   const single = N <= 1;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-  /** 代码窗行数：取本宽度下内容最长的那张，上限读 CSS 的 --code-cap（断点可不同） */
-  const measureCodeLines = () => {
-    const cap = Number.parseInt(getComputedStyle(stack).getPropertyValue("--code-cap"), 10);
-    const needed = sheets.reduce((max, el) => {
-      const code = el.querySelector<HTMLElement>(".code");
-      if (!code) return max;
-      const lineHeight = Number.parseFloat(getComputedStyle(code).lineHeight);
-      return Math.max(max, Math.round(code.scrollHeight / lineHeight));
-    }, 0);
-    const limit = Number.isFinite(cap) && cap > 0 ? cap : Number.POSITIVE_INFINITY;
-    return Math.min(Math.max(needed, 1), limit);
-  };
-
-  const fitCodeLines = () => {
-    stack?.style.setProperty("--code-lines", String(measureCodeLines()));
-  };
 
   let current = 0;
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -182,17 +166,6 @@ const stacked = sheets.length > 1;
 
   layout();
   restart();
-
-  // 代码窗行数按实测内容定：字体度量到位后再量一次，跳断点/旋屏时重算
-  const CODE_FIT_DEBOUNCE = 120;
-  let fitTimer: ReturnType<typeof setTimeout> | undefined;
-
-  fitCodeLines();
-  document.fonts?.ready.then(fitCodeLines);
-  window.addEventListener("resize", () => {
-    clearTimeout(fitTimer);
-    fitTimer = setTimeout(fitCodeLines, CODE_FIT_DEBOUNCE);
-  });
 </script>
 
 <style>
@@ -210,13 +183,11 @@ const stacked = sheets.length > 1;
     display: grid;
     /* minmax(0,1fr)：轨道不被「代码窗」的 max-content 撑宽，纸片才能跟着容器收缩 */
     grid-template-columns: minmax(0, 1fr);
-    /* --code-lines 由脚本按实测内容写入（无 JS 时用下面的回退值 8）；
-       --code-cap 是「最多显示几行」，可按断点给不同值 */
-    --code-lines: 8;
+    /* --code-cap 是「代码窗最多显示几行」，可按断点给不同值（见文件末尾的 media query）。
+       实际高度按内容算：每张取 min(自己的自然行数, cap)，最高的那张决定整行高度 */
     --code-cap: 9;
   }
   .sheet {
-    display: block;
     grid-area: 1 / 1;
     min-width: 0;
     transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--rot, 0deg));
@@ -263,11 +234,17 @@ const stacked = sheets.length > 1;
   }
 
   .window {
+    /* 撑满网格行高（行高=最高那张纸片的自然高度）：所有纸片等高，
+       后层上移叠上去时不会露出下边角（实测：不等高会露边） */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
     border: 3px solid var(--ink);
     background: var(--card);
     box-shadow: var(--shadow-lg);
   }
   .window .cap {
+    flex: none;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -304,16 +281,24 @@ const stacked = sheets.length > 1;
     color: var(--ink-soft);
   }
   .window .body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     padding: 26px 26px 28px;
   }
-  /* 代码窗定高裁切：行数写死（--code-lines），超出部分底部淡出——
-     内容长度不可控，不裁切则每张纸片高度不同，后层会从前层底下探出边角 */
+  /* 代码窗：高度跟着最高的那张纸片走（`flex: 1 1 auto` 把每张都撑到同一高度），内容最多 --code-cap 行；
+     超出的部分在这里裁掉并底部淡出。淡出带与所有纸片共底：只有真被裁的那张会看到淡出，
+     内容不满的纸片淡出区落在空白上、看不出来。全程 CSS，不需要脚本读 scrollHeight */
   .code-clamp {
     --code-leading: 1.9;
+    /* flex-basis: auto（不是 0）：内在尺寸阶段拿自己的内容高度参与「整行多高」，
+       列里再有剩余空间时（别的纸片更高）才拉伸到同一高度——这就是「等高」的来源。
+       min-height 保持 auto，让 max-height 去封顶（Chrome 会把自动最小尺寸夹到 max 内） */
+    flex: 1 1 auto;
+    max-height: calc(var(--code-cap) * var(--code-leading) * 1em);
     font-family: var(--font-mono);
     font-size: 15px;
     line-height: var(--code-leading);
-    height: calc(var(--code-lines) * var(--code-leading) * 1em);
     overflow: hidden;
     /* 遮罩只作用于文字（纸底画在 .window 上），内容不满时看不出痕迹 */
     mask-image: linear-gradient(to bottom, #000 calc(100% - 1em), transparent);
@@ -399,7 +384,7 @@ const stacked = sheets.length > 1;
     .window .cap .file {
       display: none;
     }
-    /* 窄屏字号降一档（em 定高自动缩）；窄屏折行多，允许更多行才不吞描述 */
+    /* 窄屏字号降一档（高度按 em 走，自动缩）；窄屏折行多，允许更多行才不吞描述 */
     .stack {
       --code-cap: 12;
     }

@@ -1,4 +1,4 @@
-/** 阅读时长估算（plan §5）：中文 ÷450 字/分，英文 ÷200 词/分，合计向上取整、保底 1 分钟 */
+/** 阅读时长估算：中文 ÷450 字/分，英文 ÷200 词/分，合计向上取整、保底 1 分钟 */
 const CJK_CHARS_PER_MIN = 450;
 const EN_WORDS_PER_MIN = 200;
 const MIN_MINUTES = 1;

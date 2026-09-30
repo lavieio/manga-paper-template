@@ -9,12 +9,12 @@ import {
 } from "../utils/remote-image-size.ts";
 
 /**
- * 构建期给正文 <img> 补齐尺寸与加载属性（plan §9）：
+ * 构建期给正文 <img> 补齐尺寸与加载属性：
  * - **尺寸**：站内图（src 以 / 开头）直接读 public/ 下的文件；外链图在构建期抓图头
  *   （见 utils/remote-image-size.ts，失败则降级成下面的汇总告警）。两处都是为了消掉
  *   布局抖动，并让灯箱拿到构建期尺寸（没有 data-pswp-* 就只能等运行时 naturalWidth）。
  * - **加载**：首图 eager，其余 lazy + 全文 decoding="async"。长文一次拉全部图片是白流量，
- *   何况它们大多压在首屏下面（审计报告里 10 张图的文章就是这么拉的）。
+ *   何况它们大多压在首屏下面（十张图的文章就是这么拉的）。
  * - 作者在 markdown 里显式写过的属性一律不覆盖：想给某张图 fetchpriority="high"、或让首图也 lazy，
  *   直接写 HTML 即可。
  */

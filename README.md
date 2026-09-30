@@ -1,5 +1,5 @@
 # MangaPaper 🖋
-![MangaPaper](public/default-og.svg)
+![MangaPaper](public/og.png)
 
 ![Astro](https://img.shields.io/badge/Astro-7.x-FF5D01?style=for-the-badge&logo=astro&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
@@ -13,7 +13,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 
 ## 🔥 Features
 
-- [x] 稿纸 × 漫画设计语言，全站等宽字体
+- [x] 稿纸 × 漫画设计语言，全站等宽字体（完整字体进仓 + 构建期切子集：一篇文章 ≈1 MB / 3 个字体请求）
 - [x] **私密文章**：构建期 AES-256-GCM 加密，页面只存密文；`/private` 加密入口页
 - [x] 文章目录（右侧 sticky TOC，滚动高亮 + 朱砂指示条）
 - [x] 代码块一键复制（构建期注入按钮 + 事件委托；公开与私密文章都有）
@@ -23,6 +23,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 - [x] 归档时间轴 / 标签云 / 分类页
 - [x] draft posts & pagination（每页 8 篇）
 - [x] sitemap & rss feed（私密与草稿自动排除）
+- [x] 分享卡片：每篇公开文章构建期渲染一张 1200×630 OG 图（[Satori](https://github.com/vercel/satori) + resvg-js；私密/草稿绝不生成）
 - [x] 评论（[remark42](https://remark42.com/)，可选；未配置则整块不渲染）
 - [x] 日期自动化：git 钩子注入 `date` / 刷新 `updated`
 - [x] 一键部署（Vercel / Cloudflare Pages）
@@ -31,22 +32,26 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 
 ```bash
 /
+├── assets/
+│   └── fonts/                  # 完整字体：4 个字重 TTF + LICENSE（OFL-1.1；构建期从这里切子集）
 ├── public/
-│   ├── default-og.svg          # README 头图 / 社交分享图
+│   ├── fonts/                  # 字体子集产物（npm run fonts 生成，不进仓）
+│   ├── og.png                  # README 头图（站点默认卡片的快照；卡片本体由 /og/*.png 构建期生成）
 │   └── favicon.svg             # 朱砂印章
 ├── scripts/
 │   ├── build-deploy-config.ts  # 生成 dist/_headers + dist/_redirects
+│   ├── build-fonts.ts          # 生成自托管字体子集（npm run fonts）
 │   ├── frontmatter-dates.ts    # git 钩子：date / updated 自动注入
 │   └── preflight.ts            # 构建前必须通过的检查（目前是 SITE_URL）
 ├── src/
 │   ├── components/             # PostCard / FeaturedStack / TableOfContents / Comments …
 │   ├── content/blog/           # 文章：一级子目录名 = 分类
 │   ├── layouts/Base.astro      # 布局：点阵稿纸底、主题切换、页头页脚
-│   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss
+│   ├── pages/                  # index / posts / archive / tags / category / search / private / about / rss / og（分享卡片）
 │   ├── plugins/                # rehype 图片尺寸/懒加载注入、代码复制按钮、私密与草稿扫描
 │   ├── scripts/                # 灯箱、TOC、私密解锁与密钥缓存（客户端）
 │   ├── styles/                 # global / fonts / card / prose / private / lightbox
-│   ├── utils/                  # 内容管线、加密、格式与阅读时长、响应头策略
+│   ├── utils/                  # 内容管线、加密、格式与阅读时长、响应头策略、og 卡片（版式/文本/装饰/字体子集）
 │   ├── config.ts               # 站名 / 作者 / 关于页文案与联系方式 / 页脚仓库链接 / remark42（唯一站点入口）
 │   └── content.config.ts       # 内容 schema（zod）
 ├── vercel.ts                   # Vercel 项目配置（Vercel 构建时执行，自己读 env；不存生成物）
@@ -60,8 +65,9 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 
 - **框架** — [Astro](https://astro.build/)（`output: 'static'`，无 SSR adapter）
 - **源码语言** — TypeScript（Node 原生类型剥离，构建前无需编译步骤）
-- **字体** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font)（OFL-1.1）+ [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/)
+- **字体** — [Maple Mono NF CN](https://github.com/subframe7536/maple-font)（OFL-1.1，自托管子集）
 - **静态搜索** — [Pagefind](https://pagefind.app/)
+- **分享图** — [Satori](https://github.com/vercel/satori) + [resvg-js](https://github.com/thx/resvg-js)（构建期渲染，不进产物）
 - **灯箱** — [PhotoSwipe](https://photoswipe.com/)
 - **评论** — [remark42](https://remark42.com/)（自托管，可选）
 - **加密** — WebCrypto（PBKDF2 600k + AES-256-GCM）
@@ -182,17 +188,18 @@ cover: /cover.png       # 可选
 CSP 现在是 Report-Only：只往控制台发报告、不拦任何资源，上线不会因为策略写得太严而白屏。收紧顺序：
 
 1. 部署后在浏览器控制台看 CSP 报告；
-2. 把报告里出现的来源补进 `src/utils/deploy-policy.ts` 的白名单（字体 CDN 与 remark42 已放行）；
+2. 把报告里出现的来源补进 `src/utils/deploy-policy.ts` 的白名单（remark42 已放行）；
 3. 确认干净后把策略名从 `Content-Security-Policy-Report-Only` 改成 `Content-Security-Policy`，才开始强制。
 
 `script-src` 留了 `'unsafe-inline'`：Astro 会把小于 4KB 的客户端脚本内联进 HTML（主题首帧、
 年份修正、解锁检查 + 若干组件脚本），而且随内容变化，写死 hash 会随每次构建漂移。
 想更严就用 Astro 内置的 [`security.csp`](https://docs.astro.build/en/reference/configuration-reference/#securitycsp)（构建期自动算 hash）。
 
-`/_astro/*` 是带内容哈希的静态资源，配置里给了 `Cache-Control: public, max-age=31536000, immutable`。
+内容哈希命名的产物（`/_astro/*`、`/fonts/*`、`/pagefind/index/*`、`/pagefind/fragment/*`）配了
+`Cache-Control: public, max-age=31536000, immutable`；其余路径（HTML、Pagefind 的固定文件名运行时）
+不写规则，走平台默认。
 
-> `devtools/` 里的产物断言会核对：两个出口逐条一致、CSP 仍为 Report-Only、产物里用到的外部来源
-> （字体 CDN 等）都被对应指令放行、配了 remark42 就一定放行了它。
+> 两个出口（`dist/_headers` 与 `vercel.ts`）必须逐条一致：策略只在 `src/utils/deploy-policy.ts` 里改。
 
 ### 重定向（301）
 
@@ -233,14 +240,27 @@ Vercel 读 `vercel.ts` 的 `redirects`。站内链接一律直接指向 `/posts/
 
 ## 🔤 字体
 
-默认走 [ZeoSeven Fonts CDN](https://fonts.zeoseven.com/items/442/)（cn-font-split 分包、OFL-1.1、hinted），
-无需自托管字体文件。只加载 4 个字重（正文 400 / 引用斜体 400i / 贴纸 600 / 标题 700），
-并以非阻塞方式加载（`preload` + `onload` 切 `rel`，`<noscript>` 兜底）。
+自托管 **Maple Mono NF CN**（[SIL OFL 1.1](https://github.com/subframe7536/maple-font)，v7.9），
+不依赖任何字体 CDN。做法是**完整字体进仓、构建期现切子集**：`assets/fonts/` 放 4 个字重的原始 TTF
+（正文 400 / 引用斜体 400i / 贴纸 600 / 标题 700，合计 ≈83 MB），构建时按当前内容切成只含用得上的
+字形的子集，产物 `public/fonts/*.woff2`（84 个 / ≈3.5 MB）**不进仓**。按 `unicode-range` 分层：
 
-想改为自托管：下载 Maple Mono NF CN 并自行分片，产出 `public/fonts/**` 后，把 `src/layouts/Base.astro`
-里的 CDN `<link>` 换成自托管 `@font-face`（保留 `src/styles/fonts.css` 的 fallback 度量对齐）。
-也可用 ZeoSeven 官方 [ZSFT CLI](https://fonts.zeoseven.com/docs/cli/) 做私有部署。离线开发时字体
-回落到度量对齐后的 Consolas。
+- **core**：站点字符 + 常用符号（ASCII / CJK 标点 / 全角 / 箭头·数学·制表…），4 个字重各一份
+  （≈350–380 KB/份），首屏只 `preload` 400 与 700；
+- **tail**：GB2312 一级里 core 之外的剩余字，按「1 个区（94 字）」切片（只做 400/700），
+  浏览器只在页面真出现那些字时才取 → **GB2312 一级以内永不缺字**，首屏也不必为它付字节；
+- 覆盖不到的字符（GB2312 二级、表外生僻字，以及字库里本来就没有的 `✅❌➕`、康熙部首）落到
+  `src/styles/fonts.css` 里那份**度量对齐**的 Consolas fallback（`size-adjust: 109.1%`），同宽不抖行。
+
+实测（412px、冷缓存）：一篇文章的字体字节从 CDN 方案的 ≈2.5 MB / 55 个分片降到 **≈1.05 MB / 3 个请求**
+（400 + 700 + 贴纸用的 600）。
+
+**不需要任何手动步骤**：`npm run fonts` 挂在 `npm run build` 与 `npm run dev` 上，按当前内容（含私密/
+草稿文章的源码）重算字符集；字符集与字体都没变就整个跳过（指纹存 `.cache/fonts/plan.json`，本机后续
+构建 ~0.2s，干净 clone 第一次 ≈20s）。换字重或改覆盖范围改 `scripts/lib/font-charsets.ts`；升级字体
+版本就是把 `assets/fonts/*.ttf` 换成上游同名文件（[releases](https://github.com/subframe7536/maple-font/releases)
+的 `MapleMono-NF-CN.zip` 里解出来）。
+
 
 ## ✨ Feedback & Suggestions
 
