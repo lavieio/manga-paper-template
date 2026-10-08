@@ -28,15 +28,9 @@ const stacked = sheets.length > 1;
   <div class="stack" id="featured-stack">
     {
       sheets.map((post, i) => (
-        <a
-          class="sheet"
-          data-index={i}
-          href={`/posts/${getPostSlug(post)}`}
-          aria-label={`精选文章：${post.data.title}（${getCategory(post)} · ${formatDate(post.data.date)} · ${estimateReadTime(post.body ?? "")} 分钟）`}
-        >
+        <div class="sheet" data-index={i}>
           {/* 卡面是代码窗装饰（假源码、文件名、纸堆层次）：整块不进无障碍树，
-              否则读屏会把 90 多字的假代码念成链接名（WCAG 2.5.3）；
-              标题/分类/日期/时长因此写进上面的 aria-label。 */}
+              否则读屏会把 90 多字的假代码念成链接名；真链接是下面的 .cover。 */}
           <div class="window" aria-hidden="true">
             <div class="cap">
               <span class="tl r" />
@@ -61,7 +55,19 @@ const stacked = sheets.length > 1;
               </div>
             </div>
           </div>
-        </a>
+          {/*
+            真链接：透明覆盖层，盖住整张纸（视觉、命中区域、焦点环都与原来一致）。
+            名字来自下面 sr-only 的标题：纸面那堆假代码不在 <a> 里，
+            「可访问名」与「可见文本」就不会互相打架（WCAG 2.5.3 Label in Name）。
+            后层纸片的点击仍由脚本在 .sheet 上拦下来，改成「抽到顶层」。
+          */}
+          <a class="cover" href={`/posts/${getPostSlug(post)}`}>
+            <span class="sr-only">
+              精选文章：{post.data.title}（{getCategory(post)} · {formatDate(post.data.date)} ·{" "}
+              {estimateReadTime(post.body ?? "")} 分钟）
+            </span>
+          </a>
+        </div>
       ))
     }
   </div>
@@ -189,6 +195,8 @@ const stacked = sheets.length > 1;
   }
   .sheet {
     grid-area: 1 / 1;
+    /* 覆盖整张纸的真链接（.cover）靠它定位 */
+    position: relative;
     min-width: 0;
     transform: translate(var(--tx, 0px), var(--ty, 0px)) rotate(var(--rot, 0deg));
     transition:
@@ -231,6 +239,15 @@ const stacked = sheets.length > 1;
   }
   .sheet.fading {
     opacity: 0;
+  }
+
+  /* 真链接：透明的覆盖层，盖住整张纸。
+     可见文本只剩纸面装饰（在 <a> 之外），可访问名与它不会打架（WCAG 2.5.3 Label in Name）；
+     命中区域与焦点环仍是整张纸那么大 */
+  .cover {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
   }
 
   .window {
