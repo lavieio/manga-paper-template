@@ -1,3 +1,5 @@
+import { parseGaMeasurementId } from "./utils/analytics";
+
 /** 站点全局配置：唯一入口。占位值随时可改。 */
 export const site = {
   name: "MangaPaper",
@@ -25,5 +27,18 @@ export const remark42 = {
 } as const;
 
 export const isRemark42Enabled = Boolean(remark42.host && remark42.siteId);
+
+/**
+ * 访问统计（GA4）与搜索引擎验证（GSC）：全部从 env 读取，不设硬编码占位。
+ * 两项都是可选的，未配置就整块不渲染，也不会写进 CSP。
+ */
+export const analytics = {
+  /** GA4 Measurement ID（`PUBLIC_`，客户端可见）；未配置或格式非法一律视为未启用 */
+  gaMeasurementId: parseGaMeasurementId(import.meta.env.PUBLIC_GA_MEASUREMENT_ID as string | undefined),
+  /** GSC 的 HTML 标记验证 token（也可改用 DNS TXT 验证，那样无需本项） */
+  gscVerification: (import.meta.env.PUBLIC_GSC_VERIFICATION as string | undefined)?.trim() || null,
+} as const;
+
+export const isAnalyticsEnabled = analytics.gaMeasurementId !== null;
 
 export type SiteConfig = typeof site;

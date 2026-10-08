@@ -20,6 +20,7 @@ import {
   renderHeadersFile,
   renderRedirectsFile,
 } from "../src/utils/deploy-policy.ts";
+import { parseGaMeasurementId } from "../src/utils/analytics.ts";
 
 const DIST = "dist";
 const DIST_HEADERS = `${DIST}/_headers`;
@@ -39,10 +40,18 @@ if (rawRemark42?.trim() && !remark42Origin) {
   console.warn(`[deploy] PUBLIC_REMARK42_HOST 不是合法的绝对 URL（"${rawRemark42}"），CSP 未放行它`);
 }
 
-writeFileSync(DIST_HEADERS, renderHeadersFile(buildHeaderRules(rawRemark42)));
+const rawGa = process.env.PUBLIC_GA_MEASUREMENT_ID;
+const gaMeasurementId = parseGaMeasurementId(rawGa);
+
+if (rawGa?.trim() && !gaMeasurementId) {
+  console.warn(`[deploy] PUBLIC_GA_MEASUREMENT_ID 格式非法（"${rawGa}"，应形如 G-XXXXXXXXXX），CSP 未放行 GA`);
+}
+
+writeFileSync(DIST_HEADERS, renderHeadersFile(buildHeaderRules({ remark42Host: rawRemark42, gaMeasurementId: rawGa })));
 writeFileSync(DIST_REDIRECTS, renderRedirectsFile(buildRedirectRules()));
 
 console.log(
   `[deploy] 已生成 ${DIST_HEADERS} 与 ${DIST_REDIRECTS}` +
-    (remark42Origin ? `，CSP 已放行 remark42：${remark42Origin}` : "，未配置 remark42"),
+    (remark42Origin ? `，CSP 已放行 remark42：${remark42Origin}` : "，未配置 remark42") +
+    (gaMeasurementId ? `，CSP 已放行 GA4：${gaMeasurementId}` : "，未配置 GA4"),
 );
