@@ -13,6 +13,12 @@ import { siteUrlOrPlaceholder } from "./src/utils/site-url.ts";
 // site 会静静落回占位域名（canonical / sitemap / RSS 全跟着错）。
 loadEnvFiles();
 
+// 把「是否在 Vercel 上构建」注入成 PUBLIC_ 变量（Vercel 构建期设 `VERCEL=1`）：
+// 组件据此决定要不要挂载 Vercel 原生观测（`/_vercel/*` 同源脚本）——
+// 非 Vercel 平台即使误设开关也不会输出 404 引用。
+// Vite 的 loadEnv 会把 process.env 里 PUBLIC_ 前缀的键带进 import.meta.env，所以直接写 process.env。
+process.env.PUBLIC_ON_VERCEL = process.env.VERCEL === "1" ? "1" : "";
+
 // sitemap 排除项：私密/草稿文章、noindex 的 /private
 const hiddenSlugs = collectHiddenSlugs();
 const SITEMAP_EXCLUDED = ["/private", "/search"];
