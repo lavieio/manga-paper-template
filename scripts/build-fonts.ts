@@ -2,14 +2,14 @@
 /**
  * 字体子集：按当前内容把提交进仓的完整字体切成上线要用的子集（core + tail）。
  *
- * - **输入**：`assets/fonts/` 里 4 个完整字重的 TTF（上游原文件，OFL-1.1，随仓库提交）；
- * - **产物**：`public/fonts/*.woff2` + `src/styles/fonts-face.css` + `src/utils/font-assets.ts`，
- *   都在 .gitignore 里、**不进仓**；
+ * - **输入**：`assets/fonts/` 里的上游完整 TTF（OFL-1.1，随仓库提交），要切哪些字重见 `FONT_WEIGHTS`；
+ * - **产物**：`public/fonts/*.woff2` + `public/fonts/maple-tail.<hash>.css` + `src/styles/fonts-core.css`
+ *   + `src/utils/font-assets.ts`，都在 .gitignore 里、**不进仓**；
  * - **跳过**：字符集与输入字体都没变就整个跳过（指纹见 `.cache/fonts/plan.json`），
- *   本机后续构建 ~0.2s；干净 clone 第一次 ≈20s（4 个 core + 80 个 tail 片）。
+ *   本机后续构建 ~0.2s；干净 clone 第一次 ≈20s（2 个 core + 80 个 tail 片）。
  *   注意「不变」指的是**产物**不变：字体没有的字（✅❌➕）进不了任何面，它们增减不会触发重切；
  *   缺字报告 `.cache/fonts/coverage.json` 则每次运行都重写（它是观测值，不是产物）。
- * - **切片**：core = 站点字符 + 常用符号（4 个字重），tail = GB2312 一级里 core 之外的剩余字
+ * - **切片**：core = 站点字符 + 常用符号（每个用到的字重各一份），tail = GB2312 一级里 core 之外的剩余字
  *   按「1 个区」切片（只 400/700），交给浏览器按 unicode-range 按需取。
  *
  * 为什么不留一份「预切好的中间字体」提交进仓：那要多维护一层字符集与一次重建步骤，
@@ -24,7 +24,7 @@ import { join } from "node:path";
 import subsetFont from "subset-font";
 import { FONT_WEIGHTS, faceFileName, siteCharset } from "./lib/font-charsets.ts";
 import { planFaces, type FacePlan, type FontCmaps, type FontPlan } from "./lib/font-plan.ts";
-import { FONT_DIR_README, renderFaceCss, renderFontAssets } from "./lib/font-render.ts";
+import { FONT_DIR_README, renderCoreFaceCss, renderFontAssets, renderTailFaceCss } from "./lib/font-render.ts";
 import { readCodepoints } from "./lib/sfnt.ts";
 
 const ROOT = process.cwd();
@@ -35,7 +35,12 @@ const BLOB_DIR = join(CACHE_DIR, "blobs");
 const BLOB_INDEX = join(CACHE_DIR, "faces.json");
 const PLAN_FILE = join(CACHE_DIR, "plan.json");
 const COVERAGE_FILE = join(CACHE_DIR, "coverage.json");
-const FACE_CSS = join(ROOT, "src/styles/fonts-face.css");
+/** core 字面清单：跟随页面 CSS 一起内联（~18 KB，换掉一次渲染阻塞 RTT 划算） */
+const CORE_FACE_CSS = join(ROOT, "src/styles/fonts-core.css");
+/** tail 字面清单：出成独立 immutable CSS，页面异步挂载（内联的话每个页面都要重下一遍） */
+const TAIL_CSS_PREFIX = "maple-tail";
+/** 旧版生成物：v1.5.0 及以前把 core + tail 写在同一个 `fonts-face.css` 里 */
+const LEGACY_FACE_CSS = join(ROOT, "src/styles/fonts-face.css");
 const ASSETS_TS = join(ROOT, "src/utils/font-assets.ts");
 const LICENSE_NAME = "LICENSE.txt";
 /** 改字符集 / 切片 / 命名规则时 +1：指纹随之失效，产物全部重切 */
@@ -50,6 +55,7 @@ interface PlanState {
 }
 
 async function main(): Promise<void> {
+  removeLegacyArtifacts();
   const hashes = hashFonts();
   const plan = planFaces(siteCharset(ROOT), await readFontCmaps());
   reportMissing(plan.missing);
@@ -61,8 +67,17 @@ async function main(): Promise<void> {
     return;
   }
   const names = await writeFaces(plan.faces);
-  writeOutputs(plan, names, key);
-  console.log(`[fonts] 生成 ${names.length} 个面 → public/fonts（${key}）`);
+  const tailFile = writeOutputs(plan, names, key);
+  console.log(`[fonts] 生成 ${names.length} 个面${tailFile ? ` + ${tailFile}` : ""} → public/fonts（${key}）`);
+}
+
+/**
+ * 清掉旧版生成物（v1.5.0 及以前唯一的那份 `fonts-face.css`）。
+ * 必须**在扫站点字符之前**做：那文件里是一大堆 `unicode-range` 文本，留着会被 `siteCharset()`
+ * 当成源码字符扫进去，core 子集会膨胀到覆盖整个 GB2312——一个静默的倒退。
+ */
+function removeLegacyArtifacts(): void {
+  rmSync(LEGACY_FACE_CSS, { force: true });
 }
 
 /** 完整字体必须齐全；顺手算出内容哈希进指纹（换了字体立刻失效） */
@@ -70,7 +85,7 @@ function hashFonts(): Map<string, string> {
   const hashes = new Map<string, string>();
   for (const weight of FONT_WEIGHTS) {
     const file = join(FONT_SOURCE_DIR, weight.file);
-    if (!existsSync(file)) throw new Error(`缺完整字体 ${file}：把上游 4 个字重的 TTF 放进 assets/fonts/`);
+    if (!existsSync(file)) throw new Error(`缺完整字体 ${file}：把上游对应字重的 TTF 放进 assets/fonts/`);
     hashes.set(weight.label, sha256(readFileSync(file)));
   }
   return hashes;
@@ -130,9 +145,13 @@ function blobKey(face: FacePlan): string {
   return sha256([packageVersion("subset-font"), face.label, face.kind, face.chars].join("\u0000")).slice(0, 16);
 }
 
-function writeOutputs(plan: FontPlan, names: readonly string[], key: string): void {
-  writeFileSync(FACE_CSS, renderFaceCss(plan.faces, names));
-  writeFileSync(ASSETS_TS, renderFontAssets(plan.faces, names, key));
+function writeOutputs(plan: FontPlan, names: readonly string[], key: string): string | null {
+  const tailCss = renderTailFaceCss(plan.faces, names);
+  const tailFile = tailCss === "" ? null : `${TAIL_CSS_PREFIX}.${sha256(tailCss).slice(0, HASH_LENGTH)}.css`;
+
+  writeFileSync(CORE_FACE_CSS, renderCoreFaceCss(plan.faces, names));
+  if (tailFile) writeFileSync(join(OUT_DIR, tailFile), tailCss);
+  writeFileSync(ASSETS_TS, renderFontAssets(plan.faces, names, key, tailFile ? `/fonts/${tailFile}` : null));
   writeFileSync(join(OUT_DIR, "README.md"), FONT_DIR_README);
 
   const license = join(FONT_SOURCE_DIR, LICENSE_NAME);
@@ -140,8 +159,10 @@ function writeOutputs(plan: FontPlan, names: readonly string[], key: string): vo
   else console.warn(`[fonts] ⚠ 缺 ${license}：OFL-1.1 要求随字体一起分发许可证`);
 
   mkdirSync(CACHE_DIR, { recursive: true });
-  const files = [...names, "README.md", ...(existsSync(license) ? [LICENSE_NAME] : [])];
+  // tail CSS 进 files：被删掉时指纹失效、重新生成（它就是 immutable 的产物之一）
+  const files = [...names, "README.md", ...(tailFile ? [tailFile] : []), ...(existsSync(license) ? [LICENSE_NAME] : [])];
   writeFileSync(PLAN_FILE, `${JSON.stringify({ key, files }, null, 2)}\n`);
+  return tailFile;
 }
 
 /**
@@ -170,7 +191,7 @@ function planKey(plan: FontPlan, fontHashes: ReadonlyMap<string, string>): strin
 
 /** 指纹一致 + 产物齐全（且没有多余的 woff2 残留）才算「不用重切」 */
 function isUpToDate(key: string): boolean {
-  if (!existsSync(PLAN_FILE) || !existsSync(FACE_CSS) || !existsSync(ASSETS_TS)) return false;
+  if (!existsSync(PLAN_FILE) || !existsSync(CORE_FACE_CSS) || !existsSync(ASSETS_TS)) return false;
 
   const state = JSON.parse(readFileSync(PLAN_FILE, "utf8")) as PlanState;
   if (state.key !== key) return false;

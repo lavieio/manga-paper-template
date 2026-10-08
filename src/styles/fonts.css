@@ -1,9 +1,11 @@
 /* Maple Mono NF CN —— 自托管子集，不依赖任何字体 CDN。
    字体文件与 @font-face 清单都是构建期生成的（`npm run fonts`）：
-   core 装站点字符 + 常用符号（首屏 preload 400/700），tail 按 unicode-range 兜住
-   GB2312 一级里 core 之外的剩余字。字符集与切片策略见 scripts/lib/font-charsets.ts，
-   生成物都在 .gitignore 里（public/fonts/、fonts-face.css、font-assets.ts）。 */
-@import "./fonts-face.css";
+   core 装站点字符 + 常用符号（首屏 preload 400/700）→ fonts-core.css 内联进页面；
+   tail 按 unicode-range 兜住 GB2312 一级里 core 之外的剩余字 → 独立 immutable CSS，
+   Base.astro 异步挂载（内联进 HTML 等于每个页面都重下一遍）。
+   字符集与切片策略见 scripts/lib/font-charsets.ts，生成物都在 .gitignore 里
+   （public/fonts/、fonts-core.css、font-assets.ts）。 */
+@import "./fonts-core.css";
 
 /* Fallback 度量对齐（实测值，来源见下注释）——
    MapleMono: upm 1000 / asc 1020 / desc -300 / gap 0 / avgWidth 600（0.6em）
