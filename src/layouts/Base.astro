@@ -5,7 +5,8 @@ import "../styles/card.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
 import Analytics from "../components/Analytics.astro";
-import { site, analytics, isAnalyticsEnabled } from "../config";
+import VercelInsights from "../components/VercelInsights.astro";
+import { site, analytics, isAnalyticsEnabled, isVercelInsightsEnabled } from "../config";
 import { FONT_PRELOAD, FONT_TAIL_CSS } from "../utils/font-assets";
 import { serializeJsonLd, type JsonLdNode } from "../utils/structured-data";
 import { siteShareImage, type ShareImage } from "../utils/share-image";
@@ -155,5 +156,10 @@ const rssFeed = new URL("rss.xml", Astro.site);
       节点可以放在这里：组件内部自己攒队列 + 空闲加载，不阻塞首屏。
     */}
     {isAnalyticsEnabled && !noindex && import.meta.env.PROD && <Analytics />}
+    {/*
+      Vercel 原生观测（Web Analytics / Speed Insights）：同源脚本，无需 CSP。
+      未配置 / 非 Vercel / 非生产构建均在组件内部拦下；页面 noindex（私密文章、/private、404）在这里排除。
+    */}
+    {isVercelInsightsEnabled && !noindex && <VercelInsights />}
   </body>
 </html>

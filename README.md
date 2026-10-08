@@ -70,6 +70,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 - **分享图** — [Satori](https://github.com/vercel/satori) + [resvg-js](https://github.com/thx/resvg-js)（构建期渲染，不进产物）
 - **灯箱** — [PhotoSwipe](https://photoswipe.com/)
 - **评论** — [remark42](https://remark42.com/)（自托管，可选）
+- **观测** — [Google Analytics 4](https://analytics.google.com/)（可选）+ Vercel Web Analytics / Speed Insights（可选，仅 Vercel）
 - **加密** — WebCrypto（PBKDF2 600k + AES-256-GCM）
 - **Git 钩子** — [husky](https://typicode.github.io/husky/)
 - **部署** — [Cloudflare Pages](https://pages.cloudflare.com/) 或 [Vercel](https://vercel.com/)（二选一）
@@ -218,6 +219,8 @@ Vercel 读 `vercel.ts` 的 `redirects`。站内链接一律直接指向 `/posts/
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 评论（可选，两项配齐才生效） |
 | `PUBLIC_GA_MEASUREMENT_ID` | 可选：GA4 Measurement ID（形如 `G-XXXXXXXXXX`），配了才埋点、才放行 CSP |
 | `PUBLIC_GSC_VERIFICATION` | 可选：GSC HTML 标记验证的 content 值（用 DNS TXT 验证时无需） |
+| `PUBLIC_VERCEL_ANALYTICS` | 可选（仅 Vercel）：Vercel Web Analytics，需先在面板 Enable |
+| `PUBLIC_VERCEL_SPEED_INSIGHTS` | 可选（仅 Vercel）：Vercel Speed Insights，需先在面板 Enable |
 
 `.env` 已在 `.gitignore` 中，`.env.example` 随仓库分发。
 
@@ -261,6 +264,22 @@ Vercel 读 `vercel.ts` 的 `redirects`。站内链接一律直接指向 `/posts/
 都已在构建期按 `SITE_URL` 生成，并已排除私密文章、草稿、`/private`、`/search`；私密页靠 `noindex`
 （不是 `robots.txt` Disallow）挡收录——别把 `/private` 写进 Disallow，那样爬虫读不到 `noindex`，
 反而可能被收录。
+
+### Vercel 平台原生观测（可选，仅 Vercel）
+
+部署在 Vercel 时，除了 GA4 还能直接用平台自带的 **Web Analytics**（访问量）与 **Speed Insights**
+（真实 Core Web Vitals），比 GA 更省事：
+
+- 在 Vercel 项目面板分别 **Enable** 这两项，再在环境变量里设 `PUBLIC_VERCEL_ANALYTICS=1` /
+  `PUBLIC_VERCEL_SPEED_INSIGHTS=1`（两者独立，可只开一个）
+- 用官方 `@vercel/analytics/astro` / `@vercel/speed-insights/astro` 组件：生产期注入**同源**脚本
+  （`/_vercel/insights|speed-insights/script.js`），上报端点也是同源，所以 **CSP 无需改动**
+- **构建期自动识别平台**（Vercel 的 `VERCEL=1`）：非 Vercel（如 Cloudflare Pages）即使误设开关也不会
+  渲染，本地 `npm run preview` 也不受 `/_vercel/*` 404 影响；仅生产构建、非 `noindex` 页才埋
+- 无 cookie、匿名，不需要 consent；与 GA4 可并存（Vercel 看平台看板 / CWV，GA 看跨平台受众）
+
+> ⚠️ 仅当站点部署在 Vercel 时可用；若站点前面还挂了 Cloudflare 代理（橙云）套 Vercel，
+> `/_vercel/*` 可能被代理拦成 404，需自行调整代理规则。
 
 ## 🔤 字体
 

@@ -1,0 +1,23 @@
+---
+/**
+ * Vercel 平台原生观测（可选）：Web Analytics（访问量）+ Speed Insights（真实 Core Web Vitals）。
+ *
+ * 用官方 `@vercel/analytics/astro` 与 `@vercel/speed-insights/astro` 组件：
+ * 生产期注入**同源**脚本（`/_vercel/insights/script.js`、`/_vercel/speed-insights/script.js`），
+ * 上报端点也是同源（`/_vercel/insights/view`、`/_vercel/speed-insights/vitals`），
+ * 所以 **CSP 无需改动**（`script-src` / `connect-src` 的 `'self'` 已覆盖）；
+ * 组件还会按 `Astro.params` 把动态路由聚合成 `/posts/[slug]` 之类，静态站也能看聚合维度。
+ *
+ * 只在这里做本组件自身的前置判断；页面级 noindex 由 Base.astro 拦（挂载前就排除）。
+ * 判断结果先落到 frontmatter 常量再进模板：模板里直接用导入绑定会被 Vite 摇掉。
+ */
+import VercelAnalytics from "@vercel/analytics/astro";
+import VercelSpeedInsights from "@vercel/speed-insights/astro";
+import { isVercelAnalyticsEnabled, isVercelSpeedInsightsEnabled } from "../config";
+
+const showAnalytics = import.meta.env.PROD && isVercelAnalyticsEnabled;
+const showSpeedInsights = import.meta.env.PROD && isVercelSpeedInsightsEnabled;
+---
+
+{showAnalytics && <VercelAnalytics />}
+{showSpeedInsights && <VercelSpeedInsights />}

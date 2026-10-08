@@ -70,6 +70,7 @@ All posts live in `src/content/blog/`; the **first-level directory name becomes 
 - **Static search** — [Pagefind](https://pagefind.app/)
 - **Social cards** — [Satori](https://github.com/vercel/satori) + [resvg-js](https://github.com/thx/resvg-js) (build-time only, nothing ships)
 - **Comments** — [remark42](https://remark42.com/) (self-hosted, optional)
+- **Analytics** — [Google Analytics 4](https://analytics.google.com/) (optional) + Vercel Web Analytics / Speed Insights (optional, Vercel only)
 - **Encryption** — WebCrypto (PBKDF2 600k + AES-256-GCM)
 - **Git hooks** — [husky](https://typicode.github.io/husky/)
 - **Deployment** — [Cloudflare Pages](https://pages.cloudflare.com/) or [Vercel](https://vercel.com/) (choose one)
@@ -227,6 +228,8 @@ while Vercel reads the `redirects` of `vercel.ts`. In-site links point straight 
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 comments (optional; both required) |
 | `PUBLIC_GA_MEASUREMENT_ID` | Optional: GA4 Measurement ID (e.g. `G-XXXXXXXXXX`); analytics and its CSP allowlist only activate when set |
 | `PUBLIC_GSC_VERIFICATION` | Optional: GSC HTML-tag verification content (not needed with DNS TXT verification) |
+| `PUBLIC_VERCEL_ANALYTICS` | Optional (Vercel only): Vercel Web Analytics; enable it in the dashboard first |
+| `PUBLIC_VERCEL_SPEED_INSIGHTS` | Optional (Vercel only): Vercel Speed Insights; enable it in the dashboard first |
 
 `.env` is gitignored; `.env.example` ships with the repository.
 
@@ -272,6 +275,25 @@ Then submit `https://<your-domain>/sitemap-index.xml` in GSC. Both the sitemap a
 generated at build time from `SITE_URL`, and already exclude private posts, drafts, `/private` and
 `/search`; private pages rely on `noindex` (not a `robots.txt` Disallow), so do **not** add `/private`
 to Disallow — crawlers would then never read the `noindex` and the page could get indexed anyway.
+
+### Vercel native observability (optional, Vercel only)
+
+When deployed on Vercel you can also use the platform's own **Web Analytics** (traffic) and
+**Speed Insights** (real-user Core Web Vitals), which are even simpler than GA:
+
+- **Enable** both in the Vercel project dashboard, then set `PUBLIC_VERCEL_ANALYTICS=1` /
+  `PUBLIC_VERCEL_SPEED_INSIGHTS=1` (independent; enable either one)
+- Uses the official `@vercel/analytics/astro` / `@vercel/speed-insights/astro` components: they inject
+  **same-origin** scripts (`/_vercel/insights|speed-insights/script.js`) and report to same-origin
+  endpoints, so **no CSP change is needed**
+- **Platform is auto-detected at build time** (Vercel sets `VERCEL=1`): on non-Vercel hosts (e.g.
+  Cloudflare Pages) the flags are ignored, and a local `npm run preview` never hits `/_vercel/*` 404s;
+  tracking runs only in production builds and never on `noindex` pages
+- Cookie-free and anonymous, so no consent banner; it coexists with GA4 (Vercel for the platform
+  dashboard and CWV, GA for cross-platform audience)
+
+> ⚠️ Vercel-only. If the site sits behind a Cloudflare proxy (orange cloud) in front of Vercel, the
+> `/_vercel/*` routes may be blocked to 404 by the proxy; adjust the proxy rules accordingly.
 
 ## 🔤 Fonts
 

@@ -1,4 +1,5 @@
 import { parseGaMeasurementId } from "./utils/analytics";
+import { isEnabledFlag } from "./utils/env-flag";
 
 /** 站点全局配置：唯一入口。占位值随时可改。 */
 export const site = {
@@ -40,5 +41,23 @@ export const analytics = {
 } as const;
 
 export const isAnalyticsEnabled = analytics.gaMeasurementId !== null;
+
+/**
+ * Vercel 平台原生观测（可选，仅 Vercel 部署可用）：Web Analytics + Speed Insights。
+ * `onVercel` 不是用户配置项——由 `astro.config.mjs` 按构建环境的 `VERCEL=1` 注入，
+ * 因此非 Vercel 平台（如 Cloudflare Pages）即使误设开关也不会输出 404 的 `/_vercel/*` 引用。
+ */
+export const vercelObservability = {
+  /** Web Analytics：访问量 / 来源 / 页面，无 cookie、匿名 */
+  analytics: isEnabledFlag(import.meta.env.PUBLIC_VERCEL_ANALYTICS as string | undefined),
+  /** Speed Insights：真实用户 Core Web Vitals */
+  speedInsights: isEnabledFlag(import.meta.env.PUBLIC_VERCEL_SPEED_INSIGHTS as string | undefined),
+  /** 当前构建是否跑在 Vercel 上（构建期注入，不是用户配置） */
+  onVercel: isEnabledFlag(import.meta.env.PUBLIC_ON_VERCEL as string | undefined),
+} as const;
+
+export const isVercelAnalyticsEnabled = vercelObservability.analytics && vercelObservability.onVercel;
+export const isVercelSpeedInsightsEnabled = vercelObservability.speedInsights && vercelObservability.onVercel;
+export const isVercelInsightsEnabled = isVercelAnalyticsEnabled || isVercelSpeedInsightsEnabled;
 
 export type SiteConfig = typeof site;
