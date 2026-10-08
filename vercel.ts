@@ -2,7 +2,8 @@
  * Vercel 项目配置（用 `vercel.ts` 而不是 `vercel.json`）。
  *
  * Vercel 只读仓根这份配置，而 `vercel.ts` **在构建时执行**、可以直接读环境变量：
- * 配了 remark42（`PUBLIC_REMARK42_HOST`）就把它的域名写进 CSP 白名单。
+ * 配了 remark42（`PUBLIC_REMARK42_HOST`）就把它的域名写进 CSP 白名单，
+ * 配了 GA4（`PUBLIC_GA_MEASUREMENT_ID`）就放行 gtag.js 与采集端点。
  * 静态的 `vercel.json` 做不到这件事（Vercel 也不插值 env），
  * 用 TS 就不用把任何生成物提交进 git。
  *
@@ -28,6 +29,11 @@ export const config = {
   framework: "astro",
   buildCommand: "npm run build",
   outputDirectory: "dist",
-  headers: toVercelHeaders(buildHeaderRules(process.env.PUBLIC_REMARK42_HOST)),
+  headers: toVercelHeaders(
+    buildHeaderRules({
+      remark42Host: process.env.PUBLIC_REMARK42_HOST,
+      gaMeasurementId: process.env.PUBLIC_GA_MEASUREMENT_ID,
+    }),
+  ),
   redirects: toVercelRedirects(buildRedirectRules()),
 };

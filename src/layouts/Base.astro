@@ -4,8 +4,10 @@ import "../styles/global.css";
 import "../styles/card.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
-import { site } from "../config";
-import { FONT_PRELOAD } from "../utils/font-assets";
+import Analytics from "../components/Analytics.astro";
+import VercelInsights from "../components/VercelInsights.astro";
+import { site, analytics, isAnalyticsEnabled, isVercelInsightsEnabled } from "../config";
+import { FONT_PRELOAD, FONT_TAIL_CSS } from "../utils/font-assets";
 import { serializeJsonLd, type JsonLdNode } from "../utils/structured-data";
 import { siteShareImage, type ShareImage } from "../utils/share-image";
 
@@ -56,6 +58,10 @@ const rssFeed = new URL("rss.xml", Astro.site);
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
+    {/* GSC 标记验证（配了 PUBLIC_GSC_VERIFICATION 才渲染；改用 DNS TXT 验证则无需此项） */}
+    {analytics.gscVerification && (
+      <meta name="google-site-verification" content={analytics.gscVerification} />
+    )}
     {
       unlockCheck && (
         <script is:inline>
@@ -105,6 +111,15 @@ const rssFeed = new URL("rss.xml", Astro.site);
         <link rel="preload" as="font" type="font/woff2" crossorigin="anonymous" href={href} />
       ))
     }
+    {/*
+      tail 字面清单：GB2312 一级里 core 之外的剩余字，只在页面真出现那些字时才去取对应 woff2。
+      它是一长串 unicode-range（~50 KB），内联进 HTML 等于每个页面都重下一遍，所以出成独立 CSS
+      （content-hash 命名 + `/fonts/*` immutable）异步挂载：media=print 不阻塞渲染，load 完切回 all。
+      代价是 CSP 得放行内联事件处理器（部署策略里 script-src 已带 'unsafe-inline'）。
+      没给 <noscript> 兜底：这份清单只覆盖站点字符集之外的字（构建产物里一个都没出现），
+      为它阻塞无 JS 读者的首屏不划算；搜索框里现敲的生僻字在正常（有 JS）路径下已经能兜住。
+    */}
+    {FONT_TAIL_CSS && <link rel="stylesheet" href={FONT_TAIL_CSS} media="print" onload="this.media='all'" />}
     <script is:inline>
       // 首帧前决定主题，避免 FOUC
       (function () {
@@ -136,5 +151,15 @@ const rssFeed = new URL("rss.xml", Astro.site);
       </main>
       <SiteFooter />
     </div>
+    {/*
+      GA4：未配置 / 非生产构建 / 页面 noindex（私密文章、/private、404）三条件任一命中都不埋点。
+      节点可以放在这里：组件内部自己攒队列 + 空闲加载，不阻塞首屏。
+    */}
+    {isAnalyticsEnabled && !noindex && import.meta.env.PROD && <Analytics />}
+    {/*
+      Vercel 原生观测（Web Analytics / Speed Insights）：同源脚本，无需 CSP。
+      未配置 / 非 Vercel / 非生产构建均在组件内部拦下；页面 noindex（私密文章、/private、404）在这里排除。
+    */}
+    {isVercelInsightsEnabled && !noindex && <VercelInsights />}
   </body>
 </html>

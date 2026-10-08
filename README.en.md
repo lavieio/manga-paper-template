@@ -34,7 +34,7 @@ light/dark themes. Fully static: no backend, no client framework.
 ```bash
 /
 ├── assets/
-│   └── fonts/                  # full fonts: four weight TTFs + LICENSE (OFL-1.1; subset from here at build time)
+│   └── fonts/                  # full fonts: upstream TTFs + LICENSE (OFL-1.1; subset from here at build time)
 ├── public/
 │   ├── fonts/                  # font subset artifacts (npm run fonts; not committed)
 │   ├── og.png                  # README hero (snapshot of the default card; cards are generated at build time)
@@ -70,6 +70,7 @@ All posts live in `src/content/blog/`; the **first-level directory name becomes 
 - **Static search** — [Pagefind](https://pagefind.app/)
 - **Social cards** — [Satori](https://github.com/vercel/satori) + [resvg-js](https://github.com/thx/resvg-js) (build-time only, nothing ships)
 - **Comments** — [remark42](https://remark42.com/) (self-hosted, optional)
+- **Analytics** — [Google Analytics 4](https://analytics.google.com/) (optional) + Vercel Web Analytics / Speed Insights (optional, Vercel only)
 - **Encryption** — WebCrypto (PBKDF2 600k + AES-256-GCM)
 - **Git hooks** — [husky](https://typicode.github.io/husky/)
 - **Deployment** — [Cloudflare Pages](https://pages.cloudflare.com/) or [Vercel](https://vercel.com/) (choose one)
@@ -225,6 +226,10 @@ while Vercel reads the `redirects` of `vercel.ts`. In-site links point straight 
 | `SITE_URL` | **Required**: site root URL — the single source of truth for canonical / sitemap / RSS. `npm run build` fails when it is missing, malformed, or still `https://your-domain.com` |
 | `SKIP_REMOTE_IMAGE_SIZE` | Optional: set to 1 to skip remote image-size probing at build time (offline / blocked hosts) |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 comments (optional; both required) |
+| `PUBLIC_GA_MEASUREMENT_ID` | Optional: GA4 Measurement ID (e.g. `G-XXXXXXXXXX`); analytics and its CSP allowlist only activate when set |
+| `PUBLIC_GSC_VERIFICATION` | Optional: GSC HTML-tag verification content (not needed with DNS TXT verification) |
+| `PUBLIC_VERCEL_ANALYTICS` | Optional (Vercel only): Vercel Web Analytics; enable it in the dashboard first |
+| `PUBLIC_VERCEL_SPEED_INSIGHTS` | Optional (Vercel only): Vercel Speed Insights; enable it in the dashboard first |
 
 `.env` is gitignored; `.env.example` ships with the repository.
 
@@ -247,25 +252,78 @@ With `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` configured, public posts
 - ⚠️ Once comments are configured, that host lands in the CSP allowlist of `dist/_headers` and `vercel.ts`
   automatically (`script-src` / `connect-src` / `frame-src`) — nothing to remember
 
+## 📊 Analytics & Search Console (optional)
+
+**Google Analytics 4**: set `PUBLIC_GA_MEASUREMENT_ID` (e.g. `G-XXXXXXXXXX`) to enable it.
+
+- Not configured → zero third-party scripts, and the CSP does not allowlist GA either
+- Only in **production builds**; **private posts, `/private`, 404 and any other `noindex` page are never tracked**
+- Loading strategy: queue `gtag` commands first, then inject `gtag.js` when the browser is idle
+  (`requestIdleCallback`, 3s timeout fallback), so it never competes with the first paint; the trade-off is
+  that visits leaving before the script lands produce no `page_view`
+- Once configured, `gtag.js` and the collection endpoints land in the CSP allowlist of
+  `dist/_headers` / `vercel.ts` automatically
+- ⚠️ GA4 writes a `_ga` cookie; if you need GDPR-style consent, add it yourself (the template loads on config)
+
+**Google Search Console**: pick either verification method.
+
+- **DNS TXT** (recommended: domain-wide, zero code): add the `google-site-verification=...` record GSC gives you
+- **HTML tag**: put GSC's content value into `PUBLIC_GSC_VERIFICATION`; it renders
+  `<meta name="google-site-verification">`
+
+Then submit `https://<your-domain>/sitemap-index.xml` in GSC. Both the sitemap and `robots.txt` are
+generated at build time from `SITE_URL`, and already exclude private posts, drafts, `/private` and
+`/search`; private pages rely on `noindex` (not a `robots.txt` Disallow), so do **not** add `/private`
+to Disallow — crawlers would then never read the `noindex` and the page could get indexed anyway.
+
+### Vercel native observability (optional, Vercel only)
+
+When deployed on Vercel you can also use the platform's own **Web Analytics** (traffic) and
+**Speed Insights** (real-user Core Web Vitals), which are even simpler than GA:
+
+- **Enable** both in the Vercel project dashboard, then set `PUBLIC_VERCEL_ANALYTICS=1` /
+  `PUBLIC_VERCEL_SPEED_INSIGHTS=1` (independent; enable either one)
+- Uses the official `@vercel/analytics/astro` / `@vercel/speed-insights/astro` components: they inject
+  **same-origin** scripts (`/_vercel/insights|speed-insights/script.js`) and report to same-origin
+  endpoints, so **no CSP change is needed**
+- **Platform is auto-detected at build time** (Vercel sets `VERCEL=1`): on non-Vercel hosts (e.g.
+  Cloudflare Pages) the flags are ignored, and a local `npm run preview` never hits `/_vercel/*` 404s;
+  tracking runs only in production builds and never on `noindex` pages
+- Cookie-free and anonymous, so no consent banner; it coexists with GA4 (Vercel for the platform
+  dashboard and CWV, GA for cross-platform audience)
+
+> ⚠️ Vercel-only. If the site sits behind a Cloudflare proxy (orange cloud) in front of Vercel, the
+> `/_vercel/*` routes may be blocked to 404 by the proxy; adjust the proxy rules accordingly.
+
 ## 🔤 Fonts
 
 Self-hosted **Maple Mono NF CN** ([SIL OFL 1.1](https://github.com/subframe7536/maple-font), v7.9) — no font
-CDN involved. The recipe is **full fonts in the repo, subsets cut at build time**: `assets/fonts/` holds the four
-original weight TTFs (body 400 / italic 400i / stickers 600 / headings 700, ≈83 MB total) and the build reduces
-them to the glyphs this site actually needs. The artifacts (`public/fonts/*.woff2`, 84 files / ≈3.5 MB) are
-**not committed**. Layered by `unicode-range`:
+CDN involved. The recipe is **full fonts in the repo, subsets cut at build time**: `assets/fonts/` holds the
+upstream TTFs (Regular / Italic / SemiBold / Bold, ≈83 MB total) and the build reduces them to the glyphs this
+site actually needs. The artifacts (`public/fonts/*.woff2`, 82 files / ≈2.8 MB) are **not committed**.
+Layered by `unicode-range`:
 
 - **core**: site characters + common symbols (ASCII / CJK punctuation / full-width / arrows·math·box…), one file
-  per weight (≈350–380 KB each); only the 400 and 700 cores are preloaded;
+  for each of the two weights the browser fonts use (400 / 700, ≈350–360 KB each); both are preloaded.
+  Semi-bold 600 and italic 400i get no subset: every extra face costs another 360–390 KB core **and** one more
+  full-document relayout. 600 only serves small sticker/label text (`font-weight: 600` in CSS resolves to the 700
+  face); italic is only used by `blockquote` (the browser synthesises the slant from the 400 face via
+  `font-synthesis`, matching the `font-style: italic` of the `demos/comic/` visual baseline). All upstream TTFs
+  stay in `assets/fonts/`: SemiBold is read directly by Satori at build time for OG cards (unrelated to the
+  browser font chain), Italic is just kept around for now;
 - **tail**: the rest of GB2312 level 1, sliced per zone (94 chars), built for 400/700 only; the browser fetches a
   slice only when such a character actually appears → **nothing inside GB2312 level 1 is ever missing**, and the
-  first load pays nothing for it;
+  first load pays nothing for it. The tail `@font-face` list (one long `unicode-range` string, ~50 KB) ships as a
+  separate `maple-tail.<hash>.css` loaded asynchronously (content hash + `/fonts/*` immutable); only the core
+  rules are inlined with the page CSS — inlining the list means re-downloading it on every page view, since HTML
+  is not cacheable;
 - Anything outside (GB2312 level 2, rare glyphs, plus glyphs the font simply lacks such as `✅❌➕` and Kangxi
   radicals) falls back to the **metric-aligned** Consolas declared in `src/styles/fonts.css`
   (`size-adjust: 109.1%`) — same advance width, no layout shift.
 
-Measured (412px, cold cache): an article's font payload drops from ≈2.5 MB / 55 shards (CDN) to
-**≈1.05 MB / 3 requests** (400 + 700 + the 600 used by stickers).
+Measured (412px, cold cache): the font payload drops from ≈2.5 MB / 55 shards (CDN) to **≈0.69 MB / 2 requests**
+(core 400 + 700; same for a list page and an article with a blockquote), plus a ≈10 KB immutable CSS for the tail
+list. Per-page inline CSS drops from ≈80 KB to ≈31 KB and the HTML (gzip) from ≈22 KB to ≈12 KB.
 
 **No manual step**: `npm run fonts` is part of `npm run build` and `npm run dev`; it recomputes the character set
 from the current content (including private/draft post sources) and skips the whole step when nothing changed

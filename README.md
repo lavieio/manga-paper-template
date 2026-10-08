@@ -33,7 +33,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 ```bash
 /
 ├── assets/
-│   └── fonts/                  # 完整字体：4 个字重 TTF + LICENSE（OFL-1.1；构建期从这里切子集）
+│   └── fonts/                  # 完整字体：上游 TTF + LICENSE（OFL-1.1；构建期从这里切子集）
 ├── public/
 │   ├── fonts/                  # 字体子集产物（npm run fonts 生成，不进仓）
 │   ├── og.png                  # README 头图（站点默认卡片的快照；卡片本体由 /og/*.png 构建期生成）
@@ -70,6 +70,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 - **分享图** — [Satori](https://github.com/vercel/satori) + [resvg-js](https://github.com/thx/resvg-js)（构建期渲染，不进产物）
 - **灯箱** — [PhotoSwipe](https://photoswipe.com/)
 - **评论** — [remark42](https://remark42.com/)（自托管，可选）
+- **观测** — [Google Analytics 4](https://analytics.google.com/)（可选）+ Vercel Web Analytics / Speed Insights（可选，仅 Vercel）
 - **加密** — WebCrypto（PBKDF2 600k + AES-256-GCM）
 - **Git 钩子** — [husky](https://typicode.github.io/husky/)
 - **部署** — [Cloudflare Pages](https://pages.cloudflare.com/) 或 [Vercel](https://vercel.com/)（二选一）
@@ -216,6 +217,10 @@ Vercel 读 `vercel.ts` 的 `redirects`。站内链接一律直接指向 `/posts/
 | `SITE_URL` | **必填**：站点根 URL（canonical / sitemap / RSS 的唯一真源）。缺失、格式非法或仍是 `https://your-domain.com` 时 `npm run build` 直接失败 |
 | `SKIP_REMOTE_IMAGE_SIZE` | 可选：设为 1 则构建期不抓外链图片尺寸（离线 / 外链域名被墙时用） |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 评论（可选，两项配齐才生效） |
+| `PUBLIC_GA_MEASUREMENT_ID` | 可选：GA4 Measurement ID（形如 `G-XXXXXXXXXX`），配了才埋点、才放行 CSP |
+| `PUBLIC_GSC_VERIFICATION` | 可选：GSC HTML 标记验证的 content 值（用 DNS TXT 验证时无需） |
+| `PUBLIC_VERCEL_ANALYTICS` | 可选（仅 Vercel）：Vercel Web Analytics，需先在面板 Enable |
+| `PUBLIC_VERCEL_SPEED_INSIGHTS` | 可选（仅 Vercel）：Vercel Speed Insights，需先在面板 Enable |
 
 `.env` 已在 `.gitignore` 中，`.env.example` 随仓库分发。
 
@@ -238,22 +243,69 @@ Vercel 读 `vercel.ts` 的 `redirects`。站内链接一律直接指向 `/posts/
 - ⚠️ 配了评论后，它的域名会自动进 `dist/_headers` 与 `vercel.ts` 的 CSP 白名单
   （`script-src` / `connect-src` / `frame-src`）——忘不了
 
+## 📊 访问统计与收录（可选）
+
+**Google Analytics 4**：填 `PUBLIC_GA_MEASUREMENT_ID`（形如 `G-XXXXXXXXXX`）即启用。
+
+- 未配置 → 全站零第三方脚本，CSP 也不放行 GA 域名
+- 只在**生产构建**埋点；**私密文章、`/private`、404 等 `noindex` 页一律不埋**（不跟踪未公开内容）
+- 加载策略：先攒 `gtag` 命令队列，等浏览器空闲再注入 `gtag.js`（`requestIdleCallback`，3s 超时兜底），
+  不与首屏抢带宽；代价是脚本落地前就离开的访问不产生 `page_view`
+- 配了之后，`gtag.js` 与采集端点会自动进 `dist/_headers` / `vercel.ts` 的 CSP 白名单
+- ⚠️ GA4 会写 `_ga` cookie；面向欧盟等需征得同意的地区，请自行加 consent 方案（模板默认「配置即加载」）
+
+**Google Search Console**：两种验证方式任选。
+
+- **DNS TXT**（推荐，域级生效、零代码）：在域名 DNS 加 GSC 给的 `google-site-verification=...` 记录
+- **HTML 标记**：把 GSC 给的 content 值填进 `PUBLIC_GSC_VERIFICATION`，会渲染
+  `<meta name="google-site-verification">`
+
+验证通过后在 GSC 提交 sitemap：`https://<你的域名>/sitemap-index.xml`。sitemap 与 `robots.txt`
+都已在构建期按 `SITE_URL` 生成，并已排除私密文章、草稿、`/private`、`/search`；私密页靠 `noindex`
+（不是 `robots.txt` Disallow）挡收录——别把 `/private` 写进 Disallow，那样爬虫读不到 `noindex`，
+反而可能被收录。
+
+### Vercel 平台原生观测（可选，仅 Vercel）
+
+部署在 Vercel 时，除了 GA4 还能直接用平台自带的 **Web Analytics**（访问量）与 **Speed Insights**
+（真实 Core Web Vitals），比 GA 更省事：
+
+- 在 Vercel 项目面板分别 **Enable** 这两项，再在环境变量里设 `PUBLIC_VERCEL_ANALYTICS=1` /
+  `PUBLIC_VERCEL_SPEED_INSIGHTS=1`（两者独立，可只开一个）
+- 用官方 `@vercel/analytics/astro` / `@vercel/speed-insights/astro` 组件：生产期注入**同源**脚本
+  （`/_vercel/insights|speed-insights/script.js`），上报端点也是同源，所以 **CSP 无需改动**
+- **构建期自动识别平台**（Vercel 的 `VERCEL=1`）：非 Vercel（如 Cloudflare Pages）即使误设开关也不会
+  渲染，本地 `npm run preview` 也不受 `/_vercel/*` 404 影响；仅生产构建、非 `noindex` 页才埋
+- 无 cookie、匿名，不需要 consent；与 GA4 可并存（Vercel 看平台看板 / CWV，GA 看跨平台受众）
+
+> ⚠️ 仅当站点部署在 Vercel 时可用；若站点前面还挂了 Cloudflare 代理（橙云）套 Vercel，
+> `/_vercel/*` 可能被代理拦成 404，需自行调整代理规则。
+
 ## 🔤 字体
 
 自托管 **Maple Mono NF CN**（[SIL OFL 1.1](https://github.com/subframe7536/maple-font)，v7.9），
-不依赖任何字体 CDN。做法是**完整字体进仓、构建期现切子集**：`assets/fonts/` 放 4 个字重的原始 TTF
-（正文 400 / 引用斜体 400i / 贴纸 600 / 标题 700，合计 ≈83 MB），构建时按当前内容切成只含用得上的
-字形的子集，产物 `public/fonts/*.woff2`（84 个 / ≈3.5 MB）**不进仓**。按 `unicode-range` 分层：
+不依赖任何字体 CDN。做法是**完整字体进仓、构建期现切子集**：`assets/fonts/` 放上游完整 TTF
+（Regular / Italic / SemiBold / Bold，合计 ≈83 MB），构建时按当前内容切成只含用得上的字形的子集，
+产物 `public/fonts/*.woff2`（82 个 / ≈2.8 MB）**不进仓**。按 `unicode-range` 分层：
 
-- **core**：站点字符 + 常用符号（ASCII / CJK 标点 / 全角 / 箭头·数学·制表…），4 个字重各一份
-  （≈350–380 KB/份），首屏只 `preload` 400 与 700；
+- **core**：站点字符 + 常用符号（ASCII / CJK 标点 / 全角 / 箭头·数学·制表…），浏览器字体用到的
+  2 个字重各一份（400 / 700，≈350–360 KB/份），两个都 `preload`。
+  半粗 600 与引用斜体 400i 都不切面：每多一个面要多下 360–390 KB 的 core，还要多付一次整文档重排。
+  600 只服务贴纸、标签这类小字（CSS 里的 `font-weight: 600` 由字体匹配落到 700 字面），斜体全站只有
+  `blockquote` 用（浏览器按 `font-synthesis` 从 400 面合成倾斜，与 `demos/comic/` 定稿里的
+  `font-style: italic` 一致）。`assets/fonts/` 里仍留着上游全部 TTF：SemiBold 供构建期渲染 OG 卡片
+  （Satori 直接读 TTF，与浏览器字体链无关），Italic 只是暂时留着备查；
 - **tail**：GB2312 一级里 core 之外的剩余字，按「1 个区（94 字）」切片（只做 400/700），
-  浏览器只在页面真出现那些字时才取 → **GB2312 一级以内永不缺字**，首屏也不必为它付字节；
+  浏览器只在页面真出现那些字时才取 → **GB2312 一级以内永不缺字**，首屏也不必为它付字节。
+  tail 的 `@font-face` 清单（一长串 `unicode-range`，~50 KB）单独出成 `maple-tail.<hash>.css`
+  异步挂载（content-hash + `/fonts/*` immutable），只有 core 那几条跟着页面 CSS 内联——
+  清单内联进 HTML 等于每个页面都重下一遍（HTML 不可缓存）；
 - 覆盖不到的字符（GB2312 二级、表外生僻字，以及字库里本来就没有的 `✅❌➕`、康熙部首）落到
   `src/styles/fonts.css` 里那份**度量对齐**的 Consolas fallback（`size-adjust: 109.1%`），同宽不抖行。
 
-实测（412px、冷缓存）：一篇文章的字体字节从 CDN 方案的 ≈2.5 MB / 55 个分片降到 **≈1.05 MB / 3 个请求**
-（400 + 700 + 贴纸用的 600）。
+实测（412px、冷缓存）：字体字节从 CDN 方案的 ≈2.5 MB / 55 个分片降到 **≈0.69 MB / 2 个请求**
+（core 400 + 700；列表页与带引用块的文章页一致），tail 清单另算一份 ≈10 KB 的 immutable CSS；
+每页内联 CSS 从 ≈80 KB 降到 ≈31 KB，页面 HTML（gzip）从 ≈22 KB 降到 ≈12 KB。
 
 **不需要任何手动步骤**：`npm run fonts` 挂在 `npm run build` 与 `npm run dev` 上，按当前内容（含私密/
 草稿文章的源码）重算字符集；字符集与字体都没变就整个跳过（指纹存 `.cache/fonts/plan.json`，本机后续

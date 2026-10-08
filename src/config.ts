@@ -1,3 +1,6 @@
+import { parseGaMeasurementId } from "./utils/analytics";
+import { isEnabledFlag } from "./utils/env-flag";
+
 /** 站点全局配置：唯一入口。占位值随时可改。 */
 export const site = {
   name: "MangaPaper",
@@ -25,5 +28,36 @@ export const remark42 = {
 } as const;
 
 export const isRemark42Enabled = Boolean(remark42.host && remark42.siteId);
+
+/**
+ * 访问统计（GA4）与搜索引擎验证（GSC）：全部从 env 读取，不设硬编码占位。
+ * 两项都是可选的，未配置就整块不渲染，也不会写进 CSP。
+ */
+export const analytics = {
+  /** GA4 Measurement ID（`PUBLIC_`，客户端可见）；未配置或格式非法一律视为未启用 */
+  gaMeasurementId: parseGaMeasurementId(import.meta.env.PUBLIC_GA_MEASUREMENT_ID as string | undefined),
+  /** GSC 的 HTML 标记验证 token（也可改用 DNS TXT 验证，那样无需本项） */
+  gscVerification: (import.meta.env.PUBLIC_GSC_VERIFICATION as string | undefined)?.trim() || null,
+} as const;
+
+export const isAnalyticsEnabled = analytics.gaMeasurementId !== null;
+
+/**
+ * Vercel 平台原生观测（可选，仅 Vercel 部署可用）：Web Analytics + Speed Insights。
+ * `onVercel` 不是用户配置项——由 `astro.config.mjs` 按构建环境的 `VERCEL=1` 注入，
+ * 因此非 Vercel 平台（如 Cloudflare Pages）即使误设开关也不会输出 404 的 `/_vercel/*` 引用。
+ */
+export const vercelObservability = {
+  /** Web Analytics：访问量 / 来源 / 页面，无 cookie、匿名 */
+  analytics: isEnabledFlag(import.meta.env.PUBLIC_VERCEL_ANALYTICS as string | undefined),
+  /** Speed Insights：真实用户 Core Web Vitals */
+  speedInsights: isEnabledFlag(import.meta.env.PUBLIC_VERCEL_SPEED_INSIGHTS as string | undefined),
+  /** 当前构建是否跑在 Vercel 上（构建期注入，不是用户配置） */
+  onVercel: isEnabledFlag(import.meta.env.PUBLIC_ON_VERCEL as string | undefined),
+} as const;
+
+export const isVercelAnalyticsEnabled = vercelObservability.analytics && vercelObservability.onVercel;
+export const isVercelSpeedInsightsEnabled = vercelObservability.speedInsights && vercelObservability.onVercel;
+export const isVercelInsightsEnabled = isVercelAnalyticsEnabled || isVercelSpeedInsightsEnabled;
 
 export type SiteConfig = typeof site;

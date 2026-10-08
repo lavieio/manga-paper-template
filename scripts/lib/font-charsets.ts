@@ -1,8 +1,8 @@
 /**
  * 字体子集：字符集与切片策略（唯一来源）。
  *
- * 仓库里放的是**完整字体**（`assets/fonts/` 的 4 个字重，上游原文件），构建期按当前内容现切：
- * - **core** = 站点字符 ∪ 常用符号 → 4 个字重各一份，首屏 preload 400/700；
+ * 仓库里放的是**完整字体**（`assets/fonts/` 的上游原文件），构建期按当前内容现切：
+ * - **core** = 站点字符 ∪ 常用符号 → 每个字重各一份，首屏 preload 400/700；
  * - **tail** = GB2312 一级里 core 之外的剩余字 → 按「1 个区（94 字）」切片，只做 400/700，
  *   交给浏览器按 `unicode-range` 按需取（GB2312 一级以内永不缺字）；
  * - core/tail 都覆盖不到的字符（GB2312 以外、或字库里本来就没有的 ✅❌➕）回落度量对齐的 fallback。
@@ -13,7 +13,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { extname, join } from "node:path";
 
 export interface FontWeightPlan {
-  /** 文件名与 @font-face 用的标签，如 `400` / `400i` */
+  /** 文件名与 @font-face 用的标签，如 `400` / `700` */
   readonly label: string;
   readonly cssWeight: number;
   readonly italic: boolean;
@@ -21,18 +21,27 @@ export interface FontWeightPlan {
   readonly file: string;
 }
 
-/** 站点实际用到的 4 个字重：正文 / 引用斜体 / 贴纸 / 标题 */
+/**
+ * 站点实际用到的字重：正文 / 标题。
+ *
+ * 只留这两个面，因为每多一个面要付两份代价：一份 360–390 KB 的 core 子集，
+ * 以及一次**整文档重排**（字体到货时全部文本重新排版，4× CPU 下实测单次 ≈160–700 ms 主线程）。
+ * - 半粗 600 已移除：它只服务贴纸、标签这类小字 → CSS 里的 `font-weight: 600` 落到 700 字面；
+ * - 引用斜体 400i 已移除：全站只有 `blockquote` 用斜体（`prose.css`，与 `demos/comic` 定稿一致），
+ *   浏览器按 `font-synthesis` 从 400 面合成倾斜，省一份 380 KB 的字面。
+ *
+ * `assets/fonts/` 里的 SemiBold 仍要留：构建期渲染 OG 卡片直接读 TTF（`src/utils/og-font.ts` 用
+ * 400/600/700）。Italic 目前没有消费者，留着只为随时能试回来。
+ */
 export const FONT_WEIGHTS: readonly FontWeightPlan[] = [
   { label: "400", cssWeight: 400, italic: false, file: "MapleMono-NF-CN-Regular.ttf" },
-  { label: "400i", cssWeight: 400, italic: true, file: "MapleMono-NF-CN-Italic.ttf" },
-  { label: "600", cssWeight: 600, italic: false, file: "MapleMono-NF-CN-SemiBold.ttf" },
   { label: "700", cssWeight: 700, italic: false, file: "MapleMono-NF-CN-Bold.ttf" },
 ];
 
 /** 首屏 preload 的字重（正文 + 标题）；其余按 unicode-range 按需取 */
 export const PRELOAD_LABELS: readonly string[] = ["400", "700"];
 
-/** tail 只做这两个字重：600 / italic 的生僻字由同家族 400/700 的字形兜住（CSS 字体匹配规则） */
+/** tail 只做这两个字重（正好是浏览器字体的全部）；斜体不切片，交给浏览器合成 */
 export const TAIL_LABELS: readonly string[] = ["400", "700"];
 
 /** GB2312 一级汉字的区号范围（16–55）；tail 的切片单位就是「区」 */
@@ -55,7 +64,7 @@ const CONTROLS = /[\u0000-\u001f\u007f\ufeff]/g;
 /** 站点字符扫描：构建期真正会渲染成文本的文件类型 */
 const SITE_EXTENSIONS = new Set([".md", ".mdx", ".astro", ".ts", ".js", ".mjs", ".css", ".json", ".txt", ".svg"]);
 /** 生成物自己：扫进来只会自我循环（unicode-range 文本、内容哈希） */
-const SITE_EXCLUDED = new Set(["font-assets.ts", "fonts-face.css"]);
+const SITE_EXCLUDED = new Set(["font-assets.ts", "fonts-core.css"]);
 /** 会被渲染成文本的地方：`src/` 全是，另加配置文件 */
 const SITE_ROOTS: readonly string[] = ["src", "astro.config.mjs"];
 /** 不扫的目录 */
