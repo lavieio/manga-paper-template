@@ -1,0 +1,40 @@
+---
+/**
+ * GA4 埋点（可选）。
+ *
+ * 只在 `src/layouts/Base.astro` 里按「已配置 + 生产构建 + 页面未被 noindex」三条件渲染，
+ * 因此私密文章、/private、404 都不会被统计。
+ * 加载策略：先建立 gtag 命令队列，等浏览器空闲再注入 gtag.js——
+ * 首屏（LCP/INP）不跟第三方请求抢带宽，成本是「加载前就离开的访问」不产生 page_view。
+ * 放行 gtag.js 与采集端点的 CSP 由 `src/utils/deploy-policy.ts` 按同一份 env 现算。
+ */
+import { analytics } from "../config";
+
+const measurementId = analytics.gaMeasurementId;
+---
+
+{
+  measurementId && (
+    <script is:inline define:vars={{ measurementId }}>
+      // gtag 队列桩：脚本落地前先把命令攒进 dataLayer，gtag.js 加载后会回放
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () {
+        window.dataLayer.push(arguments);
+      };
+      window.gtag("js", new Date());
+      window.gtag("config", measurementId);
+
+      (function () {
+        function load() {
+          var s = document.createElement("script");
+          s.async = true;
+          s.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(measurementId);
+          document.head.appendChild(s);
+        }
+        // 空闲回调带 timeout 兜底：后台标签页空闲回调可能长时间不触发
+        if ("requestIdleCallback" in window) window.requestIdleCallback(load, { timeout: 3000 });
+        else window.setTimeout(load, 2000);
+      })();
+    </script>
+  )
+}

@@ -4,7 +4,8 @@ import "../styles/global.css";
 import "../styles/card.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import SiteFooter from "../components/SiteFooter.astro";
-import { site } from "../config";
+import Analytics from "../components/Analytics.astro";
+import { site, analytics, isAnalyticsEnabled } from "../config";
 import { FONT_PRELOAD, FONT_TAIL_CSS } from "../utils/font-assets";
 import { serializeJsonLd, type JsonLdNode } from "../utils/structured-data";
 import { siteShareImage, type ShareImage } from "../utils/share-image";
@@ -56,6 +57,10 @@ const rssFeed = new URL("rss.xml", Astro.site);
     <title>{pageTitle}</title>
     <meta name="description" content={description} />
     {noindex && <meta name="robots" content="noindex" />}
+    {/* GSC 标记验证（配了 PUBLIC_GSC_VERIFICATION 才渲染；改用 DNS TXT 验证则无需此项） */}
+    {analytics.gscVerification && (
+      <meta name="google-site-verification" content={analytics.gscVerification} />
+    )}
     {
       unlockCheck && (
         <script is:inline>
@@ -145,5 +150,10 @@ const rssFeed = new URL("rss.xml", Astro.site);
       </main>
       <SiteFooter />
     </div>
+    {/*
+      GA4：未配置 / 非生产构建 / 页面 noindex（私密文章、/private、404）三条件任一命中都不埋点。
+      节点可以放在这里：组件内部自己攒队列 + 空闲加载，不阻塞首屏。
+    */}
+    {isAnalyticsEnabled && !noindex && import.meta.env.PROD && <Analytics />}
   </body>
 </html>

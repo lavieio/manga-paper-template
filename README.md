@@ -216,6 +216,8 @@ Vercel 读 `vercel.ts` 的 `redirects`。站内链接一律直接指向 `/posts/
 | `SITE_URL` | **必填**：站点根 URL（canonical / sitemap / RSS 的唯一真源）。缺失、格式非法或仍是 `https://your-domain.com` 时 `npm run build` 直接失败 |
 | `SKIP_REMOTE_IMAGE_SIZE` | 可选：设为 1 则构建期不抓外链图片尺寸（离线 / 外链域名被墙时用） |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 评论（可选，两项配齐才生效） |
+| `PUBLIC_GA_MEASUREMENT_ID` | 可选：GA4 Measurement ID（形如 `G-XXXXXXXXXX`），配了才埋点、才放行 CSP |
+| `PUBLIC_GSC_VERIFICATION` | 可选：GSC HTML 标记验证的 content 值（用 DNS TXT 验证时无需） |
 
 `.env` 已在 `.gitignore` 中，`.env.example` 随仓库分发。
 
@@ -237,6 +239,28 @@ Vercel 读 `vercel.ts` 的 `redirects`。站内链接一律直接指向 `/posts/
   只能在自托管侧反代替换其样式表或重建前端——模板不提供此能力
 - ⚠️ 配了评论后，它的域名会自动进 `dist/_headers` 与 `vercel.ts` 的 CSP 白名单
   （`script-src` / `connect-src` / `frame-src`）——忘不了
+
+## 📊 访问统计与收录（可选）
+
+**Google Analytics 4**：填 `PUBLIC_GA_MEASUREMENT_ID`（形如 `G-XXXXXXXXXX`）即启用。
+
+- 未配置 → 全站零第三方脚本，CSP 也不放行 GA 域名
+- 只在**生产构建**埋点；**私密文章、`/private`、404 等 `noindex` 页一律不埋**（不跟踪未公开内容）
+- 加载策略：先攒 `gtag` 命令队列，等浏览器空闲再注入 `gtag.js`（`requestIdleCallback`，3s 超时兜底），
+  不与首屏抢带宽；代价是脚本落地前就离开的访问不产生 `page_view`
+- 配了之后，`gtag.js` 与采集端点会自动进 `dist/_headers` / `vercel.ts` 的 CSP 白名单
+- ⚠️ GA4 会写 `_ga` cookie；面向欧盟等需征得同意的地区，请自行加 consent 方案（模板默认「配置即加载」）
+
+**Google Search Console**：两种验证方式任选。
+
+- **DNS TXT**（推荐，域级生效、零代码）：在域名 DNS 加 GSC 给的 `google-site-verification=...` 记录
+- **HTML 标记**：把 GSC 给的 content 值填进 `PUBLIC_GSC_VERIFICATION`，会渲染
+  `<meta name="google-site-verification">`
+
+验证通过后在 GSC 提交 sitemap：`https://<你的域名>/sitemap-index.xml`。sitemap 与 `robots.txt`
+都已在构建期按 `SITE_URL` 生成，并已排除私密文章、草稿、`/private`、`/search`；私密页靠 `noindex`
+（不是 `robots.txt` Disallow）挡收录——别把 `/private` 写进 Disallow，那样爬虫读不到 `noindex`，
+反而可能被收录。
 
 ## 🔤 字体
 

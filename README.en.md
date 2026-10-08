@@ -225,6 +225,8 @@ while Vercel reads the `redirects` of `vercel.ts`. In-site links point straight 
 | `SITE_URL` | **Required**: site root URL — the single source of truth for canonical / sitemap / RSS. `npm run build` fails when it is missing, malformed, or still `https://your-domain.com` |
 | `SKIP_REMOTE_IMAGE_SIZE` | Optional: set to 1 to skip remote image-size probing at build time (offline / blocked hosts) |
 | `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` | remark42 comments (optional; both required) |
+| `PUBLIC_GA_MEASUREMENT_ID` | Optional: GA4 Measurement ID (e.g. `G-XXXXXXXXXX`); analytics and its CSP allowlist only activate when set |
+| `PUBLIC_GSC_VERIFICATION` | Optional: GSC HTML-tag verification content (not needed with DNS TXT verification) |
 
 `.env` is gitignored; `.env.example` ships with the repository.
 
@@ -246,6 +248,30 @@ With `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` configured, public posts
   to the paper look requires rewriting its stylesheet behind a reverse proxy, or rebuilding its frontend — out of scope here
 - ⚠️ Once comments are configured, that host lands in the CSP allowlist of `dist/_headers` and `vercel.ts`
   automatically (`script-src` / `connect-src` / `frame-src`) — nothing to remember
+
+## 📊 Analytics & Search Console (optional)
+
+**Google Analytics 4**: set `PUBLIC_GA_MEASUREMENT_ID` (e.g. `G-XXXXXXXXXX`) to enable it.
+
+- Not configured → zero third-party scripts, and the CSP does not allowlist GA either
+- Only in **production builds**; **private posts, `/private`, 404 and any other `noindex` page are never tracked**
+- Loading strategy: queue `gtag` commands first, then inject `gtag.js` when the browser is idle
+  (`requestIdleCallback`, 3s timeout fallback), so it never competes with the first paint; the trade-off is
+  that visits leaving before the script lands produce no `page_view`
+- Once configured, `gtag.js` and the collection endpoints land in the CSP allowlist of
+  `dist/_headers` / `vercel.ts` automatically
+- ⚠️ GA4 writes a `_ga` cookie; if you need GDPR-style consent, add it yourself (the template loads on config)
+
+**Google Search Console**: pick either verification method.
+
+- **DNS TXT** (recommended: domain-wide, zero code): add the `google-site-verification=...` record GSC gives you
+- **HTML tag**: put GSC's content value into `PUBLIC_GSC_VERIFICATION`; it renders
+  `<meta name="google-site-verification">`
+
+Then submit `https://<your-domain>/sitemap-index.xml` in GSC. Both the sitemap and `robots.txt` are
+generated at build time from `SITE_URL`, and already exclude private posts, drafts, `/private` and
+`/search`; private pages rely on `noindex` (not a `robots.txt` Disallow), so do **not** add `/private`
+to Disallow — crawlers would then never read the `noindex` and the page could get indexed anyway.
 
 ## 🔤 Fonts
 
