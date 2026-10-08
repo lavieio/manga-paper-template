@@ -32,7 +32,7 @@ node_modules/
 # 下面几个是构建期产物（npm run fonts），不进仓。
 .cache/
 public/fonts/
-src/styles/fonts-face.css
+src/styles/fonts-core.css
 src/utils/font-assets.ts
 
 # ── 日志 ────────────────────────────────────────────

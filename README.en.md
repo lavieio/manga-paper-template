@@ -34,7 +34,7 @@ light/dark themes. Fully static: no backend, no client framework.
 ```bash
 /
 ├── assets/
-│   └── fonts/                  # full fonts: four weight TTFs + LICENSE (OFL-1.1; subset from here at build time)
+│   └── fonts/                  # full fonts: upstream TTFs + LICENSE (OFL-1.1; subset from here at build time)
 ├── public/
 │   ├── fonts/                  # font subset artifacts (npm run fonts; not committed)
 │   ├── og.png                  # README hero (snapshot of the default card; cards are generated at build time)
@@ -250,22 +250,32 @@ With `PUBLIC_REMARK42_HOST` / `PUBLIC_REMARK42_SITE_ID` configured, public posts
 ## 🔤 Fonts
 
 Self-hosted **Maple Mono NF CN** ([SIL OFL 1.1](https://github.com/subframe7536/maple-font), v7.9) — no font
-CDN involved. The recipe is **full fonts in the repo, subsets cut at build time**: `assets/fonts/` holds the four
-original weight TTFs (body 400 / italic 400i / stickers 600 / headings 700, ≈83 MB total) and the build reduces
-them to the glyphs this site actually needs. The artifacts (`public/fonts/*.woff2`, 84 files / ≈3.5 MB) are
-**not committed**. Layered by `unicode-range`:
+CDN involved. The recipe is **full fonts in the repo, subsets cut at build time**: `assets/fonts/` holds the
+upstream TTFs (Regular / Italic / SemiBold / Bold, ≈83 MB total) and the build reduces them to the glyphs this
+site actually needs. The artifacts (`public/fonts/*.woff2`, 82 files / ≈2.8 MB) are **not committed**.
+Layered by `unicode-range`:
 
 - **core**: site characters + common symbols (ASCII / CJK punctuation / full-width / arrows·math·box…), one file
-  per weight (≈350–380 KB each); only the 400 and 700 cores are preloaded;
+  for each of the two weights the browser fonts use (400 / 700, ≈350–360 KB each); both are preloaded.
+  Semi-bold 600 and italic 400i get no subset: every extra face costs another 360–390 KB core **and** one more
+  full-document relayout. 600 only serves small sticker/label text (`font-weight: 600` in CSS resolves to the 700
+  face); italic is only used by `blockquote` (the browser synthesises the slant from the 400 face via
+  `font-synthesis`, matching the `font-style: italic` of the `demos/comic/` visual baseline). All upstream TTFs
+  stay in `assets/fonts/`: SemiBold is read directly by Satori at build time for OG cards (unrelated to the
+  browser font chain), Italic is just kept around for now;
 - **tail**: the rest of GB2312 level 1, sliced per zone (94 chars), built for 400/700 only; the browser fetches a
   slice only when such a character actually appears → **nothing inside GB2312 level 1 is ever missing**, and the
-  first load pays nothing for it;
+  first load pays nothing for it. The tail `@font-face` list (one long `unicode-range` string, ~50 KB) ships as a
+  separate `maple-tail.<hash>.css` loaded asynchronously (content hash + `/fonts/*` immutable); only the core
+  rules are inlined with the page CSS — inlining the list means re-downloading it on every page view, since HTML
+  is not cacheable;
 - Anything outside (GB2312 level 2, rare glyphs, plus glyphs the font simply lacks such as `✅❌➕` and Kangxi
   radicals) falls back to the **metric-aligned** Consolas declared in `src/styles/fonts.css`
   (`size-adjust: 109.1%`) — same advance width, no layout shift.
 
-Measured (412px, cold cache): an article's font payload drops from ≈2.5 MB / 55 shards (CDN) to
-**≈1.05 MB / 3 requests** (400 + 700 + the 600 used by stickers).
+Measured (412px, cold cache): the font payload drops from ≈2.5 MB / 55 shards (CDN) to **≈0.69 MB / 2 requests**
+(core 400 + 700; same for a list page and an article with a blockquote), plus a ≈10 KB immutable CSS for the tail
+list. Per-page inline CSS drops from ≈80 KB to ≈31 KB and the HTML (gzip) from ≈22 KB to ≈12 KB.
 
 **No manual step**: `npm run fonts` is part of `npm run build` and `npm run dev`; it recomputes the character set
 from the current content (including private/draft post sources) and skips the whole step when nothing changed

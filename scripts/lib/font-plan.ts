@@ -9,7 +9,7 @@
 import { FONT_WEIGHTS, PRELOAD_LABELS, TAIL_LABELS, gb2312Level1Areas, sortChars, symbolCharset, type FontWeightPlan } from "./font-charsets.ts";
 
 export interface FacePlan {
-  /** 字重标签，如 `400` / `400i` */
+  /** 字重标签，如 `400` / `700` */
   readonly label: string;
   /** 面的种类，也是文件名里的一段：`core` 或 `l1-<区号>` */
   readonly kind: string;

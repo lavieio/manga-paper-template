@@ -33,7 +33,7 @@ MangaPaper 是一个**漫画稿纸风格**的开源博客模板：点阵纸底�
 ```bash
 /
 ├── assets/
-│   └── fonts/                  # 完整字体：4 个字重 TTF + LICENSE（OFL-1.1；构建期从这里切子集）
+│   └── fonts/                  # 完整字体：上游 TTF + LICENSE（OFL-1.1；构建期从这里切子集）
 ├── public/
 │   ├── fonts/                  # 字体子集产物（npm run fonts 生成，不进仓）
 │   ├── og.png                  # README 头图（站点默认卡片的快照；卡片本体由 /og/*.png 构建期生成）
@@ -241,19 +241,28 @@ Vercel 读 `vercel.ts` 的 `redirects`。站内链接一律直接指向 `/posts/
 ## 🔤 字体
 
 自托管 **Maple Mono NF CN**（[SIL OFL 1.1](https://github.com/subframe7536/maple-font)，v7.9），
-不依赖任何字体 CDN。做法是**完整字体进仓、构建期现切子集**：`assets/fonts/` 放 4 个字重的原始 TTF
-（正文 400 / 引用斜体 400i / 贴纸 600 / 标题 700，合计 ≈83 MB），构建时按当前内容切成只含用得上的
-字形的子集，产物 `public/fonts/*.woff2`（84 个 / ≈3.5 MB）**不进仓**。按 `unicode-range` 分层：
+不依赖任何字体 CDN。做法是**完整字体进仓、构建期现切子集**：`assets/fonts/` 放上游完整 TTF
+（Regular / Italic / SemiBold / Bold，合计 ≈83 MB），构建时按当前内容切成只含用得上的字形的子集，
+产物 `public/fonts/*.woff2`（82 个 / ≈2.8 MB）**不进仓**。按 `unicode-range` 分层：
 
-- **core**：站点字符 + 常用符号（ASCII / CJK 标点 / 全角 / 箭头·数学·制表…），4 个字重各一份
-  （≈350–380 KB/份），首屏只 `preload` 400 与 700；
+- **core**：站点字符 + 常用符号（ASCII / CJK 标点 / 全角 / 箭头·数学·制表…），浏览器字体用到的
+  2 个字重各一份（400 / 700，≈350–360 KB/份），两个都 `preload`。
+  半粗 600 与引用斜体 400i 都不切面：每多一个面要多下 360–390 KB 的 core，还要多付一次整文档重排。
+  600 只服务贴纸、标签这类小字（CSS 里的 `font-weight: 600` 由字体匹配落到 700 字面），斜体全站只有
+  `blockquote` 用（浏览器按 `font-synthesis` 从 400 面合成倾斜，与 `demos/comic/` 定稿里的
+  `font-style: italic` 一致）。`assets/fonts/` 里仍留着上游全部 TTF：SemiBold 供构建期渲染 OG 卡片
+  （Satori 直接读 TTF，与浏览器字体链无关），Italic 只是暂时留着备查；
 - **tail**：GB2312 一级里 core 之外的剩余字，按「1 个区（94 字）」切片（只做 400/700），
-  浏览器只在页面真出现那些字时才取 → **GB2312 一级以内永不缺字**，首屏也不必为它付字节；
+  浏览器只在页面真出现那些字时才取 → **GB2312 一级以内永不缺字**，首屏也不必为它付字节。
+  tail 的 `@font-face` 清单（一长串 `unicode-range`，~50 KB）单独出成 `maple-tail.<hash>.css`
+  异步挂载（content-hash + `/fonts/*` immutable），只有 core 那几条跟着页面 CSS 内联——
+  清单内联进 HTML 等于每个页面都重下一遍（HTML 不可缓存）；
 - 覆盖不到的字符（GB2312 二级、表外生僻字，以及字库里本来就没有的 `✅❌➕`、康熙部首）落到
   `src/styles/fonts.css` 里那份**度量对齐**的 Consolas fallback（`size-adjust: 109.1%`），同宽不抖行。
 
-实测（412px、冷缓存）：一篇文章的字体字节从 CDN 方案的 ≈2.5 MB / 55 个分片降到 **≈1.05 MB / 3 个请求**
-（400 + 700 + 贴纸用的 600）。
+实测（412px、冷缓存）：字体字节从 CDN 方案的 ≈2.5 MB / 55 个分片降到 **≈0.69 MB / 2 个请求**
+（core 400 + 700；列表页与带引用块的文章页一致），tail 清单另算一份 ≈10 KB 的 immutable CSS；
+每页内联 CSS 从 ≈80 KB 降到 ≈31 KB，页面 HTML（gzip）从 ≈22 KB 降到 ≈12 KB。
 
 **不需要任何手动步骤**：`npm run fonts` 挂在 `npm run build` 与 `npm run dev` 上，按当前内容（含私密/
 草稿文章的源码）重算字符集；字符集与字体都没变就整个跳过（指纹存 `.cache/fonts/plan.json`，本机后续
