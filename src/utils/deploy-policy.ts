@@ -120,12 +120,21 @@ export function cspOrigin(value: string | undefined): string | null {
 }
 
 /**
+ * Cloudflare 边缘自动注入的 Web Analytics beacon（CF 面板里开了 Web Analytics / RUM 就会有）。
+ * 它不由本站产物决定，所以无条件放行：不加进白名单，CSP 报告会一直刷违规、
+ * Chrome Issues 面板也会报一条（best-practices 因此扣分）。它只发同源的 `/cdn-cgi/rum`，
+ * 所以 connect-src 'self' 已经够用，不用再放行别的域名。
+ */
+export const CLOUDFLARE_INSIGHTS_ORIGIN = "https://static.cloudflareinsights.com";
+
+/**
  * 指令集是「产物真实需要什么」的清单（字体已自托管，没有第三方来源）：
  * - `img-src https:`：文章里的外链图来自任意 https 域名（构建期只探测尺寸，不自托管）；
  * - `worker-src` + `'wasm-unsafe-eval'`：Pagefind 用 worker + WebAssembly 建索引；
  * - `'unsafe-inline'`：Astro 把小于 4KB 的客户端脚本内联进 HTML，且随内容变化；
  * - remark42：脚本、WebSocket 与 iframe 分别要 script-src / connect-src / frame-src；
- * - GA4：gtag.js 要 script-src，采集端点要 connect-src（img 向 `https:` 已放开）。
+ * - GA4：gtag.js 要 script-src，采集端点要 connect-src（img 向 `https:` 已放开）；
+ * - Cloudflare Web Analytics：边缘注入的 beacon 要 script-src（见上）。
  */
 interface CspOrigins {
   readonly remark42Origin: string | null;
@@ -138,7 +147,7 @@ function buildCsp({ remark42Origin, gaEnabled }: CspOrigins): string {
   const gaCollect = gaEnabled ? ` ${GA_COLLECT_ORIGINS.join(" ")}` : "";
   const directives = [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${gaScript}${remark42}`,
+    `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' ${CLOUDFLARE_INSIGHTS_ORIGIN}${gaScript}${remark42}`,
     "style-src 'self' 'unsafe-inline'",
     "font-src 'self'",
     "img-src 'self' data: https:",
@@ -164,6 +173,8 @@ const HEADERS_DOC = [
   "# 客户端脚本内联进 HTML 且随内容变化，写死 hash 必然漂移；更严的做法是 Astro 内置 security.csp。",
   "# 配了 remark42（PUBLIC_REMARK42_HOST）时，它的域名已自动写进 script-src / connect-src / frame-src；",
   "# 配了 GA4（PUBLIC_GA_MEASUREMENT_ID）时，gtag.js 域名进 script-src、采集端点进 connect-src。",
+  "# Cloudflare 的 Web Analytics beacon（static.cloudflareinsights.com）始终在 script-src 白名单里：",
+  "# 它是 CF 在边缘注入的，不配 CSP 就会在报告与 Chrome Issues 里一直报违规。",
   "# 内容哈希命名的产物（/_astro/*、/fonts/*、/pagefind/index|fragment/*）配了 immutable 长缓存；",
   "# 其余路径（HTML、/pagefind 下固定文件名的运行时）不写规则，走平台默认。",
 ].join("\n");
