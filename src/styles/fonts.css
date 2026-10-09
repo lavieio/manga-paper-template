@@ -1,17 +1,28 @@
 /* Maple Mono NF CN —— 自托管子集，不依赖任何字体 CDN。
    字体文件与 @font-face 清单都是构建期生成的（`npm run fonts`）：
-   core 装站点字符 + 常用符号（首屏 preload 400/700）→ fonts-core.css 内联进页面；
-   tail 按 unicode-range 兜住 GB2312 一级里 core 之外的剩余字 → 独立 immutable CSS，
-   Base.astro 异步挂载（内联进 HTML 等于每个页面都重下一遍）。
+   - 全站 core（站点字符 + 常用符号）→ fonts-core.css 内联进页面：开发期、兜底、
+     以及词汇宽的动态面（搜索页）都用它；同一份清单还会以稳定地址 `/maple-core.css`
+     发给跨源消费者（remark42 的评论区 iframe）；
+   - 上线产物里每页的这两条引用会被 scripts/page-fonts.ts 换成**本页自己的子集**
+     （首访字体字节 743 KB → 中位 140 KB）；
+   - tail（GB2312 一级里 core 之外的字，按区切片）→ 独立 immutable CSS，给站点字符集之外的
+     字兜底（用户敲的生僻字、评论）；只有声明了 dynamicText 的页面才挂它。
    字符集与切片策略见 scripts/lib/font-charsets.ts，生成物都在 .gitignore 里
-   （public/fonts/、fonts-core.css、font-assets.ts）。 */
+   （public/fonts/、public/maple-core.css、fonts-core.css、font-assets.ts）。 */
 @import "./fonts-core.css";
 
-/* Fallback 度量对齐（实测值，来源见下注释）——
-   MapleMono: upm 1000 / asc 1020 / desc -300 / gap 0 / avgWidth 600（0.6em）
-   Consolas : upm 2048 / avgWidth 1126（0.55em）
-   size-adjust 109.1% 令 Consolas 单字推进宽度对齐 MapleMono 的 0.6em，
-   swap 逐块替换时行距与排版不抖动。 */
+/* ── Fallback 度量对齐 ──
+   目标（实测值，Chrome 里 canvas measureText 100px 量出来的）：
+   MapleMono: upm 1000 / asc 1020 / desc -300 / gap 0 → 行盒 1.32em；
+              拉丁推进 0.6em、汉字推进 1.2em（汉字正好两格，代码里对齐）。
+   size-adjust 把 fallback 的推进宽度拉到同一格，ascent/descent 再钉死行盒高度——
+   两者都对齐，字体到货时的重排才不会推动下面的内容（CLS）。
+
+   为什么拉丁与汉字要分成两个面：Consolas / ui-monospace 都没有汉字，
+   换字体前那一屏汉字只能落到**系统 CJK 字体**（推进 1em），比 MapleMono 的 1.2em 窄两成，
+   标题会因此少折一行、换字体时整篇往下顶（实测文章页 CLS 0.052 就是这个）。
+   两个面的 override 都要除以各自的 size-adjust，最终行盒才落在 1.32em 上。
+   面按字体栈顺序生效：拉丁面取不到 local 时，浏览器会为汉字继续往后找。 */
 @font-face {
   font-family: "Maple Mono NF CN Fallback";
   src: local("Consolas");
@@ -21,7 +32,20 @@
   line-gap-override: 0%;
 }
 
+@font-face {
+  font-family: "Maple Mono NF CN CJK Fallback";
+  src: local("PingFang SC"), local("Hiragino Sans GB"), local("Microsoft YaHei"),
+    local("Noto Sans CJK SC"), local("Source Han Sans SC"), local("WenQuanYi Micro Hei"),
+    local("Heiti SC"), local("Droid Sans Fallback"), local("SimSun");
+  size-adjust: 120%;
+  ascent-override: 85%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+  /* 只管汉字与全角标点：拉丁字母交给上面那个面，免得系统 CJK 字体的西文形状混进来 */
+  unicode-range: U+3000-303F, U+4E00-9FFF, U+F900-FAFF, U+FE30-FE4F, U+FF00-FFEF, U+20000-2FA1F;
+}
+
 :root {
   --font-mono: "Maple Mono NF CN", "Maple Mono NF CN Fallback",
-    ui-monospace, "Cascadia Code", monospace;
+    "Maple Mono NF CN CJK Fallback", ui-monospace, "Cascadia Code", monospace;
 }

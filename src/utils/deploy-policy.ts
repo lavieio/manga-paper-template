@@ -21,6 +21,12 @@ export const ASTRO_ASSETS_SOURCE = "/_astro/*";
 /** 自托管字体子集：文件名带内容哈希 */
 export const FONT_ASSETS_SOURCE = "/fonts/*";
 /**
+ * 字体允许跨源读取：remark42 的评论区是跨源 iframe，它那边的主题 CSS 要能 `@font-face`
+ * 到我们的 woff2（不带 `Access-Control-Allow-Origin` 字体就会被 CORS 拦掉）。
+ * 字体是公开静态资源，开 `*` 没有信息泄漏风险。
+ */
+export const FONT_CORS_HEADER: HeaderEntry = { name: "Access-Control-Allow-Origin", value: "*" };
+/**
  * Pagefind 的索引与分片：文件名由**内容**算出来（实测：给一篇文章加一句话重编，
  * 这 19 个文件的名字全变、且没有任何同名文件换了内容），搜索时由 `pagefind-entry.json`
  * 按哈希去取，所以可以永久缓存。
@@ -93,7 +99,10 @@ export function buildHeaderRules(env: DeployPolicyEnv): HeaderRule[] {
     },
     ...IMMUTABLE_SOURCES.map((source) => ({
       source,
-      headers: [{ name: "Cache-Control", value: IMMUTABLE_CACHE }],
+      headers: [
+        { name: "Cache-Control", value: IMMUTABLE_CACHE },
+        ...(source === FONT_ASSETS_SOURCE ? [FONT_CORS_HEADER] : []),
+      ],
     })),
   ];
 }

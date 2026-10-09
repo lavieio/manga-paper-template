@@ -2,15 +2,27 @@
 /**
  * 字体子集：按当前内容把提交进仓的完整字体切成上线要用的子集（core + tail）。
  *
+ * 分两段，各管一件事（另一段在 `scripts/page-fonts.ts`）：
+ *
+ * 1. **本文件（`npm run fonts`，在 `astro build` 之前）**：切**全站** core + tail。
+ *    - core = 站点字符 + 常用符号 → 每个字重各一份。它是**开发期与兜底**用的：
+ *      `astro dev` 没有第二段，页面就靠它；上线时每页的引用会被第二段换成本页自己的子集，
+ *      漏换的页面也仍然能用（回落成本段的产物，不会没字体）；
+ *      词汇宽的动态面（搜索页）也直接保留它。
+ *    - tail = GB2312 一级里 core 之外的剩余字，按「1 个区」切片，
+ *      给站点字符集之外的字兜底（用户敲的生僻字、评论），交给浏览器按需取。
+ * 2. **`scripts/page-fonts.ts`（在 `astro build` 之后）**：按页把 core 的引用换成
+ *    「这一页真正出现的字符」的子集——单个页面只需要全站字符的 1/4 上下，
+ *    首访字体字节因此从 ~720 KB 降到 ~100 KB。
+ *
  * - **输入**：`assets/fonts/` 里的上游完整 TTF（OFL-1.1，随仓库提交），要切哪些字重见 `FONT_WEIGHTS`；
  * - **产物**：`public/fonts/*.woff2` + `public/fonts/maple-tail.<hash>.css` + `src/styles/fonts-core.css`
- *   + `src/utils/font-assets.ts`，都在 .gitignore 里、**不进仓**；
+ *   + `public/maple-core.css`（core 清单的稳定地址，给跨源消费者）+ `src/utils/font-assets.ts`，
+ *   都在 .gitignore 里、**不进仓**；
  * - **跳过**：字符集与输入字体都没变就整个跳过（指纹见 `.cache/fonts/plan.json`），
  *   本机后续构建 ~0.2s；干净 clone 第一次 ≈20s（2 个 core + 80 个 tail 片）。
  *   注意「不变」指的是**产物**不变：字体没有的字（✅❌➕）进不了任何面，它们增减不会触发重切；
  *   缺字报告 `.cache/fonts/coverage.json` 则每次运行都重写（它是观测值，不是产物）。
- * - **切片**：core = 站点字符 + 常用符号（每个用到的字重各一份），tail = GB2312 一级里 core 之外的剩余字
- *   按「1 个区」切片（只 400/700），交给浏览器按 unicode-range 按需取。
  *
  * 为什么不留一份「预切好的中间字体」提交进仓：那要多维护一层字符集与一次重建步骤，
  * 而 subset 的耗时由**产物**大小决定，输入是完整字体（20 MB）还是中间子集（1.7 MB）实测几乎一样。
@@ -21,8 +33,8 @@
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import subsetFont from "subset-font";
 import { FONT_WEIGHTS, faceFileName, siteCharset } from "./lib/font-charsets.ts";
+import { openBlobStore } from "./lib/font-blobs.ts";
 import { planFaces, type FacePlan, type FontCmaps, type FontPlan } from "./lib/font-plan.ts";
 import { FONT_DIR_README, renderCoreFaceCss, renderFontAssets, renderTailFaceCss } from "./lib/font-render.ts";
 import { readCodepoints } from "./lib/sfnt.ts";
@@ -37,14 +49,20 @@ const PLAN_FILE = join(CACHE_DIR, "plan.json");
 const COVERAGE_FILE = join(CACHE_DIR, "coverage.json");
 /** core 字面清单：跟随页面 CSS 一起内联（~18 KB，换掉一次渲染阻塞 RTT 划算） */
 const CORE_FACE_CSS = join(ROOT, "src/styles/fonts-core.css");
-/** tail 字面清单：出成独立 immutable CSS，页面异步挂载（内联的话每个页面都要重下一遍） */
+/** tail 清单：出成独立 immutable CSS，只有声明了 dynamicText 的页面才挂它（内联的话每个页面都要重下一遍） */
 const TAIL_CSS_PREFIX = "maple-tail";
+/**
+ * 全站 core 清单的**稳定地址**（`/maple-core.css`，不在 `/fonts/*` 下，走平台默认缓存）：
+ * 跨源消费者（remark42 的评论区 iframe）要把它 `@import` 进主题 CSS，而哈希名一变
+ * 那边的配置就失效了。评论区那种「词汇很宽」的面用整份 core 才划算——按需分片会被铺满。
+ */
+const CORE_CSS_STABLE = join(ROOT, "public/maple-core.css");
 /** 旧版生成物：v1.5.0 及以前把 core + tail 写在同一个 `fonts-face.css` 里 */
 const LEGACY_FACE_CSS = join(ROOT, "src/styles/fonts-face.css");
 const ASSETS_TS = join(ROOT, "src/utils/font-assets.ts");
 const LICENSE_NAME = "LICENSE.txt";
 /** 改字符集 / 切片 / 命名规则时 +1：指纹随之失效，产物全部重切 */
-const PLAN_VERSION = 2;
+const PLAN_VERSION = 4;
 const HASH_LENGTH = 8;
 /** 构建日志里最多列几个缺字，其余只报数量 */
 const MISSING_PREVIEW = 16;
@@ -101,7 +119,6 @@ async function readFontCmaps(): Promise<FontCmaps> {
 }
 
 function writeFaces(faces: readonly FacePlan[]): Promise<string[]> {
-  mkdirSync(BLOB_DIR, { recursive: true });
   rmSync(OUT_DIR, { recursive: true, force: true });
   mkdirSync(OUT_DIR, { recursive: true });
   return renderFaces(faces);
@@ -109,47 +126,38 @@ function writeFaces(faces: readonly FacePlan[]): Promise<string[]> {
 
 /** 逐个面取 blob（命中缓存就复用）并拷进发布目录，返回产物文件名 */
 async function renderFaces(faces: readonly FacePlan[]): Promise<string[]> {
-  const index = loadBlobIndex();
+  const store = openBlobStore({
+    blobDir: BLOB_DIR,
+    indexPath: BLOB_INDEX,
+    generator: packageVersion("subset-font"),
+    source: weightSource,
+  });
   const names: string[] = [];
 
   for (const face of faces) {
-    const blob = await ensureBlob(face, index);
+    const blob = await store.ensure(face.label, face.kind, face.chars);
     const name = faceFileName(face.label, face.kind, blob.hash);
     copyFileSync(join(BLOB_DIR, blob.file), join(OUT_DIR, name));
     names.push(name);
   }
-  mkdirSync(CACHE_DIR, { recursive: true });
-  writeFileSync(BLOB_INDEX, `${JSON.stringify(index, null, 2)}\n`);
+  store.flush();
   return names;
 }
 
-/** 内容寻址的 blob 缓存：字符集没变的面直接复用，加一篇文章只会重切受影响的那几个 */
-async function ensureBlob(face: FacePlan, index: Record<string, string>): Promise<{ file: string; hash: string }> {
-  const key = blobKey(face);
-  const cached = index[key];
-  if (cached && existsSync(join(BLOB_DIR, cached))) return { file: cached, hash: cached.slice(0, HASH_LENGTH) };
-
-  const weight = FONT_WEIGHTS.find((item) => item.label === face.label);
-  if (!weight) throw new Error(`没有字重 ${face.label}`);
-  const source = readFileSync(join(FONT_SOURCE_DIR, weight.file));
-
-  const subset = await subsetFont(source, face.chars, { targetFormat: "woff2" });
-  const file = `${sha256(subset).slice(0, HASH_LENGTH)}.woff2`;
-  writeFileSync(join(BLOB_DIR, file), subset);
-  index[key] = file;
-  return { file, hash: file.slice(0, HASH_LENGTH) };
-}
-
-/** 缓存键要带上 subset-font 版本：升级它等于换了切法，旧 blob 不能再复用 */
-function blobKey(face: FacePlan): string {
-  return sha256([packageVersion("subset-font"), face.label, face.kind, face.chars].join("\u0000")).slice(0, 16);
+/** 完整字体字节（blob 缓存按字重标签取源） */
+function weightSource(label: string): Buffer {
+  const weight = FONT_WEIGHTS.find((item) => item.label === label);
+  if (!weight) throw new Error(`没有字重 ${label}`);
+  return readFileSync(join(FONT_SOURCE_DIR, weight.file));
 }
 
 function writeOutputs(plan: FontPlan, names: readonly string[], key: string): string | null {
   const tailCss = renderTailFaceCss(plan.faces, names);
   const tailFile = tailCss === "" ? null : `${TAIL_CSS_PREFIX}.${sha256(tailCss).slice(0, HASH_LENGTH)}.css`;
 
-  writeFileSync(CORE_FACE_CSS, renderCoreFaceCss(plan.faces, names));
+  const coreCss = renderCoreFaceCss(plan.faces, names);
+  writeFileSync(CORE_FACE_CSS, coreCss);
+  writeFileSync(CORE_CSS_STABLE, coreCss);
   if (tailFile) writeFileSync(join(OUT_DIR, tailFile), tailCss);
   writeFileSync(ASSETS_TS, renderFontAssets(plan.faces, names, key, tailFile ? `/fonts/${tailFile}` : null));
   writeFileSync(join(OUT_DIR, "README.md"), FONT_DIR_README);
@@ -192,6 +200,8 @@ function planKey(plan: FontPlan, fontHashes: ReadonlyMap<string, string>): strin
 /** 指纹一致 + 产物齐全（且没有多余的 woff2 残留）才算「不用重切」 */
 function isUpToDate(key: string): boolean {
   if (!existsSync(PLAN_FILE) || !existsSync(CORE_FACE_CSS) || !existsSync(ASSETS_TS)) return false;
+  // 稳定地址的那份 core 清单在 OUT_DIR 之外，单独核一下（删了它、但指纹没变时不能跳过）
+  if (!existsSync(CORE_CSS_STABLE)) return false;
 
   const state = JSON.parse(readFileSync(PLAN_FILE, "utf8")) as PlanState;
   if (state.key !== key) return false;
@@ -208,14 +218,6 @@ function reportMissing(missing: string): void {
   console.warn(
     `[fonts] ⚠ ${[...missing].length} 个字符完整字体里没有，回落度量对齐的 fallback：${[...missing].slice(0, MISSING_PREVIEW).join("")}`,
   );
-}
-
-function loadBlobIndex(): Record<string, string> {
-  try {
-    return JSON.parse(readFileSync(BLOB_INDEX, "utf8")) as Record<string, string>;
-  } catch {
-    return {};
-  }
 }
 
 function hexCodepoint(char: string): string {

@@ -55,7 +55,10 @@ function coreFace(weight: FontWeightPlan, core: string, cmap: ReadonlySet<number
   };
 }
 
-/** GB2312 一级里 core 之外的剩余字：core 已经覆盖的字不能留在 tail，否则是白下载 */
+/**
+ * GB2312 一级里 core 之外的剩余字：core 已经覆盖的字不能留在 tail，否则是白下载
+ * （同族重叠实测会把两份都取下来）。它们与 core 同族、范围不相交，先后顺序不影响匹配。
+ */
 function tailFace(
   label: string,
   area: { readonly area: number; readonly chars: string },

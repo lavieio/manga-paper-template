@@ -5,6 +5,16 @@
  * - 懒加载：滚动接近评论区才注入 remark42 脚本（首屏零负担）
  * - 主题同步：remark42 在跨源 iframe 中渲染（样式隔离，无法用页面 CSS 覆盖），
  *   但官方支持 light/dark，我们跟随站点主题并在切换时调用 REMARK42.changeTheme
+ * - 字体：评论区在跨源 iframe 里，页面的 `--font-mono` 到不了那边，评论文字用的是 remark42
+ *   自己的字体栈。要让评论也用 Maple Mono，在 remark42 侧配一份自定义 CSS，引**全站 core**
+ *   （评论区的词汇很宽，用按需分片会被一片片铺满；core 是一份 717 KB、可长缓存的字面）：
+ *
+ *     @import url("https://<你的域名>/maple-core.css");
+ *     body, .comment, textarea, input, button { font-family: "Maple Mono NF CN", ui-monospace, monospace; }
+ *
+ *   `/maple-core.css` 是稳定地址（`/fonts/` 下那份是哈希名，跨源配置跟不上）；字体文件带
+ *   `Access-Control-Allow-Origin: *`（见 src/utils/deploy-policy.ts），跨源能取。
+ *   不去动 remark42 的主题也没关系：那边本来就不用本站字体，页面上的其它文字不受影响。
  * - 私密文章不渲染本组件（在 [slug].astro 的私密分支里就不存在）
  */
 import { remark42, isRemark42Enabled } from "../config";
