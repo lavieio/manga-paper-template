@@ -140,6 +140,28 @@ export function siteCharset(root: string): string {
   return sortChars([...chars].join(""));
 }
 
+/**
+ * **站点字面**：全站字符 + 常用符号。它是「词汇宽」那几个调用点共用的字符集——
+ * `astro dev`、兜底、构建期看不见正文的页（`scripts/page-fonts.ts` 的 `DYNAMIC_PAGES`）、
+ * 以及跨源主题（`/maple-core.css`）。
+ */
+export function siteFaceCharset(root: string): string {
+  return sortChars(siteCharset(root) + symbolCharset());
+}
+
+/**
+ * tail 分片的字符集：GB2312 一级按「区」切（每区 94 字），**减去 core 已覆盖的字**。
+ *
+ * 减这一下不能省：同族、unicode-range 重叠的两个面，浏览器实测会把两份都下载下来。
+ * 于是 tail 就是「字符集 = 某一区的字 − 站点字面」这一个入参，与 core、按页面走同一个函数。
+ */
+export function tailCharsets(core: string): readonly { readonly kind: string; readonly chars: string }[] {
+  return gb2312Level1Areas().map((area) => ({
+    kind: `l1-${area.area}`,
+    chars: [...area.chars].filter((char) => !core.includes(char)).join(""),
+  }));
+}
+
 function collectDir(dir: string, chars: Set<string>): void {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const path = join(dir, entry.name);

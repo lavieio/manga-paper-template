@@ -4,27 +4,33 @@
  *
  * 为什么需要这一步：全站 core 是「所有页面用到的字」的并集（≈2600 码位 / 717 KB 两字重），
  * 而单个页面只需要其中一小块（首页 311 字、中位页 213 字、最长文章 517 字）——
- * 实测首访字体字节：首页 743 KB → 125 KB、/tags 21 KB、全站平均 ~97 KB。
+ * 实测首访字体字节：首页 743 KB → 170 KB、/tags 45 KB、全站中位 140 KB。
  * 按频次把 core 切成多片并不管用：页面字符是语料的**横向采样**，切完每页仍会碰到绝大多数片
  * （实测 40 KB/片时首页仍要 564 KB / 7 个请求），只有「按页精确切」才拿得到这份收益。
  *
+ * 它用的还是那两个共用件——`planFacesFor(charset, …)`（字符集 → 面）与
+ * `writeFaces(faces, …)`（面 → 产物文件）；本文件只负责**决定每页的字符集**：
+ * - 普通页：该页真正渲染出来的字符（HTML 文本 + 样式表 content: 字面 + 私密文章源码）；
+ * - `DYNAMIC_PAGES`（词汇宽、构建期看不见正文的页，如搜索结果页）：退化成**站点字面**，
+ *   于是它就是 core 那份面本身，换装自然成了空操作——同一个机制的不同入参，不是另一套机制。
+ *
  * 换装方式（见 `scripts/lib/font-page-swap.ts`）：只改页面里那两处引用——
  * preload 的 href、内联 `@font-face` 的 src 与 unicode-range。**不碰** Astro 渲染层，
- * 也不碰 tail 清单，因此：
- * - `npm run dev` 行为不变（没有这一步，用全站 core）；
- * - 漏换的页面（`DYNAMIC_PAGES`）仍用全站 core，最坏是回到改造前的体积，不会没字体；
- * - unicode-range 收窄到本页字符集：页面里没进子集的字（样式表生成、密文解密后出现）
- *   会回落到度量对齐的 fallback，而不是画成豆腐块。
+ * 也不碰 tail 清单，因此 `npm run dev` 行为不变（没有这一步，用全站 core）；
+ * unicode-range 收窄到本页字符集之后，页面里没进子集的字（样式表生成、密文解密后出现）
+ * 会回落到度量对齐的 fallback，而不是画成豆腐块。
  *
  * 挂点：`npm run build` 里 `astro build` 之后、`build-deploy-config` 与 pagefind 之前
  * （产物目录此时已定稿，只差这一步换装）。产物写在 `dist/fonts/`，与 tail 同在 `/fonts/*`
  * 的 immutable 缓存规则下；文件名带内容哈希，字符集相同的页面自动共用一个文件。
  */
-import { copyFileSync, existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { basename, join, relative } from "node:path";
-import { FONT_WEIGHTS, faceFileName, sortChars, toUnicodeRange } from "./lib/font-charsets.ts";
+import { FONT_WEIGHTS, siteFaceCharset, sortChars, toUnicodeRange } from "./lib/font-charsets.ts";
 import { openBlobStore, type BlobStore } from "./lib/font-blobs.ts";
+import { writeFaces } from "./lib/font-faces.ts";
 import { swapFaceRefs, type FaceSwap } from "./lib/font-page-swap.ts";
+import { planFacesFor } from "./lib/font-plan.ts";
 import { cssContentChars, pageText } from "./lib/page-text.ts";
 import { readCmapSync } from "./lib/sfnt.ts";
 
@@ -32,7 +38,7 @@ const ROOT = process.cwd();
 const DIST_DIR = join(ROOT, "dist");
 /** 页面字体产物与 tail 同居 `/fonts/*`（immutable 长缓存规则覆盖它） */
 const DIST_FONT_DIR = join(DIST_DIR, "fonts");
-/** 构建期生成的全站 core（`npm run fonts` 的产物），从这里认文件名 */
+/** 构建期生成的全站 core（`npm run fonts` 的产物），从这里认要替换掉的文件名 */
 const GENERATED_FONT_DIR = join(ROOT, "public/fonts");
 const SOURCE_FONT_DIR = join(ROOT, "assets/fonts");
 const CONTENT_DIR = join(ROOT, "src/content/blog");
@@ -41,7 +47,10 @@ const BLOB_DIR = join(CACHE_DIR, "blobs");
 const BLOB_INDEX = join(CACHE_DIR, "faces.json");
 /** 全站 core 的产物名（`maple-<字重>-core.<hash>.woff2`） */
 const CORE_NAME = /^maple-(\d+)-core\.[0-9a-f]+\.woff2$/;
+/** 按页子集的 kind（进文件名，也是 blob 缓存键的一部分） */
 const PAGE_KIND = "page";
+/** core 的 kind：宽词汇页退化成站点字面时用它，于是直接命中 build-fonts 已经切好的那份面 */
+const CORE_KIND = "core";
 /**
  * 内容由客户端现生成、因而保留全站 core 的页面。
  *
@@ -58,8 +67,11 @@ const SKIP_DIRS = new Set(["pagefind"]);
 const PRIVATE_FRONTMATTER = /^private:\s*true\s*$/m;
 
 interface Ctx {
+  /** 全站 core 的产物名：字重标签 → 文件名（换装时要把它们换掉） */
   readonly cores: ReadonlyMap<string, string>;
   readonly cmaps: ReadonlyMap<string, ReadonlySet<number>>;
+  /** 站点字面（`siteFaceCharset`，与 build-fonts 的 core 同一份入参） */
+  readonly siteCharset: string;
   /** 页面 HTML 里看不到、却会被渲染出来的字（CSS `content:` 的字面文本） */
   readonly extras: string;
   /** 私密文章源码的字：只并进渲染它们的页面，不进其他页 */
@@ -68,9 +80,15 @@ interface Ctx {
   readonly store: BlobStore;
 }
 
+/** 一页的入参：用哪个字符集、它算哪一种面 */
+interface PageCharset {
+  readonly charset: string;
+  readonly kind: string;
+}
+
 interface PageResult {
   readonly page: string;
-  readonly status: "swapped" | "dynamic" | "skipped";
+  readonly status: "swapped" | "core" | "skipped";
   readonly bytes: number;
 }
 
@@ -84,6 +102,7 @@ async function main(): Promise<void> {
   const ctx: Ctx = {
     cores,
     cmaps: readCmaps(),
+    siteCharset: siteFaceCharset(ROOT),
     extras: cssExtras(),
     privateChars: privateSource.chars,
     privatePages: privateSource.pages,
@@ -156,7 +175,7 @@ function walk(dir: string): string[] {
   return out;
 }
 
-/** 待换装的页面：dist 下的 HTML，Pagefind 产物与动态页除外 */
+/** 待换装的页面：dist 下的 HTML，Pagefind 产物除外 */
 function listPages(): string[] {
   return walk(DIST_DIR)
     .filter((file) => file.endsWith(".html"))
@@ -165,40 +184,43 @@ function listPages(): string[] {
     .sort();
 }
 
+/**
+ * 这一页该切哪个字符集：渲染出来的字；宽词汇页退化成站点字面（于是它就是 core 那份面，
+ * 换装变成空操作）。`siteFaceCharset` 与 `npm run fonts` 用的是同一个函数、同一个 ROOT，
+ * 所以两边的字符集必然一致，宽词汇页直接命中已经切好的 core 产物、不会多出一份重复文件。
+ */
+function charsetFor(page: string, html: string, ctx: Ctx): PageCharset {
+  if (DYNAMIC_PAGES.includes(page)) return { charset: ctx.siteCharset, kind: CORE_KIND };
+  const secret = ctx.privatePages.has(page) ? ctx.privateChars : "";
+  return { charset: sortChars(pageText(html) + ctx.extras + secret), kind: PAGE_KIND };
+}
+
 async function processPage(page: string, ctx: Ctx): Promise<PageResult> {
   const path = join(DIST_DIR, page);
   const html = readFileSync(path, "utf8");
-  if (DYNAMIC_PAGES.includes(page)) return { page, status: "dynamic", bytes: 0 };
-  const secret = ctx.privatePages.has(page) ? ctx.privateChars : "";
-  const charset = sortChars(pageText(html) + ctx.extras + secret);
-  const { swaps, bytes } = await buildSwaps(charset, ctx);
+  const { charset, kind } = charsetFor(page, html, ctx);
+  const { swaps, bytes } = await buildSwaps(charset, kind, ctx);
   if (swaps.length === 0) return { page, status: "skipped", bytes: 0 };
 
   writeFileSync(path, swapFaceRefs(html, swaps));
-  return { page, status: "swapped", bytes };
+  return { page, status: kind === CORE_KIND ? "core" : "swapped", bytes };
 }
 
-/** 本页每个字重各切一份子集，并拼出换装清单（返回字节数 = 两字重合计） */
-async function buildSwaps(charset: string, ctx: Ctx): Promise<{ swaps: FaceSwap[]; bytes: number }> {
+/** 本页每个字重各切一份子集（走共用件），并拼出换装清单 */
+async function buildSwaps(charset: string, kind: string, ctx: Ctx): Promise<{ swaps: FaceSwap[]; bytes: number }> {
+  const written = await writeFaces(planFacesFor(charset, ctx.cmaps, { kind }), ctx.store, DIST_FONT_DIR);
   const swaps: FaceSwap[] = [];
-  let bytes = 0;
 
-  for (const [label, oldName] of ctx.cores) {
-    const chars = supported(charset, ctx.cmaps.get(label));
-    if (chars === "") continue;
-    const blob = await ctx.store.ensure(label, PAGE_KIND, chars);
-    const newName = faceFileName(label, PAGE_KIND, blob.hash);
-    copyFileSync(join(BLOB_DIR, blob.file), join(DIST_FONT_DIR, newName));
-    bytes += statSync(join(DIST_FONT_DIR, newName)).size;
-    swaps.push({ oldName, newName, unicodeRange: toUnicodeRange([...chars].map((char) => char.codePointAt(0) ?? 0)) });
+  for (const item of written) {
+    const oldName = ctx.cores.get(item.face.label);
+    if (!oldName) continue;
+    swaps.push({
+      oldName,
+      newName: item.name,
+      unicodeRange: toUnicodeRange([...item.face.chars].map((char) => char.codePointAt(0) ?? 0)),
+    });
   }
-  return { swaps, bytes };
-}
-
-/** 只留完整字体真正有的字（`✅` 这类字体没有的字进不了任何面） */
-function supported(chars: string, cmap: ReadonlySet<number> | undefined): string {
-  if (!cmap) return "";
-  return [...chars].filter((char) => cmap.has(char.codePointAt(0) ?? 0)).join("");
+  return { swaps, bytes: written.reduce((sum, item) => sum + item.bytes, 0) };
 }
 
 function weightSource(label: string): Buffer {
@@ -211,11 +233,12 @@ function report(results: readonly PageResult[]): void {
   const swapped = results.filter((item) => item.status === "swapped");
   const bytes = swapped.map((item) => item.bytes).sort((a, b) => a - b);
   const median = bytes[Math.floor(bytes.length / 2)] ?? 0;
-  const dynamic = results.filter((item) => item.status === "dynamic").map((item) => item.page);
+  const core = results.filter((item) => item.status === "core");
+  const detail = core.map((item) => `${item.page}（${Math.round(item.bytes / 1024)} KB）`).join(", ");
   console.log(
     `[page-fonts] ${swapped.length} 页换成本页子集：两字重合计 中位 ${Math.round(median / 1024)} KB / ` +
       `最大 ${Math.round((bytes[bytes.length - 1] ?? 0) / 1024)} KB` +
-      `${dynamic.length > 0 ? `；保留全站 core：${dynamic.join(", ")}` : ""}`,
+      `${core.length > 0 ? `；用全站 core：${detail}` : ""}`,
   );
 }
 

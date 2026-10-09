@@ -8,7 +8,7 @@
  *
  * 键里带 `generator`（subset-font 版本）：升级它等于换了切法，旧 blob 不能复用。
  * 两个调用方（`scripts/build-fonts.ts` 与 `scripts/page-fonts.ts`）共用同一个缓存目录，
- * 所以「全站 core」与「按页子集」互不污染也互不覆盖。
+ * 所以「全站 core」「tail 分片」与「按页子集」互不污染也互不覆盖。
  */
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -19,12 +19,14 @@ import subsetFont from "subset-font";
 export const BLOB_HASH_LENGTH = 8;
 
 export interface FaceBlob {
-  readonly file: string;
+  /** blob 的绝对路径（调用方直接拷进发布目录） */
+  readonly path: string;
+  /** 内容哈希前缀（进产物文件名） */
   readonly hash: string;
 }
 
 export interface BlobStore {
-  /** 取（必要时现切）一份子集，返回 blob 文件名与其哈希 */
+  /** 取（必要时现切）一份子集 */
   ensure(label: string, kind: string, chars: string): Promise<FaceBlob>;
   /** 落盘索引；调用方在所有面都取完之后调一次 */
   flush(): void;
@@ -46,14 +48,14 @@ export function openBlobStore(options: BlobStoreOptions): BlobStore {
       const key = blobKey(options.generator, label, kind, chars);
       const cached = index[key];
       if (cached && existsSync(join(options.blobDir, cached))) {
-        return { file: cached, hash: cached.slice(0, BLOB_HASH_LENGTH) };
+        return { path: join(options.blobDir, cached), hash: cached.slice(0, BLOB_HASH_LENGTH) };
       }
       const subset = await subsetFont(options.source(label), chars, { targetFormat: "woff2" });
       const file = `${sha256(subset).slice(0, BLOB_HASH_LENGTH)}.woff2`;
       mkdirSync(options.blobDir, { recursive: true });
       writeFileSync(join(options.blobDir, file), subset);
       index[key] = file;
-      return { file, hash: file.slice(0, BLOB_HASH_LENGTH) };
+      return { path: join(options.blobDir, file), hash: file.slice(0, BLOB_HASH_LENGTH) };
     },
     flush() {
       mkdirSync(dirname(options.indexPath), { recursive: true });
