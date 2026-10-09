@@ -5,8 +5,8 @@
      发给跨源消费者（remark42 的评论区 iframe）；
    - 上线产物里每页的这两条引用会被 scripts/page-fonts.ts 换成**本页自己的子集**
      （首访字体字节 743 KB → 中位 140 KB）；
-   - tail（GB2312 一级里 core 之外的字，按区切片）→ 独立 immutable CSS，给站点字符集之外的
-     字兜底（用户敲的生僻字、评论）；只有声明了 dynamicText 的页面才挂它。
+   - 站点字符集**之外**的字（用户现敲的生僻字、评论里的字）不自托管：由下面那两份
+     度量对齐的 fallback 接管（字形随平台，但推进宽度与行盒与 MapleMono 一致）。
    字符集与切片策略见 scripts/lib/font-charsets.ts，生成物都在 .gitignore 里
    （public/fonts/、public/maple-core.css、fonts-core.css、font-assets.ts）。 */
 @import "./fonts-core.css";
@@ -17,6 +17,9 @@
               拉丁推进 0.6em、汉字推进 1.2em（汉字正好两格，代码里对齐）。
    size-adjust 把 fallback 的推进宽度拉到同一格，ascent/descent 再钉死行盒高度——
    两者都对齐，字体到货时的重排才不会推动下面的内容（CLS）。
+
+   这也是「站点字符集之外的字」的兜底：自托管子集只覆盖站点自己的字，用户现敲的生僻字、
+   评论里的字、GB2312 以外的字都落到这两份面上——字形随平台，但度量与 MapleMono 一致。
 
    为什么拉丁与汉字要分成两个面：Consolas / ui-monospace 都没有汉字，
    换字体前那一屏汉字只能落到**系统 CJK 字体**（推进 1em），比 MapleMono 的 1.2em 窄两成，

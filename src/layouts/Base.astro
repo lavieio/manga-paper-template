@@ -7,7 +7,7 @@ import SiteFooter from "../components/SiteFooter.astro";
 import Analytics from "../components/Analytics.astro";
 import VercelInsights from "../components/VercelInsights.astro";
 import { site, analytics, isAnalyticsEnabled, isVercelInsightsEnabled } from "../config";
-import { FONT_PRELOAD, FONT_TAIL_CSS } from "../utils/font-assets";
+import { FONT_PRELOAD } from "../utils/font-assets";
 import { serializeJsonLd, type JsonLdNode } from "../utils/structured-data";
 import { siteShareImage, type ShareImage } from "../utils/share-image";
 
@@ -24,12 +24,6 @@ interface Props {
    * 否则当站内没有任何 data-pagefind-body 时，Pagefind 会退化成索引全部页面。
    */
   searchable?: boolean;
-  /**
-   * 本页会不会渲染**站点字符集之外的字**（用户输入、评论、搜索结果里的生僻字）。
-   * 传 true 就挂上 tail 清单（`FONT_TAIL_CSS`）：那批 GB2312 一级的字按需取，
-   * 一片 25 KB 上下。静态页面不挂——它们的字符已经全在按页子集里。
-   */
-  dynamicText?: boolean;
   /** schema.org 结构化数据（JSON-LD）；不传就不渲染（私密文章必须不传） */
   structuredData?: JsonLdNode | readonly JsonLdNode[];
   /** 分享图（og:image）；文章页传自己的卡片，其余页面用站点默认卡片 */
@@ -44,7 +38,6 @@ const {
   noindex = false,
   unlockCheck = false,
   searchable = false,
-  dynamicText = false,
   structuredData,
   shareImage = siteShareImage({ siteUrl: Astro.site, siteName: site.name }),
   shareType = "website",
@@ -110,10 +103,12 @@ const rssFeed = new URL("rss.xml", Astro.site);
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     {/*
       字体 preload：自托管子集只 preload 400 / 700 两个字面（正文 + 标题），
-      其余字重与 tail 分片交给 unicode-range 按需取；清单来自构建期生成的 font-assets.ts。
+      其余字重交给 unicode-range 按需取；清单来自构建期生成的 font-assets.ts。
       这里 preload 的是**全站 core**（站点字符全集）：开发期与兜底用它；
       上线产物里 scripts/page-fonts.ts 会把这条 href 与本页 `@font-face` 的 src
       一并换成该页自己的子集（首访字体字节 743 KB → 中位 140 KB）。
+      站点字符集之外的字（用户现敲的生僻字、评论）不自托管，由 fonts.css 里那两份
+      度量对齐的 fallback（Consolas 系与系统 CJK）接管，换字体不推动内容。
       `as="font"` 的 preload 一律走 CORS 模式，同源也必须写 crossorigin，否则会被取两次。
     */}
     {
@@ -121,18 +116,6 @@ const rssFeed = new URL("rss.xml", Astro.site);
         <link rel="preload" as="font" type="font/woff2" crossorigin="anonymous" href={href} />
       ))
     }
-    {/*
-      tail 清单：GB2312 一级里 core 之外的字，只在页面真出现那些字时才取对应 woff2。
-      它覆盖的是**站点字符集之外的字**（用户敲的生僻字、评论），所以只给会有这种字的页面挂
-      （Base 的 dynamicText）；静态页面的字符已经全在按页子集里，挂上去是白下 50 KB。
-      清单本身是一长串 unicode-range（~50 KB），内联进 HTML 等于每个页面都重下一遍，所以出成独立 CSS
-      （content-hash 命名 + `/fonts/*` immutable）异步挂载：media=print 不阻塞渲染，load 完切回 all。
-      代价是 CSP 得放行内联事件处理器（部署策略里 script-src 已带 'unsafe-inline'）。
-      没给 <noscript> 兜底：无 JS 的读者根本用不到搜索框与评论，静态字符也不靠它。
-    */}
-    {dynamicText && FONT_TAIL_CSS && (
-      <link rel="stylesheet" href={FONT_TAIL_CSS} media="print" onload="this.media='all'" />
-    )}
     <script is:inline>
       // 首帧前决定主题，避免 FOUC
       (function () {

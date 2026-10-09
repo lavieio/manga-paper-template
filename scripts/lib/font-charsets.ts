@@ -1,17 +1,21 @@
 /**
  * 字体子集：字符集与切片策略（唯一来源）。
  *
- * 仓库里放的是**完整字体**（`assets/fonts/` 的上游原文件），构建期按当前内容现切，分两类面：
- * - **core** = 站点字符 ∪ 常用符号 → 每个字重各一份。
- *   (a) 它是**开发期与兜底**用的全站字面：`astro dev` 用它；上线产物里每页的引用会被
- *       `scripts/page-fonts.ts` 换成本页自己的子集；
- *   (b) 词汇**宽**的动态面（构建期看不见、且一屏就能铺开几百个字的地方，如搜索结果）
+ * 仓库里放的是**完整字体**（`assets/fonts/` 的上游原文件），构建期按当前内容现切。只有一类面：
+ *
+ * - **core** = 站点字符 ∪ 常用符号 → 每个字重各一份。它有四个调用点，用的是同一个
+ *   「字符集 → 面」函数（见 `scripts/lib/font-plan.ts`）：
+ *   (a) **开发期**：`astro dev` 没有按页那一步，页面就靠它；
+ *   (b) **上线兜底**：每页的引用会被 `scripts/page-fonts.ts` 换成本页自己的子集，
+ *       漏换的页面仍能用它；
+ *   (c) **词汇宽的动态面**（构建期看不见、一屏就能铺开几百个字的地方，如搜索结果）：
  *       直接保留它（`scripts/page-fonts.ts` 的 `DYNAMIC_PAGES`）；
- *   (c) 同一份清单还会以稳定地址 `/maple-core.css` 发布给跨源消费者（remark42 的评论区 iframe）。
- * - **tail** = GB2312 一级里 core 之外的剩余字 → 按「1 个区（94 字）」切片，只做 400/700，
- *   交给浏览器按 `unicode-range` 按需取（GB2312 一级以内永不缺字）。它是给**站点字符集之外**
- *   的字兜底的（用户敲的生僻字、评论里的字）：只有声明了 `dynamicText` 的页面才挂它的清单。
- * - core / tail 都覆盖不到的字符（GB2312 以外、或字库里本来就没有的 ✅❌➕）回落度量对齐的 fallback。
+ *   (d) **跨源消费者**：同一份清单以稳定地址 `/maple-core.css` 发布（remark42 的评论区 iframe）。
+ *
+ * 站点字符集**之外**的字（用户现敲的生僻字、评论里的字、GB2312 以外的字）不再自托管：
+ * 它们由 `src/styles/fonts.css` 里那两份**度量对齐**的 fallback（Consolas 系与系统 CJK）接管——
+ * 推进宽度与行盒都对齐 MapleMono，所以换字体不会推动内容（CLS 实测 0.052 → 0.010），
+ * 代价只是字形随平台。
  *
  * 本文件只回答「哪些字符、怎么切片」；怎么调 subset-font、怎么命名与写产物见 `scripts/build-fonts.ts`。
  */
@@ -47,12 +51,6 @@ export const FONT_WEIGHTS: readonly FontWeightPlan[] = [
 /** 首屏 preload 的字重（正文 + 标题）；其余按 unicode-range 按需取 */
 export const PRELOAD_LABELS: readonly string[] = ["400", "700"];
 
-/** tail 只做这两个字重（正好是浏览器字体的全部）；斜体不切片，交给浏览器合成 */
-export const TAIL_LABELS: readonly string[] = ["400", "700"];
-
-/** GB2312 一级汉字的区号范围（16–55）；tail 的切片单位就是「区」 */
-export const GB2312_LEVEL1_AREA = { first: 16, last: 55 } as const;
-
 /** core 里的常用符号块：ASCII / latin-1 / 箭头·数学·制表…（体积便宜，还能挡住未来的代码类文章） */
 const SYMBOL_RANGES: readonly (readonly [number, number])[] = [
   [0x0020, 0x007e], // ASCII
@@ -76,9 +74,6 @@ const SITE_ROOTS: readonly string[] = ["src", "astro.config.mjs"];
 /** 不扫的目录 */
 const SITE_SKIP_DIRS = new Set(["node_modules", ".git", "dist", ".astro", ".cache"]);
 
-const GB2312_DECODER = new TextDecoder("gb2312");
-const REPLACEMENT = "\uFFFD";
-
 /** 产物的文件名：`maple-400-core.<内容哈希>.woff2`（构建期生成，不进仓） */
 export function faceFileName(label: string, kind: string, hash: string): string {
   return `maple-${label}-${kind}.${hash}.woff2`;
@@ -92,27 +87,6 @@ export function codepointsOf(text: string): number[] {
 /** 去重并按码位升序（字符集与 unicode-range 都要确定性输出） */
 export function sortChars(text: string): string {
   return [...new Set(text)].sort((a, b) => (a.codePointAt(0) ?? 0) - (b.codePointAt(0) ?? 0)).join("");
-}
-
-/**
- * 一个 GB2312 区 = 低字节 0xA1–0xFE 共 94 个字符；未定义的位置解码成 U+FFFD，丢掉。
- * 注：WHATWG 的 `gb2312` 解码器实际是 GBK（GB2312 的超集），个别空位会被填上 GBK 的字，
- * 这对我们无害——tail 只是「一级里 core 之外」的兜底，多几个字不影响首屏，也不会漏字。
- */
-export function gb2312Area(area: number): string {
-  const lead = 0xa0 + area;
-  let out = "";
-  for (let trail = 0xa1; trail <= 0xfe; trail += 1) out += GB2312_DECODER.decode(Uint8Array.of(lead, trail));
-  return out.replaceAll(REPLACEMENT, "");
-}
-
-/** GB2312 一级汉字，按区返回（tail 的切片单位） */
-export function gb2312Level1Areas(): readonly { readonly area: number; readonly chars: string }[] {
-  const areas: { area: number; chars: string }[] = [];
-  for (let area = GB2312_LEVEL1_AREA.first; area <= GB2312_LEVEL1_AREA.last; area += 1) {
-    areas.push({ area, chars: gb2312Area(area) });
-  }
-  return areas;
 }
 
 /** 常用符号块（ASCII + latin-1 + 箭头/数学/制表/方块/几何/杂项/全角…） */
@@ -147,19 +121,6 @@ export function siteCharset(root: string): string {
  */
 export function siteFaceCharset(root: string): string {
   return sortChars(siteCharset(root) + symbolCharset());
-}
-
-/**
- * tail 分片的字符集：GB2312 一级按「区」切（每区 94 字），**减去 core 已覆盖的字**。
- *
- * 减这一下不能省：同族、unicode-range 重叠的两个面，浏览器实测会把两份都下载下来。
- * 于是 tail 就是「字符集 = 某一区的字 − 站点字面」这一个入参，与 core、按页面走同一个函数。
- */
-export function tailCharsets(core: string): readonly { readonly kind: string; readonly chars: string }[] {
-  return gb2312Level1Areas().map((area) => ({
-    kind: `l1-${area.area}`,
-    chars: [...area.chars].filter((char) => !core.includes(char)).join(""),
-  }));
 }
 
 function collectDir(dir: string, chars: Set<string>): void {
