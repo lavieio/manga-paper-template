@@ -1,11 +1,11 @@
 {
   "name": "manga-paper",
   "type": "module",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "private": true,
   "scripts": {
     "dev": "npm run fonts && astro dev",
-    "build": "node scripts/preflight.ts && npm run fonts && astro build && node scripts/build-deploy-config.ts && pagefind --site dist",
+    "build": "node scripts/preflight.ts && npm run fonts && astro build && node scripts/page-fonts.ts && node scripts/build-deploy-config.ts && pagefind --site dist",
     "fonts": "node scripts/build-fonts.ts",
     "preview": "astro preview",
     "astro": "astro",
