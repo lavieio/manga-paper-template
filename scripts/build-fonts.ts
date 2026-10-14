@@ -36,7 +36,7 @@
  */
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { FONT_WEIGHTS, PRELOAD_LABELS, siteCharset, siteFaceCharset } from "./lib/font-charsets.ts";
 import { openBlobStore, type BlobStore } from "./lib/font-blobs.ts";
 import { writeFaces, type WrittenFace } from "./lib/font-faces.ts";
@@ -163,6 +163,9 @@ function writeOutputs(written: readonly WrittenFace[], key: string): void {
   writeFileSync(CORE_CSS_STABLE, coreCss);
 
   const preload = written.filter((item) => item.face.preload).map((item) => `/fonts/${item.name}`);
+  // ASSETS_TS 在 .gitignore 里，而且是它所在目录里**唯一**的文件——全新 clone 里那个目录
+  // 根本不存在，直接写会 ENOENT（Vercel 上就是这么炸的）。产物自己负责把目录建出来。
+  mkdirSync(dirname(ASSETS_TS), { recursive: true });
   writeFileSync(ASSETS_TS, renderFontAssets(preload, key));
   writeFileSync(join(OUT_DIR, "README.md"), FONT_DIR_README);
   writePlanFile(written.map((item) => item.name), key);
