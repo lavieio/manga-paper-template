@@ -2,7 +2,7 @@
 /**
  * 生成 Cloudflare Pages / Netlify 要的部署配置（构建链）：
  * - `dist/_headers`：安全响应头（CSP 白名单按 `.env` 现算）；
- * - `dist/_redirects`：真 301（`/posts/ → /posts/1`）。
+ * - `dist/_redirects`：真 301（`/posts/` 与 `/posts` → `/posts/1`）。
  *
  * 为什么是生成而不是手写：策略里有一半要跟着 `.env` 走（remark42 的域名），静态文件做不到。
  * Vercel 那边不需要生成物：仓根的 `vercel.ts` 在 Vercel 构建时执行、自己读环境变量，
