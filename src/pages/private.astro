@@ -6,10 +6,10 @@
  */
 import "../styles/private.css";
 import Base from "../layouts/Base.astro";
-import { getPrivatePosts, getPostSlug, getCategory } from "../utils/posts";
-import { estimateReadTime } from "../utils/readtime";
-import { formatDate } from "../utils/format";
-import { encryptText, getPrivatePassword } from "../utils/private-crypto";
+import { getPrivatePosts, getPostSlug, getCategory } from "../utils/content/posts";
+import { estimateReadTime } from "../utils/content/readtime";
+import { formatDate } from "../utils/content/format";
+import { encryptText, getPrivatePassword } from "../utils/crypto/private-crypto";
 
 interface PrivateCard {
   slug: string;
@@ -93,9 +93,9 @@ if (posts.length > 0) {
     importCachedKey,
     decryptText,
     type EncryptedPayload,
-  } from "../utils/private-crypto";
+  } from "../utils/crypto/private-crypto";
   import { saveUnlockedKey, loadUnlockedKey, clearUnlockedKey } from "../scripts/private-key";
-  import { categoryColor } from "../utils/category";
+  import { categoryColor } from "../utils/content/category";
 
   const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const PEEL_MS = REDUCED ? 0 : 450;

@@ -456,7 +456,7 @@ MangaPaper 生成的内容安全策略（CSP）目前采用 **Report-Only 模式
 上线后可以按下面的顺序逐步收紧策略：
 
 1. 打开部署后的网站，观察浏览器控制台中的 CSP 报告。
-2. 检查报告涉及的资源来源，将确实需要的来源加入 `src/utils/deploy-policy.ts` 中的白名单。remark42 的相关域名会根据配置自动处理。
+2. 检查报告涉及的资源来源，将确实需要的来源加入 `src/utils/deploy/deploy-policy.ts` 中的白名单。remark42 的相关域名会根据配置自动处理。
 3. 确认没有遗漏后，再将策略从 `Content-Security-Policy-Report-Only` 切换为 `Content-Security-Policy`，正式启用拦截。
 
 这里也有一个需要留意的细节：当前 `script-src` 保留了 `'unsafe-inline'`，因为 Astro 可能会将部分较小的客户端脚本内联到 HTML 中，例如主题首帧处理、年份修正、解锁检查和部分组件脚本。这些脚本可能随内容变化，如果采用手写哈希的方式，就容易在每次构建后失效。

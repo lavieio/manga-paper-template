@@ -7,9 +7,9 @@
  * 位置都是 1200×630 画布上的绝对坐标；「挂在标题右边/下面」的那几条用 `OgGeometry`
  * 的度量，标题短的时候会跟着收（否则会跟标题隔一大段空白、或超出标题范围）。
  */
-import { COLOR, DOT_RADIUS, GRID, LAYOUT, type OgGeometry } from "./og-card";
-import { OG_HEIGHT, OG_WIDTH } from "./og-size.ts";
-import { brushStroke, handStroke, type Point } from "./og-stroke";
+import { COLOR, DOT_RADIUS, GRID, LAYOUT, type OgGeometry } from "./card";
+import { OG_HEIGHT, OG_WIDTH } from "./size.ts";
+import { brushStroke, handStroke, type Point } from "./stroke";
 
 /** 纸底矩形：Satori 会把根节点背景吐成这一行，用它定位点阵的插入点 */
 export const PAPER_RECT = new RegExp(`<rect[^>]*fill="${COLOR.paper}"[^>]*/>`);

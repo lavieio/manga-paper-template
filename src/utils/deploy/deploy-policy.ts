@@ -12,7 +12,7 @@
  * 静态文件自己没办法知道这件事，所以 CF 侧必须生成而不是手写。
  * CSP 目前是 Report-Only（只上报不拦），观察期结束、白名单补齐后再去掉 -Report-Only 强制。
  */
-import { GA_COLLECT_ORIGINS, GA_SCRIPT_ORIGIN, parseGaMeasurementId } from "./analytics.ts";
+import { GA_COLLECT_ORIGINS, GA_SCRIPT_ORIGIN, parseGaMeasurementId } from "../env/analytics.ts";
 
 export const REPORT_ONLY_CSP = "Content-Security-Policy-Report-Only";
 export const ENFORCING_CSP = "Content-Security-Policy";
@@ -165,7 +165,7 @@ function buildCsp({ remark42Origin, gaEnabled }: CspOrigins): string {
 const HEADERS_DOC = [
   "# 安全响应头（Cloudflare Pages / Netlify 语法）",
   "# ⚠️ 本文件由 `node scripts/build-deploy-config.ts` 生成，改这里会被下次构建覆盖——",
-  "#    要改策略请改 src/utils/deploy-policy.ts。",
+  "#    要改策略请改 src/utils/deploy/deploy-policy.ts。",
   "# Vercel 不认这个文件：同一份策略在仓根的 vercel.ts 里（那份在 Vercel 构建时执行，不入 git）。",
   "#",
   "# CSP 目前是 Report-Only：只往控制台发报告、不拦任何资源。部署后观察报告、补齐白名单，",
@@ -225,7 +225,7 @@ export function buildRedirectRules(): RedirectRule[] {
 const REDIRECTS_DOC = [
   "# 真 301（Cloudflare Pages / Netlify 的 _redirects 语法）",
   "# ⚠️ 本文件由 `node scripts/build-deploy-config.ts` 生成，改这里会被下次构建覆盖——",
-  "#    要改规则请改 src/utils/deploy-policy.ts；Vercel 那份在仓根的 vercel.ts 里。",
+  "#    要改规则请改 src/utils/deploy/deploy-policy.ts；Vercel 那份在仓根的 vercel.ts 里。",
   "# 分页第一页的正式地址是 /posts/1；/posts/ 与 /posts 都是旧地址，一并 301 过去。",
 ].join("\n");
 

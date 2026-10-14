@@ -22,7 +22,7 @@
  *
  * - **输入**：`assets/fonts/` 里的上游完整 TTF（OFL-1.1，随仓库提交），要切哪些字重见 `FONT_WEIGHTS`；
  * - **产物**：`public/fonts/*.woff2` + `src/styles/fonts-core.css` + `public/maple-core.css`
- *   （core 清单的稳定地址，给跨源消费者）+ `src/utils/font-assets.ts`，都在 .gitignore 里、**不进仓**；
+ *   （core 清单的稳定地址，给跨源消费者）+ `src/utils/font/assets.ts`，都在 .gitignore 里、**不进仓**；
  * - **跳过**：字符集与输入字体都没变就整个跳过（指纹见 `.cache/fonts/plan.json`），
  *   本机后续构建 ~0.1s；干净 clone 第一次 ≈1–2s（2 个 core 面）。
  *   注意「不变」指的是**产物**不变：字体没有的字（✅❌➕）进不了任何面，它们增减不会触发重切；
@@ -62,7 +62,7 @@ const CORE_FACE_CSS = join(ROOT, "src/styles/fonts-core.css");
 const CORE_CSS_STABLE = join(ROOT, "public/maple-core.css");
 /** 旧版生成物：v1.5.0 及以前把 core + tail 写在同一个 `fonts-face.css` 里 */
 const LEGACY_FACE_CSS = join(ROOT, "src/styles/fonts-face.css");
-const ASSETS_TS = join(ROOT, "src/utils/font-assets.ts");
+const ASSETS_TS = join(ROOT, "src/utils/font/assets.ts");
 const LICENSE_NAME = "LICENSE.txt";
 /** 改字符集 / 切片 / 命名规则时 +1：指纹随之失效，产物全部重切 */
 const PLAN_VERSION = 6;

@@ -34,7 +34,7 @@ node_modules/
 public/fonts/
 public/maple-core.css
 src/styles/fonts-core.css
-src/utils/font-assets.ts
+src/utils/font/assets.ts
 
 # ── 日志 ────────────────────────────────────────────
 *.log

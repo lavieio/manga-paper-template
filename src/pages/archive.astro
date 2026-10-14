@@ -1,8 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
-import { getPublishedPosts, getPostSlug, getCategory } from "../utils/posts";
-import { formatMonthDay, getYear } from "../utils/format";
-import { estimateReadTime } from "../utils/readtime";
+import { getPublishedPosts, getPostSlug, getCategory } from "../utils/content/posts";
+import { formatMonthDay, getYear } from "../utils/content/format";
+import { estimateReadTime } from "../utils/content/readtime";
 
 const posts = await getPublishedPosts();
 

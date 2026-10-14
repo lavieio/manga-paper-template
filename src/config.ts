@@ -6,9 +6,9 @@
  * 不进仓里的配置文件。
  */
 import userConfig from "../manga-paper.config";
-import { parseGaMeasurementId } from "./utils/analytics";
-import { isEnabledFlag } from "./utils/env-flag";
-import { RSS_SOCIAL, resolveSocials } from "./utils/socials";
+import { parseGaMeasurementId } from "./utils/env/analytics";
+import { isEnabledFlag } from "./utils/env/env-flag";
+import { RSS_SOCIAL, resolveSocials } from "./utils/social/links";
 
 /** 站点身份与文案：换站只改 manga-paper.config.ts 的 site */
 export const site = { ...userConfig.site } as const;

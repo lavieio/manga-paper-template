@@ -7,9 +7,9 @@ import SiteFooter from "../components/SiteFooter.astro";
 import Analytics from "../components/Analytics.astro";
 import VercelInsights from "../components/VercelInsights.astro";
 import { site, analytics, isAnalyticsEnabled, isVercelInsightsEnabled } from "../config";
-import { FONT_PRELOAD } from "../utils/font-assets";
-import { serializeJsonLd, type JsonLdNode } from "../utils/structured-data";
-import { siteShareImage, type ShareImage } from "../utils/share-image";
+import { FONT_PRELOAD } from "../utils/font/assets";
+import { serializeJsonLd, type JsonLdNode } from "../utils/content/structured-data";
+import { siteShareImage, type ShareImage } from "../utils/og/share";
 
 interface Props {
   title?: string;

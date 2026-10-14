@@ -3,7 +3,7 @@
  *
  * 只放不依赖运行时的常量与校验函数，因此有两类消费者：
  * - 客户端 / 构建期（`src/config.ts` 读 `import.meta.env`）；
- * - Node 构建脚本（`src/utils/deploy-policy.ts` 读 `process.env`）。
+ * - Node 构建脚本（`src/utils/deploy/deploy-policy.ts` 读 `process.env`）。
  * GA 域名与 ID 校验必须两边共用，否则「组件加载了 gtag、CSP 却没放行」会白白上报一堆违规。
  */
 

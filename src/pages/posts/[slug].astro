@@ -8,18 +8,18 @@ import BackToTop from "../../components/BackToTop.astro";
 import Comments from "../../components/Comments.astro";
 import PrivateUnlock from "../../components/PrivateUnlock.astro";
 import { site } from "../../config";
-import { encryptText, getPrivatePassword, type EncryptedPayload } from "../../utils/private-crypto";
+import { encryptText, getPrivatePassword, type EncryptedPayload } from "../../utils/crypto/private-crypto";
 import {
   getPublishedPosts,
   getPostSlug,
   getCategory,
   toUrlSegment,
-} from "../../utils/posts";
-import { categoryColor } from "../../utils/category";
-import { estimateReadTime } from "../../utils/readtime";
-import { formatDate } from "../../utils/format";
-import { blogPostingJsonLd, siteFacts } from "../../utils/structured-data";
-import { postShareImage } from "../../utils/share-image";
+} from "../../utils/content/posts";
+import { categoryColor } from "../../utils/content/category";
+import { estimateReadTime } from "../../utils/content/readtime";
+import { formatDate } from "../../utils/content/format";
+import { blogPostingJsonLd, siteFacts } from "../../utils/content/structured-data";
+import { postShareImage } from "../../utils/og/share";
 
 export async function getStaticPaths() {
   // 详情页路由取全量（含私密）；上一篇/下一篇只取公开文章（不泄露私密标题）

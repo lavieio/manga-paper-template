@@ -6,21 +6,21 @@
  *
  * 为什么是生成而不是手写：策略里有一半要跟着 `.env` 走（remark42 的域名），静态文件做不到。
  * Vercel 那边不需要生成物：仓根的 `vercel.ts` 在 Vercel 构建时执行、自己读环境变量，
- * 同一份策略由 `src/utils/deploy-policy.ts` 渲染。
+ * 同一份策略由 `src/utils/deploy/deploy-policy.ts` 渲染。
  *
  * 挂在 `npm run build` 的 `astro build` 之后（Astro 会清空 dist/）。
  * 也可以单独跑 `node scripts/build-deploy-config.ts` 看生成结果。
  */
 import { existsSync, writeFileSync } from "node:fs";
-import { loadEnvFiles } from "../src/utils/load-env.ts";
+import { loadEnvFiles } from "../src/utils/env/load-env.ts";
 import {
   buildHeaderRules,
   buildRedirectRules,
   cspOrigin,
   renderHeadersFile,
   renderRedirectsFile,
-} from "../src/utils/deploy-policy.ts";
-import { parseGaMeasurementId } from "../src/utils/analytics.ts";
+} from "../src/utils/deploy/deploy-policy.ts";
+import { parseGaMeasurementId } from "../src/utils/env/analytics.ts";
 
 const DIST = "dist";
 const DIST_HEADERS = `${DIST}/_headers`;

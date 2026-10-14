@@ -5,10 +5,10 @@
  * （Node 原生类型剥离不解析无扩展名的相对 import，一旦这里 import 了别的 src 模块，
  * `devtools/socials.test.ts` 就跑不起来了）。
  */
-import type { Social } from "../types/config";
+import type { Social } from "../../types/config";
 
 /**
- * 内置图标名。加名字要同时改 `src/utils/social-icons.ts`——
+ * 内置图标名。加名字要同时改 `src/utils/social/icons.ts`——
  * 那边是 `Record<IconName, string>`，少一条编译期就红。
  */
 export const SOCIAL_ICONS = [

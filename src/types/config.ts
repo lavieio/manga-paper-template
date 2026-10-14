@@ -12,7 +12,7 @@ export interface Social {
   /** 跳转地址：`https://` 外链、`mailto:`，或以 `/` 开头的站内路径 */
   readonly url: string;
   /**
-   * 图标，三种写法都认（判定见 `src/utils/socials.ts` 的 `resolveIcon()`）：
+   * 图标，三种写法都认（判定见 `src/utils/social/links.ts` 的 `resolveIcon()`）：
    * - 内置名：`github` / `x` / `weibo` / `mail` / `rss` …（完整清单见 `SOCIAL_ICONS`）
    * - 站内图片：`/icons/weibo.svg`（文件放 `public/icons/` 下）
    * - 外链图片：`https://example.com/icon.png`

@@ -4,8 +4,8 @@ import PostCard from "../components/PostCard.astro";
 import FeaturedStack from "../components/FeaturedStack.astro";
 import SocialLinks from "../components/SocialLinks.astro";
 import { site, posts as postsConfig, homeSocials } from "../config";
-import { getPublishedPosts, siteStats } from "../utils/posts";
-import { blogJsonLd, siteFacts, websiteJsonLd } from "../utils/structured-data";
+import { getPublishedPosts, siteStats } from "../utils/content/posts";
+import { blogJsonLd, siteFacts, websiteJsonLd } from "../utils/content/structured-data";
 
 const posts = await getPublishedPosts();
 const featured = posts.filter((p) => p.data.featured);

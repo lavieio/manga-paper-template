@@ -6,10 +6,10 @@
  * - 只有 1 张时不轮播：隐藏编号方块，仍是同一套纸片样式与点击行为
  * - prefers-reduced-motion：不自动播放，切换瞬时
  */
-import type { DatedPost } from "../utils/posts";
-import { getPostSlug, getCategory } from "../utils/posts";
-import { estimateReadTime } from "../utils/readtime";
-import { formatDate } from "../utils/format";
+import type { DatedPost } from "../utils/content/posts";
+import { getPostSlug, getCategory } from "../utils/content/posts";
+import { estimateReadTime } from "../utils/content/readtime";
+import { formatDate } from "../utils/content/format";
 
 interface Props {
   posts: DatedPost[];

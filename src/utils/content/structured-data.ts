@@ -1,4 +1,4 @@
-import type { SiteConfig } from "../config";
+import type { SiteConfig } from "../../config";
 
 /**
  * JSON-LD 结构化数据（可发现性）：首页 WebSite + Blog、公开文章页 BlogPosting。
