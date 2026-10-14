@@ -10,7 +10,7 @@
  * 也把它的长任务挤出 TBT 统计窗口。
  * 代价：`FALLBACK_MS` 内既没 load 完也没交互的访问（通常是秒退）不产生 page_view——
  * 想收齐秒退数据就把那个常量调小，想 TBT 更干净就调大。
- * 放行 gtag.js 与采集端点的 CSP 由 `src/utils/deploy-policy.ts` 按同一份 env 现算。
+ * 放行 gtag.js 与采集端点的 CSP 由 `src/utils/deploy/deploy-policy.ts` 按同一份 env 现算。
  */
 import { analytics } from "../config";
 

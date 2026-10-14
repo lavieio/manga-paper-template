@@ -124,7 +124,7 @@ export default defineConfig({
 | 本地图片 | `icon: "/icons/weibo.svg"` | 文件放在 `public/icons/`，支持 SVG、PNG、WebP |
 | HTTPS 图片 | `icon: "https://cdn.example.com/x.png"` | 外链图片需使用 HTTPS |
 
-内置图标包括：`github`、`x`、`facebook`、`instagram`、`linkedin`、`telegram`、`youtube`、`reddit`、`discord`、`mastodon`、`bluesky`、`threads`、`rss`、`weibo`、`zhihu`、`bilibili`、`wechat`、`douban`、`juejin`、`gitee`、`mail`、`link`、`seal`。图标路径基于 [Simple Icons](https://github.com/simple-icons/simple-icons)（CC0-1.0），内联维护在 `src/utils/social-icons.ts`，不会额外引入依赖或发起图标请求。
+内置图标包括：`github`、`x`、`facebook`、`instagram`、`linkedin`、`telegram`、`youtube`、`reddit`、`discord`、`mastodon`、`bluesky`、`threads`、`rss`、`weibo`、`zhihu`、`bilibili`、`wechat`、`douban`、`juejin`、`gitee`、`mail`、`link`、`seal`。图标路径基于 [Simple Icons](https://github.com/simple-icons/simple-icons)（CC0-1.0），内联维护在 `src/utils/social/icons.ts`，不会额外引入依赖或发起图标请求。
 
 > 部署配置和密码等值应写入 `.env` 或部署平台的环境变量，而不是 `manga-paper.config.ts`。`label` 或 `url` 为空、或 `url` 含空白字符时，构建检查会报告对应入口。
 
@@ -288,7 +288,15 @@ MangaPaper 输出纯静态文件，构建产物位于 `dist/`。选择 Vercel �
 │   ├── plugins/                  # 内容处理插件
 │   ├── scripts/                  # 浏览器端交互
 │   ├── styles/                   # 全局、文章和组件样式
-│   └── utils/                    # 内容、加密、响应头与分享图工具
+│   └── utils/                    # 工具，按领域分子目录
+│       ├── og/                   # OG 分享卡片：渲染管线与 og:image 取值
+│       ├── content/              # 文章内容管线：读取、分类、格式化、阅读时长、结构化数据
+│       ├── env/                  # 环境变量、站点地址、统计
+│       ├── deploy/               # 安全响应头与 301 策略
+│       ├── social/               # 首页入口与内置图标
+│       ├── crypto/               # 私密文章加密
+│       ├── image/                # 外链图片尺寸探测
+│       └── font/                 # 字体子集清单（构建期生成）
 ├── manga-paper.config.ts         # 站点与首页入口配置
 ├── astro.config.mjs
 └── vercel.ts                     # Vercel 项目配置

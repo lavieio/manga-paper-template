@@ -30,7 +30,7 @@ export default defineConfig({
    * RSS 与私密文章由模板固定追加，不用写在这里。
    *
    * `icon` 三种写法都认：
-   *   内置名       "github" / "x" / "weibo" / "mail" / "rss" …（清单见 src/utils/socials.ts）
+   *   内置名       "github" / "x" / "weibo" / "mail" / "rss" …（清单见 src/utils/social/links.ts）
    *   站内图片     "/icons/weibo.svg"（文件放 public/icons/ 下）
    *   外链图片     "https://example.com/icon.png"
    */

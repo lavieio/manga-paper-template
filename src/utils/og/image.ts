@@ -9,13 +9,13 @@
  */
 import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
-import type { OgCard, OgGeometry } from "./og-card";
-import { OG_HEIGHT, OG_WIDTH } from "./og-size.ts";
-import { decorationLayer, dotLayer, PAPER_RECT } from "./og-decoration";
-import { loadOgFonts, type OgFont } from "./og-font";
-import { collectTexts, type OgNode } from "./og-node";
-import { buildCardTree, cardGeometry } from "./og-tree";
-import { ogCharset } from "./og-text";
+import type { OgCard, OgGeometry } from "./card";
+import { OG_HEIGHT, OG_WIDTH } from "./size.ts";
+import { decorationLayer, dotLayer, PAPER_RECT } from "./decoration";
+import { loadOgFonts, type OgFont } from "./font";
+import { collectTexts, type OgNode } from "./node";
+import { buildCardTree, cardGeometry } from "./tree";
+import { ogCharset } from "./text";
 
 /** Satori 的入参类型来自 react（本仓库没有 React 依赖），这里只做一次结构性转换 */
 type SatoriInput = Parameters<typeof satori>[0];

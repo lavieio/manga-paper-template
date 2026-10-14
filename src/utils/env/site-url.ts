@@ -1,7 +1,7 @@
 /**
  * SITE_URL 闸门。SITE_URL 是 canonical / sitemap / RSS 的唯一真源。
  *
- * 两个函数（.env 的加载见 src/utils/load-env.ts）：
+ * 两个函数（.env 的加载见 src/utils/env/load-env.ts）：
  * 1. `siteUrlOrPlaceholder()`：给 astro.config.mjs 用。有配置就校验格式（Astro 的 canonical
  *    走 `new URL(pathname, site)`，非法值会静默产出坏链接），没配置就退回占位域名，
  *    这样 `astro dev` / `preview` 不会被「还没配域名」挡住。

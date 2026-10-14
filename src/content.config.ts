@@ -26,7 +26,7 @@ const blog = defineCollection({
 
 /**
  * 单页内容（目前只有「关于」）。
- * 正文可以写 Markdown、HTML 与 `<style>`——后者由 `src/utils/about-content.ts`
+ * 正文可以写 Markdown、HTML 与 `<style>`——后者由 `src/utils/content/about.ts`
  * 包进 `@scope`，裸类名漏不到页头页脚。
  */
 const pages = defineCollection({

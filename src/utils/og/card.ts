@@ -4,10 +4,10 @@
  * `LAYOUT` 是版式的唯一来源：所有数字都是 1200×630 画布上的绝对坐标，
  * 改视觉只改这里，渲染代码里不要再写一套数字。
  */
-import { site } from "../config";
-import { formatDate } from "./format";
-import { getCategory, getPostSlug, getPublishedPosts, type DatedPost } from "./posts";
-import { estimateReadTime } from "./readtime";
+import { site } from "../../config";
+import { formatDate } from "../content/format";
+import { getCategory, getPostSlug, getPublishedPosts, type DatedPost } from "../content/posts";
+import { estimateReadTime } from "../content/readtime";
 
 /**
  * 卡片配色：能对上站点 token 的用 token 的值（global.css 是唯一来源），

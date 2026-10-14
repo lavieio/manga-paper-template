@@ -12,7 +12,7 @@
  */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { OG_HEIGHT, OG_WIDTH } from "./og-size.ts";
+import { OG_HEIGHT, OG_WIDTH } from "./size.ts";
 
 export interface ShareImage {
   /** 绝对地址（http/https） */

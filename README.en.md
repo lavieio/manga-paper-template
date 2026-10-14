@@ -124,7 +124,7 @@ The `icon` field supports three forms. If it is missing or unrecognized, a gener
 | Local image | `icon: "/icons/weibo.svg"` | Place the file in `public/icons/`; SVG, PNG, and WebP are supported |
 | HTTPS image | `icon: "https://cdn.example.com/x.png"` | Remote icons must use HTTPS |
 
-Built-in icons: `github`, `x`, `facebook`, `instagram`, `linkedin`, `telegram`, `youtube`, `reddit`, `discord`, `mastodon`, `bluesky`, `threads`, `rss`, `weibo`, `zhihu`, `bilibili`, `wechat`, `douban`, `juejin`, `gitee`, `mail`, `link`, and `seal`. Their paths are based on [Simple Icons](https://github.com/simple-icons/simple-icons) (CC0-1.0) and maintained inline in `src/utils/social-icons.ts`, with no extra dependency or icon request.
+Built-in icons: `github`, `x`, `facebook`, `instagram`, `linkedin`, `telegram`, `youtube`, `reddit`, `discord`, `mastodon`, `bluesky`, `threads`, `rss`, `weibo`, `zhihu`, `bilibili`, `wechat`, `douban`, `juejin`, `gitee`, `mail`, `link`, and `seal`. Their paths are based on [Simple Icons](https://github.com/simple-icons/simple-icons) (CC0-1.0) and maintained inline in `src/utils/social/icons.ts`, with no extra dependency or icon request.
 
 > Put deployment settings and passwords in `.env` or your hosting provider's environment settings, not in `manga-paper.config.ts`. Build validation reports shortcut items whose `label` or `url` is empty, or whose `url` contains whitespace.
 
@@ -288,7 +288,15 @@ For supported platforms, the build generates security-header configuration inclu
 │   ├── plugins/                  # Content-processing plugins
 │   ├── scripts/                  # Browser-side interactions
 │   ├── styles/                   # Global, article, and component styles
-│   └── utils/                    # Content, encryption, headers, and share-image utilities
+│   └── utils/                    # helpers, grouped by domain
+│       ├── og/                   # OG social cards: render pipeline and og:image policy
+│       ├── content/              # post pipeline: loading, categories, formatting, reading time, structured data
+│       ├── env/                  # environment variables, site URL, analytics
+│       ├── deploy/               # security headers and the 301 policy
+│       ├── social/               # homepage entries and built-in icons
+│       ├── crypto/               # private-post encryption
+│       ├── image/                # remote image size probing
+│       └── font/                 # font subset manifest (generated at build time)
 ├── manga-paper.config.ts         # Site and homepage shortcut configuration
 ├── astro.config.mjs
 └── vercel.ts                     # Vercel project configuration

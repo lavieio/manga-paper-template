@@ -5,9 +5,9 @@
  * 不会像静态文件那样悄悄过期。字体与 `/og/[slug].png` 共用同一份子集。
  */
 import type { APIRoute } from "astro";
-import { siteCard, siteCards } from "../../utils/og-card";
-import { prepareOgFonts, renderOgImage } from "../../utils/og-image";
-import { ogHost } from "../../utils/share-image";
+import { siteCard, siteCards } from "../../utils/og/card";
+import { prepareOgFonts, renderOgImage } from "../../utils/og/image";
+import { ogHost } from "../../utils/og/share";
 
 export const GET: APIRoute = async ({ site }) => {
   const host = ogHost(site);

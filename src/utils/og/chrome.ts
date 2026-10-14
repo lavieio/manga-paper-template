@@ -2,9 +2,9 @@
  * 卡片外围的界面构件：顶栏（三个窗口点 + 假文件名）、页眉（朱砂 logo + 站名 + 分类贴纸）、
  * 页脚（作者 · 日期 · 时长 + 右下角域名）。内容部分在 `og-tree.ts`。
  */
-import { COLOR, LAYOUT, type OgCard } from "./og-card";
-import { node, text, type OgNode } from "./og-node";
-import { fitOneLine } from "./og-text";
+import { COLOR, LAYOUT, type OgCard } from "./card";
+import { node, text, type OgNode } from "./node";
+import { fitOneLine } from "./text";
 
 /** 顶栏：文件名按可用宽度裁剪，短标题的卡片也不会把字挤出卡片 */
 export function topBar(card: OgCard): OgNode {

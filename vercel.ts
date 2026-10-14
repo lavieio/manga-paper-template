@@ -8,7 +8,7 @@
  * 用 TS 就不用把任何生成物提交进 git。
  *
  * 同一份策略还会渲染成 `dist/_headers` 与 `dist/_redirects` 给 Cloudflare Pages / Netlify 用；
- * 唯一来源是 `src/utils/deploy-policy.ts`：两个出口（本文件与 `dist/_headers`）必须逐条一致。
+ * 唯一来源是 `src/utils/deploy/deploy-policy.ts`：两个出口（本文件与 `dist/_headers`）必须逐条一致。
  *
  * 刻意不装 `@vercel/config`：这里只用 config 的原始形状（与 `vercel.json` 同构），
  * 装了只是编辑器里多一层类型提示。
@@ -18,8 +18,8 @@ import {
   buildRedirectRules,
   toVercelHeaders,
   toVercelRedirects,
-} from "./src/utils/deploy-policy.ts";
-import { loadEnvFiles } from "./src/utils/load-env.ts";
+} from "./src/utils/deploy/deploy-policy.ts";
+import { loadEnvFiles } from "./src/utils/env/load-env.ts";
 
 // Vercel 构建时环境变量已经注入（优先级更高），这里负责本机 / 其他 CI 退回读 .env
 loadEnvFiles();

@@ -2,7 +2,7 @@
 /**
  * 构建前必须通过的检查（`npm run build` 的第一环，失败即中止构建）。
  *
- * 目前只有一条：SITE_URL 必须是能上线的真实域名（规则见 src/utils/site-url.ts）。
+ * 目前只有一条：SITE_URL 必须是能上线的真实域名（规则见 src/utils/env/site-url.ts）。
  * 以后再加**必须**的检查就在 main() 里按同样模式追加——失败抛错即中止，
  * 消息原样打给用户（配置类错误只要那几行提示，不要堆栈）。
  *
@@ -14,8 +14,8 @@
  *
  * 用法：由 npm run build 自动调用，不需要手动跑。
  */
-import { loadEnvFiles } from "../src/utils/load-env.ts";
-import { assertDeployableSiteUrl } from "../src/utils/site-url.ts";
+import { loadEnvFiles } from "../src/utils/env/load-env.ts";
+import { assertDeployableSiteUrl } from "../src/utils/env/site-url.ts";
 
 /** 检查失败：打印人看得懂的消息并中止构建 */
 function fail(err: unknown): never {
