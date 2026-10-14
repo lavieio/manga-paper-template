@@ -1,0 +1,37 @@
+---
+/**
+ * social 入口的图标：内置名 → 仓内维护的 24×24 单色标记；图片路径 / 外链 URL → <img>。
+ * 形态判定已经在 `resolveIcon()` 里做完，这里只负责画。
+ */
+import { SOCIAL_ICON_MARKUP } from "../utils/social-icons";
+import type { IconSpec } from "../utils/socials";
+
+/** 默认边长：贴纸条上那一排的尺寸 */
+const DEFAULT_SIZE = 14;
+
+interface Props {
+  icon: IconSpec;
+  /** 边长（px）；页脚那种 12px 小字场景可以调小 */
+  size?: number;
+}
+
+const { icon, size = DEFAULT_SIZE } = Astro.props;
+---
+
+{
+  icon.kind === "builtin" ? (
+    <svg class="ico" viewBox="0 0 24 24" width={size} height={size} aria-hidden="true">
+      <Fragment set:html={SOCIAL_ICON_MARKUP[icon.name]} />
+    </svg>
+  ) : (
+    /* data-social-icon：图标不是内容图，产物断言据此跳过「外链图必须有灯箱尺寸」那条 */
+    <img class="ico" src={icon.src} alt="" width={size} height={size} data-social-icon="true" />
+  )
+}
+
+<style>
+  .ico {
+    display: block;
+    flex: none;
+  }
+</style>
