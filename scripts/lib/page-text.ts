@@ -6,14 +6,18 @@
  * 多取一个字符只是让子集大几百字节。
  *
  * 因此：
+ * - **注释必须先整块去掉**：注释里出现 `<style>` 这种字面文本时（文档里写「想自定义就写 <style>」就会），
+ *   下面的 script/style 正则会把注释里那个当成真的开标签，一路吃到正文里真正的 `</style>`，
+ *   中间整段正文的字全掉出子集——页面掉回 fallback，看上去就是「字体忽大忽小」。
+ *   注释本来也不会渲染，去掉它只赚不亏；
  * - 数字实体（`&#x4E2D;`）必须还原，否则「中」会漏；
- * - 具名实体（`&amp;`）不还原——它本身是 ASCII，还原与否都是超集；
- * - 注释里的字也留着（Astro 会把注释一起输出，多取几个字不心疼）。
+ * - 具名实体（`&amp;`）不还原——它本身是 ASCII，还原与否都是超集。
  *
  * CSS `content:` 里的字面文本（`content: "└ "`）不在 HTML 里，得单独扫样式表，
  * 否则那几格会掉出子集（`src/styles/prose.css` 的引用前缀就是这种）。
  */
 
+const HTML_COMMENT = /<!--[\s\S]*?-->/g;
 const SCRIPT_OR_STYLE = /<(script|style)\b[\s\S]*?<\/\1>/gi;
 const NUMERIC_ENTITY = /&#(?:x([0-9a-f]+)|(\d+));/gi;
 const CSS_CONTENT_LITERAL = /content\s*:\s*(?:"((?:[^"\\]|\\.)*)"|'((?:[^'\\]|\\.)*)')/g;
@@ -28,9 +32,11 @@ export function decodeNumericEntities(html: string): string {
   });
 }
 
-/** HTML → 会渲染成文字的字符（去掉 script/style 与标签） */
+/** HTML → 会渲染成文字的字符（去掉注释、script/style 与标签） */
 export function pageText(html: string): string {
-  return decodeNumericEntities(html.replace(SCRIPT_OR_STYLE, " ").replace(/<[^>]*>/g, " "));
+  return decodeNumericEntities(
+    html.replace(HTML_COMMENT, " ").replace(SCRIPT_OR_STYLE, " ").replace(/<[^>]*>/g, " "),
+  );
 }
 
 /** CSS 里 `content: "…"` 的字面字符（含 CSS 转义），用于补齐样式表生成的字 */
