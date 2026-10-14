@@ -1,0 +1,103 @@
+---
+/**
+ * social 入口条（设计定稿：demos/home-quicklinks.html 的方案 A）。
+ *
+ * 首页与关于页共用同一份视觉，只是列表不同——列表在 `src/config.ts` 里拼好传进来：
+ * 首页 = socials + 固定 RSS + 固定私密；关于页 = socials + 固定 RSS。
+ */
+import SocialIcon from "./SocialIcon.astro";
+import { iconKey, type ResolvedSocial } from "../utils/socials";
+
+interface Props {
+  items: readonly ResolvedSocial[];
+  /** 给读屏用的这组入口的名字 */
+  label: string;
+}
+
+const { items, label } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <nav class="strip" aria-label={label}>
+      {items.map((item) => (
+        <a
+          class={item.primary ? "tab primary" : "tab"}
+          href={item.href}
+          data-icon={iconKey(item.icon)}
+          /* 只有 http(s) 外链才开新标签：mailto 与站内路径不该跳走当前页 */
+          target={item.external ? "_blank" : undefined}
+          rel={item.external ? "noopener noreferrer" : undefined}
+        >
+          <SocialIcon icon={item.icon} />
+          {item.label}
+        </a>
+      ))}
+    </nav>
+  )
+}
+
+<style>
+  .strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin: 4px 0 0;
+  }
+  /* 贴纸手势：交替微旋；hover 压平并抬起，active 反向下沉 */
+  .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 15px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--card);
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    /* 行盒不足 24px，撑到触摸目标下限（WCAG 2.5.8） */
+    min-height: var(--touch-min);
+    transition:
+      transform 0.14s ease,
+      box-shadow 0.14s ease;
+  }
+  .strip .tab:nth-child(4n + 1) {
+    transform: rotate(-1.2deg);
+  }
+  .strip .tab:nth-child(4n + 2) {
+    transform: rotate(1deg);
+  }
+  .strip .tab:nth-child(4n + 3) {
+    transform: rotate(-0.7deg);
+  }
+  .strip .tab:nth-child(4n + 4) {
+    transform: rotate(1.3deg);
+  }
+  .tab:hover {
+    transform: rotate(0) translate(-2px, -2px);
+    box-shadow: var(--shadow-lg);
+  }
+  .tab:active {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  /* 主入口：墨底纸字。暗色下 --ink 反相为浅色，对比依旧成立 */
+  .tab.primary {
+    color: var(--paper);
+    background: var(--ink);
+  }
+  /* 图标是子组件里的元素，拿不到本组件的 scope，只能 :global 命中 */
+  .tab[data-icon="rss"] :global(.ico) {
+    color: var(--red-ink);
+  }
+  .tab[data-icon="seal"] :global(.ico) {
+    transform: rotate(-3deg);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tab {
+      transition: none;
+    }
+  }
+</style>

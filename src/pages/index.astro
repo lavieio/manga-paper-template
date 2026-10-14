@@ -2,15 +2,14 @@
 import Base from "../layouts/Base.astro";
 import PostCard from "../components/PostCard.astro";
 import FeaturedStack from "../components/FeaturedStack.astro";
-import { site } from "../config";
+import SocialLinks from "../components/SocialLinks.astro";
+import { site, posts as postsConfig, homeSocials } from "../config";
 import { getPublishedPosts, siteStats } from "../utils/posts";
 import { blogJsonLd, siteFacts, websiteJsonLd } from "../utils/structured-data";
 
-const RECENT_COUNT = 3;
-
 const posts = await getPublishedPosts();
 const featured = posts.filter((p) => p.data.featured);
-const recent = posts.filter((p) => !p.data.featured).slice(0, RECENT_COUNT);
+const recent = posts.filter((p) => !p.data.featured).slice(0, postsConfig.recentCount);
 const stats = siteStats(posts);
 
 // 首页承担站点身份：WebSite（站点本体）+ Blog（博客本体）两个节点
@@ -22,6 +21,9 @@ const jsonLd = [websiteJsonLd(jsonLdSite), blogJsonLd(jsonLdSite)];
   {/* 首页按设计没有可见标题（demo 也没有），但 h1 得有一个：
       否则 axe 报 page-has-heading-one，读屏用户也拿不到站点身份 */}
   <h1 class="sr-only">{site.name} · {site.tagline}</h1>
+
+  {/* 快捷入口贴纸条：socials + 固定的 RSS（列表见 src/config.ts 的 homeSocials） */}
+  <SocialLinks items={homeSocials} label="快捷入口" />
 
   {/* 精选统一由 FeaturedStack 渲染；单篇时组件内部降级为单张大卡 */}
   {featured.length > 0 && <FeaturedStack posts={featured} />}
