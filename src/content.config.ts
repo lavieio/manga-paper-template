@@ -24,4 +24,23 @@ const blog = defineCollection({
   }),
 });
 
-export const collections = { blog };
+/**
+ * 单页内容（目前只有「关于」）。
+ * 正文可以写 Markdown、HTML 与 `<style>`——后者由 `src/utils/about-content.ts`
+ * 包进 `@scope`，裸类名漏不到页头页脚。
+ */
+const pages = defineCollection({
+  loader: glob({ pattern: "**/*.md", base: "./src/content/pages" }),
+  schema: z.object({
+    /** 页面 h1（正文从 `##` 起，别再写 `#`） */
+    title: z.string(),
+    /** meta description；不写就回落到 site.bio */
+    description: z.string().optional(),
+    /** 正文是否套文章排版（`.prose`）；整页自写 CSS 时关掉 */
+    prose: z.boolean().default(true),
+    /** 正文下方是否显示站点统计条（文章 / 分类 / 标签数） */
+    stats: z.boolean().default(true),
+  }),
+});
+
+export const collections = { blog, pages };

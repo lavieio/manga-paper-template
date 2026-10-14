@@ -108,7 +108,7 @@ export function siteCard(host: string): OgCard {
   return {
     label: "README.md",
     title: site.name,
-    description: site.about[0],
+    description: site.bio,
     badge: "博客",
     meta: [site.author, site.bio],
     host,
