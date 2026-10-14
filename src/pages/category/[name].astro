@@ -22,7 +22,9 @@ const { name, posts } = Astro.props;
   <div class="cat-head">
     <h1>{name}</h1>
     <span class="sticker">{posts.length} 篇</span>
-    <a class="back" href="/posts">← 全部文章</a>
+    {/* 分页第一页住在 /posts/1：/posts/ 是旧地址（由 _redirects 301 过去），
+        /posts（不带斜杠）根本不是个路由——dist 里它只是个目录，静态托管会直接 404 */}
+    <a class="back" href="/posts/1">← 全部文章</a>
   </div>
 
   <section class="cards">
