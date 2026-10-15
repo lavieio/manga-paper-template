@@ -36,7 +36,7 @@
  */
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { FONT_WEIGHTS, PRELOAD_LABELS, siteCharset, siteFaceCharset } from "./lib/font-charsets.ts";
 import { openBlobStore, type BlobStore } from "./lib/font-blobs.ts";
 import { writeFaces, type WrittenFace } from "./lib/font-faces.ts";
@@ -64,8 +64,8 @@ const CORE_CSS_STABLE = join(ROOT, "public/maple-core.css");
 const LEGACY_FACE_CSS = join(ROOT, "src/styles/fonts-face.css");
 const ASSETS_TS = join(ROOT, "src/utils/font/assets.ts");
 const LICENSE_NAME = "LICENSE.txt";
-/** 改字符集 / 切片 / 命名规则时 +1：指纹随之失效，产物全部重切 */
-const PLAN_VERSION = 6;
+/** 改字符集 / 切片 / 命名规则 / 生成物形状时 +1：指纹随之失效，产物全部重写 */
+const PLAN_VERSION = 7;
 const HASH_LENGTH = 8;
 /** 构建日志里最多列几个缺字，其余只报数量 */
 const MISSING_PREVIEW = 16;
@@ -163,7 +163,10 @@ function writeOutputs(written: readonly WrittenFace[], key: string): void {
   writeFileSync(CORE_CSS_STABLE, coreCss);
 
   const preload = written.filter((item) => item.face.preload).map((item) => `/fonts/${item.name}`);
-  writeFileSync(ASSETS_TS, renderFontAssets(preload, key));
+  // ASSETS_TS 在 .gitignore 里，而且是它所在目录里**唯一**的文件——全新 clone 里那个目录
+  // 根本不存在，直接写会 ENOENT（Vercel 上就是这么炸的）。产物自己负责把目录建出来。
+  mkdirSync(dirname(ASSETS_TS), { recursive: true });
+  writeFileSync(ASSETS_TS, renderFontAssets(preload));
   writeFileSync(join(OUT_DIR, "README.md"), FONT_DIR_README);
   writePlanFile(written.map((item) => item.name), key);
 }
