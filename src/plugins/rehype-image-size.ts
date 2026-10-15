@@ -1,17 +1,17 @@
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { imageSize } from "image-size";
-import { loadEnvFiles } from "../utils/load-env.ts";
+import { loadEnvFiles } from "../utils/env/load-env.ts";
 import {
   isRemoteHttpUrl,
   resolveRemoteSizes,
   type Size,
-} from "../utils/remote-image-size.ts";
+} from "../utils/image/remote-image-size.ts";
 
 /**
  * 构建期给正文 <img> 补齐尺寸与加载属性：
  * - **尺寸**：站内图（src 以 / 开头）直接读 public/ 下的文件；外链图在构建期抓图头
- *   （见 utils/remote-image-size.ts，失败则降级成下面的汇总告警）。两处都是为了消掉
+ *   （见 utils/image/remote-image-size.ts，失败则降级成下面的汇总告警）。两处都是为了消掉
  *   布局抖动，并让灯箱拿到构建期尺寸（没有 data-pswp-* 就只能等运行时 naturalWidth）。
  * - **加载**：首图 eager，其余 lazy + 全文 decoding="async"。长文一次拉全部图片是白流量，
  *   何况它们大多压在首屏下面（十张图的文章就是这么拉的）。

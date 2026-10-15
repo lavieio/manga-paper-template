@@ -1,6 +1,6 @@
 /**
  * 字体产物的文本渲染：`src/styles/fonts-core.css`、`public/maple-core.css`、
- * `src/utils/font-assets.ts` 与发布目录的说明文件。
+ * `src/utils/font/assets.ts` 与发布目录的说明文件。
  *
  * 只有**一个**渲染函数：给一批「面 + 产物文件名」，吐一段 `@font-face` 清单。
  * core 与按页子集 的差别只在于调用方传进来的是哪批面（见 `font-plan.ts`）。
@@ -44,16 +44,13 @@ function renderFile(file: FaceFile): string {
   );
 }
 
-/** `src/utils/font-assets.ts`：Base.astro 只从这里取 preload 清单与计划指纹 */
-export function renderFontAssets(preload: readonly string[], key: string): string {
+/** `src/utils/font/assets.ts`：Base.astro 只从这里取 preload 清单 */
+export function renderFontAssets(preload: readonly string[]): string {
   return [
     "/** 生成物（`npm run fonts`）；不要手改，改策略请改 scripts/lib/font-charsets.ts。 */",
     "export const FONT_PRELOAD = [",
     preload.map((url) => `  "${url}",`).join("\n"),
     "] as const;",
-    "",
-    "/** 字符集 + 字体 + 生成器版本的指纹：一致就整个跳过生成步骤（`.cache/fonts/plan.json`） */",
-    `export const FONT_PLAN_KEY = "${key}";`,
     "",
   ].join("\n");
 }

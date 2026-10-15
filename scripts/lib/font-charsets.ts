@@ -40,7 +40,7 @@ export interface FontWeightPlan {
  * - 引用斜体 400i 已移除：全站只有 `blockquote` 用斜体（`prose.css`，与 `demos/comic` 定稿一致），
  *   浏览器按 `font-synthesis` 从 400 面合成倾斜，省一份 380 KB 的字面。
  *
- * `assets/fonts/` 里的 SemiBold 仍要留：构建期渲染 OG 卡片直接读 TTF（`src/utils/og-font.ts` 用
+ * `assets/fonts/` 里的 SemiBold 仍要留：构建期渲染 OG 卡片直接读 TTF（`src/utils/og/font.ts` 用
  * 400/600/700）。Italic 目前没有消费者，留着只为随时能试回来。
  */
 export const FONT_WEIGHTS: readonly FontWeightPlan[] = [
@@ -67,8 +67,12 @@ const SYMBOL_RANGES: readonly (readonly [number, number])[] = [
 const CONTROLS = /[\u0000-\u001f\u007f\ufeff]/g;
 /** 站点字符扫描：构建期真正会渲染成文本的文件类型 */
 const SITE_EXTENSIONS = new Set([".md", ".mdx", ".astro", ".ts", ".js", ".mjs", ".css", ".json", ".txt", ".svg"]);
-/** 生成物自己：扫进来只会自我循环（unicode-range 文本、内容哈希） */
-const SITE_EXCLUDED = new Set(["font-assets.ts", "fonts-core.css"]);
+/**
+ * 生成物自己：扫进来只会自我循环（内容哈希会反过来改指纹、unicode-range 文本会自我引用）。
+ * 按**仓根相对路径**排除而不是按文件名：`font/assets.ts` 这种名字太常见，按文件名匹配
+ * 会把以后任何一个同名文件静默漏出字集。
+ */
+const SITE_EXCLUDED_PATHS: readonly string[] = ["src/utils/font/assets.ts", "src/styles/fonts-core.css"];
 /** 会被渲染成文本的地方：`src/` 全是，另加配置文件 */
 const SITE_ROOTS: readonly string[] = ["src", "astro.config.mjs"];
 /** 不扫的目录 */
@@ -135,7 +139,9 @@ function collectDir(dir: string, chars: Set<string>): void {
 }
 
 function collectFile(path: string, chars: Set<string>): void {
-  if (!SITE_EXTENSIONS.has(extname(path)) || SITE_EXCLUDED.has(path.split(/[\\/]/).pop() ?? "")) return;
+  if (!SITE_EXTENSIONS.has(extname(path))) return;
+  const normalized = path.split("\\").join("/");
+  if (SITE_EXCLUDED_PATHS.some((excluded) => normalized.endsWith(`/${excluded}`))) return;
   for (const char of readFileSync(path, "utf8").replace(CONTROLS, "")) chars.add(char);
 }
 

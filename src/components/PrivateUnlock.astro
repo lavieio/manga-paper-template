@@ -6,7 +6,7 @@
  * - 密码错误：封条框抖动；密钥缓存走 localStorage TTL（private-key.ts）
  */
 import "../styles/private.css";
-import type { EncryptedPayload } from "../utils/private-crypto";
+import type { EncryptedPayload } from "../utils/crypto/private-crypto";
 
 interface Props {
   payload: EncryptedPayload;
@@ -55,7 +55,7 @@ const payloadJson = JSON.stringify(Astro.props.payload);
     importCachedKey,
     decryptText,
     type EncryptedPayload,
-  } from "../utils/private-crypto";
+  } from "../utils/crypto/private-crypto";
   import { saveUnlockedKey, loadUnlockedKey, clearUnlockedKey } from "../scripts/private-key";
   import { buildToc } from "../scripts/toc";
 

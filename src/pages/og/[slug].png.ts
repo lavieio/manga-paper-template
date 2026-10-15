@@ -7,10 +7,10 @@
  * 字体子集按站点级字符集切（`siteCards`），所以 16 篇文章只切一次、逐张复用。
  */
 import type { APIRoute, GetStaticPaths } from "astro";
-import { postCard, siteCards } from "../../utils/og-card";
-import { prepareOgFonts, renderOgImage } from "../../utils/og-image";
-import { getPostSlug, getPublishedPosts, type DatedPost } from "../../utils/posts";
-import { ogHost } from "../../utils/share-image";
+import { postCard, siteCards } from "../../utils/og/card";
+import { prepareOgFonts, renderOgImage } from "../../utils/og/image";
+import { getPostSlug, getPublishedPosts, type DatedPost } from "../../utils/content/posts";
+import { ogHost } from "../../utils/og/share";
 
 export const getStaticPaths = (async () => {
   const posts = await getPublishedPosts();

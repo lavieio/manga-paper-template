@@ -1,6 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { getPublishedPosts, toUrlSegment } from "../../utils/posts";
+import { getPublishedPosts, toUrlSegment } from "../../utils/content/posts";
 
 const posts = await getPublishedPosts();
 const counts = new Map<string, number>();

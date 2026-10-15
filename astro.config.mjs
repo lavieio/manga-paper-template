@@ -6,8 +6,8 @@ import rehypeCodeCopy from "./src/plugins/rehype-code-copy.ts";
 import rehypeTableHeaders from "./src/plugins/rehype-table-headers.ts";
 import rehypeTableScroll from "./src/plugins/rehype-table-scroll.ts";
 import { collectHiddenSlugs } from "./src/plugins/private-slugs.ts";
-import { loadEnvFiles } from "./src/utils/load-env.ts";
-import { siteUrlOrPlaceholder } from "./src/utils/site-url.ts";
+import { loadEnvFiles } from "./src/utils/env/load-env.ts";
+import { siteUrlOrPlaceholder } from "./src/utils/env/site-url.ts";
 
 // Astro 文档：.env files are not loaded inside configuration files。
 // 不先自己加载一遍，下面 process.env.SITE_URL 就永远读不到 .env 里的值，

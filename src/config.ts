@@ -1,22 +1,26 @@
-import { parseGaMeasurementId } from "./utils/analytics";
-import { isEnabledFlag } from "./utils/env-flag";
+/**
+ * 内部已解析配置：把仓根 `manga-paper.config.ts`（使用者唯一入口）套上默认值后的固定形状。
+ *
+ * 消费方一律从这里 import，不直接读用户配置——将来加默认值 / 校验只改这一处。
+ * env 驱动的可选能力（remark42 / GA4 / Vercel 观测）也在这里合并：它们是部署期与密钥，
+ * 不进仓里的配置文件。
+ */
+import userConfig from "../manga-paper.config";
+import { parseGaMeasurementId } from "./utils/env/analytics";
+import { isEnabledFlag } from "./utils/env/env-flag";
+import { RSS_SOCIAL, resolveSocials } from "./utils/social/links";
 
-/** 站点全局配置：唯一入口。占位值随时可改。 */
-export const site = {
-  name: "MangaPaper",
-  tagline: "A loose-leaf, comic-paper, monospace blog theme",
-  author: "lavie",
-  /** 关于页作者卡上的一句话简介（同时用作该页 meta description） */
-  bio: "漫画稿纸风格的开源博客模板",
-  /** 关于页正文段落，一段一个字符串 */
-  about: [
-    "MangaPaper 是一个用 Astro 7 写的纯静态博客模板，设计语言是「漫画稿纸」：点阵纸底、墨色硬边框、单边硬阴影、随手贴上去的彩色贴纸，全站等宽字体，明暗双主题。零后端、零前端框架，构建出来的就是能直接丢到 Cloudflare Pages 或 Vercel 的静态站点，搜索、归档、标签、分类、分页、sitemap、RSS 全在构建期生成。内容用 Markdown 写，一级目录名即分类、文件名即 URL，日期由 git 钩子自动注入；私密文章在构建期用 AES-256-GCM 加密、页面上只留密文，密码在你的浏览器本地解密；评论走可选的 remark42，未配置就整块不渲染。",
-  ],
-  /** 关于页联系邮箱；留空则不渲染该入口 */
-  email: "" as string,
-  /** 页脚 GitHub 链接（模板源码地址）；置空则不渲染该入口 */
-  repo: "https://github.com/lavieio/manga-paper-template",
-} as const;
+/** 站点身份与文案：换站只改 manga-paper.config.ts 的 site */
+export const site = { ...userConfig.site } as const;
+
+/** 内容组织：列表分页篇数与首页「最近更新」条数 */
+export const posts = { ...userConfig.posts } as const;
+
+/**
+ * 首页贴纸条的入口：socials + 固定的 RSS。
+ * 固定项放在末尾，于是 socials 里的下标与报错里的「第 N 条」一致。
+ */
+export const homeSocials = resolveSocials([...userConfig.socials, RSS_SOCIAL]);
 
 /**
  * remark42 评论：全部从 env 读取，不设硬编码占位。

@@ -5,11 +5,11 @@
  * 但没有 z-index（后画的在上）、没有 `calc`、点阵与手绘线条也画不出来——那两样在
  * `og-decoration.ts` 里注入 SVG。外围构件（顶栏/页眉/页脚）在 `og-chrome.ts`。
  */
-import { CARD_ORIGIN, COLOR, LAYOUT, type OgCard, type OgGeometry } from "./og-card";
-import { footer, header, topBar } from "./og-chrome";
-import { node, text, type OgNode } from "./og-node";
-import { OG_HEIGHT, OG_WIDTH } from "./og-size.ts";
-import { advanceOf, fitLines, fitOneLine } from "./og-text";
+import { CARD_ORIGIN, COLOR, LAYOUT, type OgCard, type OgGeometry } from "./card";
+import { footer, header, topBar } from "./chrome";
+import { node, text, type OgNode } from "./node";
+import { OG_HEIGHT, OG_WIDTH } from "./size.ts";
+import { advanceOf, fitLines, fitOneLine } from "./text";
 
 /** 画布坐标 → 卡片内容区坐标（border-box 下绝对定位子元素从 padding box 起算） */
 const inset = (x: number, y: number) => ({ left: x - CARD_ORIGIN.x, top: y - CARD_ORIGIN.y });
