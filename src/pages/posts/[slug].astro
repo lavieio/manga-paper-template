@@ -13,7 +13,9 @@ import {
   getPublishedPosts,
   getPostSlug,
   getCategory,
-  toUrlSegment,
+  categoryUrl,
+  tagUrl,
+  postUrl,
 } from "../../utils/content/posts";
 import { categoryColor } from "../../utils/content/category";
 import { estimateReadTime } from "../../utils/content/readtime";
@@ -64,7 +66,7 @@ const jsonLd = privatePayload
   ? undefined
   : blogPostingJsonLd(
       {
-        url: new URL(`/posts/${getPostSlug(post)}/`, Astro.site).href,
+        url: new URL(postUrl(post), Astro.site).href,
         title: post.data.title,
         description: post.data.description,
         published: post.data.date,
@@ -101,12 +103,12 @@ const jsonLd = privatePayload
       <>
         <div class="post-head">
           <div class="stickers">
-            <a class={`sticker ${categoryColor(category)}`} href={`/category/${toUrlSegment(category)}`}>
+            <a class={`sticker ${categoryColor(category)}`} href={categoryUrl(category)}>
               {category}
             </a>
             {
               post.data.tags.map((tag: string) => (
-                <a class="sticker blue" href={`/tags/${toUrlSegment(tag)}`}>
+                <a class="sticker blue" href={tagUrl(tag)}>
                   {tag}
                 </a>
               ))
@@ -129,7 +131,7 @@ const jsonLd = privatePayload
         <nav class="post-nav">
           {
             prev ? (
-              <a class="nav-card" href={`/posts/${getPostSlug(prev)}`}>
+              <a class="nav-card" href={postUrl(prev)}>
                 <div class="lbl">← 上一篇</div>
                 <b>{prev.data.title}</b>
               </a>
@@ -139,7 +141,7 @@ const jsonLd = privatePayload
           }
           {
             next && (
-              <a class="nav-card next" href={`/posts/${getPostSlug(next)}`}>
+              <a class="nav-card next" href={postUrl(next)}>
                 <div class="lbl">下一篇 →</div>
                 <b>{next.data.title}</b>
               </a>
