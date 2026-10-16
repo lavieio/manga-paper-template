@@ -3,9 +3,10 @@ title: MangaPaper 使用指南：从改配置到部署上线
 description: 从创建仓库、配置站点信息与关于页，到编写文章、设置环境变量，再到部署至 Vercel 或 Cloudflare Pages，一步步搭建自己的 MangaPaper 博客。
 tags: [博客, 开源]
 date: 2026-10-14
+updated: 2026-10-16
 ---
 
-[上一篇文章](/posts/about-manga-paper)介绍了 MangaPaper 的设计理念与核心功能。这一篇换个角度，只讲一件事：**怎样把 MangaPaper 变成你自己的博客。**
+[上一篇文章](/posts/about-manga-paper/)介绍了 MangaPaper 的设计理念与核心功能。这一篇换个角度，只讲一件事：**怎样把 MangaPaper 变成你自己的博客。**
 
 整个过程可以分为几个步骤：创建仓库、本地运行、修改配置、编写文章，最后部署上线。如果只是修改基本信息并完成部署，通常很快就能跑起来；关于页定制、评论和统计等功能，则可以根据需要逐步完善。
 
@@ -392,11 +393,11 @@ PRIVATE_PASSWORD=一个足够强的密码
 
 Vercel 部署中有一个容易忽略的细节：**Vercel 不读取发布目录中的 `_headers` 文件作为自身的响应头配置。**
 
-因此，MangaPaper 将 Vercel 专用的安全响应头和重定向配置放在仓库根目录的 `vercel.ts` 中。Vercel 会在构建阶段执行这份程序化配置，并根据环境变量动态生成相应规则。
+因此，MangaPaper 将 Vercel 专用的安全响应头与尾斜杠策略放在仓库根目录的 `vercel.ts` 中。Vercel 会在构建阶段执行这份程序化配置，并根据环境变量动态生成相应规则。
 
-Cloudflare Pages 使用的则是构建产物中的 `dist/_headers` 和 `dist/_redirects`，两套配置的入口不同，但都可以根据环境变量生成。
+Cloudflare Pages 使用的则是构建产物中的 `dist/_headers`，两套配置的入口不同，但都可以根据环境变量生成。
 
-使用者通常不需要修改这些文件。比如配置了 remark42 后，对应域名会自动加入相关 CSP 白名单，不必再手动维护部署规则。
+使用者通常不需要修改这个文件。比如配置了 remark42 后，对应域名会自动加入相关 CSP 白名单，不必再手动维护部署规则。
 
 如果只是更改博客名称、文章内容、评论服务等常规设置，继续通过配置文件和环境变量操作即可。
 
@@ -441,9 +442,8 @@ PRIVATE_PASSWORD=一个足够强的密码
 与 Vercel 不同，Cloudflare Pages 会读取发布目录中的配置文件：
 
 - `dist/_headers`：定义 HTTP 响应头。
-- `dist/_redirects`：定义重定向规则。
 
-这两个文件由 MangaPaper 在构建阶段生成，因此不需要手动创建或长期维护生成结果。
+这个文件由 MangaPaper 在构建阶段生成，因此不需要手动创建或长期维护生成结果。
 
 如果配置了 remark42 或 GA4 等服务，相关域名也会按需进入 CSP 白名单。这样可以让部署配置与实际启用的服务保持一致，避免为了不同环境反复编辑响应头文件。
 

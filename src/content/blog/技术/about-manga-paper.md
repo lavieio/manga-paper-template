@@ -4,7 +4,7 @@ description: 一个为技术写作而设计的开源 Astro 博客模板。点阵
 tags: [博客, 开源]
 featured: true
 date: 2026-09-16
-updated: 2026-10-14
+updated: 2026-10-16
 ---
 
 ## 为什么做 MangaPaper
@@ -203,7 +203,7 @@ private: true
 
 从基本配置、关于页定制，到文章编写、环境变量和部署上线，我把具体步骤单独整理成了另一篇文章：
 
-**[MangaPaper 使用指南：从改配置到部署上线](/posts/manga-paper-usage-guide)**
+**[MangaPaper 使用指南：从改配置到部署上线](/posts/manga-paper-usage-guide/)**
 
 你可以先通过这篇文章了解 MangaPaper 的设计思路与功能，再根据使用指南逐步搭建自己的博客。
 
