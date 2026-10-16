@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { getPublishedPosts, getPostSlug, getCategory } from "../utils/content/posts";
+import { getPublishedPosts, getCategory, postUrl } from "../utils/content/posts";
 import { formatMonthDay, getYear } from "../utils/content/format";
 import { estimateReadTime } from "../utils/content/readtime";
 
@@ -32,7 +32,7 @@ const earliest = posts.at(-1);
             <div class="t-item">
               <span class="date">{formatMonthDay(post.data.date)}</span>
               <h2>
-                <a href={`/posts/${getPostSlug(post)}`}>{post.data.title}</a>
+                <a href={postUrl(post)}>{post.data.title}</a>
               </h2>
               <span class="mins">
                 {getCategory(post)} · {estimateReadTime(post.body ?? "")} 分钟

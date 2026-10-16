@@ -3,7 +3,7 @@ import Base from "../../layouts/Base.astro";
 import PostCard from "../../components/PostCard.astro";
 import Pagination from "../../components/Pagination.astro";
 import { posts as postsConfig } from "../../config";
-import { getPublishedPosts, getCategory, toUrlSegment } from "../../utils/content/posts";
+import { getPublishedPosts, getCategory, categoryUrl } from "../../utils/content/posts";
 import type { GetStaticPathsOptions } from "astro";
 
 export const PAGE_SIZE = postsConfig.perPage;
@@ -31,7 +31,7 @@ const total = page.total;
     <span class="filter on">全部</span>
     {
       categories.map((c) => (
-        <a class="filter" href={`/category/${toUrlSegment(c)}`}>
+        <a class="filter" href={categoryUrl(c)}>
           {c}
         </a>
       ))
@@ -42,7 +42,7 @@ const total = page.total;
     {page.data.map((post) => <PostCard post={post} />)}
   </section>
 
-  <Pagination currentPage={page.currentPage} lastPage={page.lastPage} />
+  <Pagination currentPage={page.currentPage} lastPage={page.lastPage} base="/posts/" />
 </Base>
 
 <style>
