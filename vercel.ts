@@ -7,18 +7,13 @@
  * 静态的 `vercel.json` 做不到这件事（Vercel 也不插值 env），
  * 用 TS 就不用把任何生成物提交进 git。
  *
- * 同一份策略还会渲染成 `dist/_headers` 与 `dist/_redirects` 给 Cloudflare Pages / Netlify 用；
+ * 同一份策略还会渲染成 `dist/_headers` 给 Cloudflare Pages / Netlify 用；
  * 唯一来源是 `src/utils/deploy/deploy-policy.ts`：两个出口（本文件与 `dist/_headers`）必须逐条一致。
  *
  * 刻意不装 `@vercel/config`：这里只用 config 的原始形状（与 `vercel.json` 同构），
  * 装了只是编辑器里多一层类型提示。
  */
-import {
-  buildHeaderRules,
-  buildRedirectRules,
-  toVercelHeaders,
-  toVercelRedirects,
-} from "./src/utils/deploy/deploy-policy.ts";
+import { buildHeaderRules, toVercelHeaders } from "./src/utils/deploy/deploy-policy.ts";
 import { loadEnvFiles } from "./src/utils/env/load-env.ts";
 
 // Vercel 构建时环境变量已经注入（优先级更高），这里负责本机 / 其他 CI 退回读 .env
@@ -29,11 +24,16 @@ export const config = {
   framework: "astro",
   buildCommand: "npm run build",
   outputDirectory: "dist",
+  /**
+   * 尾斜杠是规范形式：产物里每个页面都是 `<path>/index.html`，sitemap 与站内链接也一律带尾斜杠。
+   * 不设的话 Vercel 默认 `false`，会把 `/posts/` 308 成 `/posts`——
+   * 与 Cloudflare Pages（保留尾斜杠）不一致，canonical 与 sitemap 也跟着对不上。
+   */
+  trailingSlash: true,
   headers: toVercelHeaders(
     buildHeaderRules({
       remark42Host: process.env.PUBLIC_REMARK42_HOST,
       gaMeasurementId: process.env.PUBLIC_GA_MEASUREMENT_ID,
     }),
   ),
-  redirects: toVercelRedirects(buildRedirectRules()),
 };
