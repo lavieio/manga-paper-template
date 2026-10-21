@@ -80,7 +80,7 @@ npm run dev
 
 ## 🎛 站点配置
 
-站名、作者、简介、首页快捷入口和分页设置统一放在仓库根目录的 **`manga-paper.config.ts`** 中。
+站名、作者、简介、语言、时区、页脚、首页快捷入口和分页设置统一放在仓库根目录的 **`manga-paper.config.ts`** 中。
 
 ```ts
 import { defineConfig } from "./src/types/config";
@@ -91,6 +91,16 @@ export default defineConfig({
     tagline: "A loose-leaf, comic-paper, monospace blog theme",
     author: "lavie",
     bio: "漫画稿纸风格的开源博客模板",
+    lang: "zh-CN",              // HTML lang / OG locale / RSS / JSON-LD
+    timeZone: "Asia/Shanghai",  // 日期展示时区
+    favicon: "/favicon.svg",
+    sealText: "M",              // 页头与默认分享卡的印章字；缺省取站名首字
+    footer: {
+      copyright: "Copyright © {year} | All rights reserved.",
+      links: [
+        // { label: "京ICP备12345678号", href: "https://beian.miit.gov.cn/" },
+      ],
+    },
   },
   posts: {
     perPage: 8,       // 列表每页篇数
@@ -107,10 +117,19 @@ export default defineConfig({
 
 | 配置项 | 作用 |
 | --- | --- |
-| `site.name` / `site.tagline` | 站点名称与简介，用于页头、页面标题、RSS 和默认分享信息 |
+| `site.name` / `site.tagline` | 站点名称与简介，用于页头品牌、页面标题、RSS 和默认分享信息 |
 | `site.author` / `site.bio` | 作者与站点简介；也用于关于页描述或默认分享卡片的文案兜底 |
+| `site.lang` / `site.timeZone` | HTML `lang`、OG locale、RSS 与 JSON-LD 语言 / 日期展示时区；默认 `zh-CN` / `Asia/Shanghai` |
+| `site.favicon` / `site.sealText` | favicon 路径 / 页头与默认分享卡的印章字；印章缺省取站名首字 |
+| `site.footer` | `copyright` 支持 `{year}` 占位；`links[]` 放 ICP / 公安备案或自定义入口 |
 | `posts.perPage` / `posts.recentCount` | 列表分页篇数 / 首页「最近更新」条数 |
 | `socials[]` | 首页快捷入口，数组顺序即显示顺序；`primary: true` 用于突出主入口，最多设置一个 |
+
+`site.footer.copyright` 里的 `{year}` 会替换成站点时区下的当前年份；`site.footer.links` 适合放 ICP 备案、公安备案或其它页脚入口，内容为空时整行不渲染。
+
+> `site.lang` 只影响 `<html lang>`、分享卡片 locale、RSS 与 JSON-LD 的语言元数据，不会自动翻译界面文案。
+>
+> `site.timeZone` 只影响日期展示与页脚年份；`date` / `updated` 的注入钩子独立运行，固定使用 `Asia/Shanghai`。
 
 `socials` 只控制**首页快捷入口条**，不会显示在关于页。RSS 由模板自动追加，无需重复配置；页脚自带 RSS 与私密文章入口。
 

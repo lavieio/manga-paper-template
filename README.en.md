@@ -80,7 +80,7 @@ Open [http://localhost:4321](http://localhost:4321). The Pagefind search index i
 
 ## 🎛 Site configuration
 
-The site name, author, bio, homepage shortcuts, and pagination settings live in **`manga-paper.config.ts`** at the repository root.
+The site name, author, bio, language, time zone, footer, homepage shortcuts, and pagination settings live in **`manga-paper.config.ts`** at the repository root.
 
 ```ts
 import { defineConfig } from "./src/types/config";
@@ -91,6 +91,16 @@ export default defineConfig({
     tagline: "A loose-leaf, comic-paper, monospace blog theme",
     author: "lavie",
     bio: "An open-source blog template with a comic-paper aesthetic",
+    lang: "en-US",              // <html lang>, OG locale, RSS and JSON-LD
+    timeZone: "Asia/Shanghai",  // Time zone for displayed dates
+    favicon: "/favicon.svg",
+    sealText: "M",              // Header / default share-card seal; defaults to the first character of the name
+    footer: {
+      copyright: "Copyright © {year} | All rights reserved.",
+      links: [
+        // { label: "ICP filing number", href: "https://beian.miit.gov.cn/" },
+      ],
+    },
   },
   posts: {
     perPage: 8,       // Posts per listing page
@@ -107,10 +117,19 @@ export default defineConfig({
 
 | Setting | Purpose |
 | --- | --- |
-| `site.name` / `site.tagline` | Site name and tagline, used in the header, page titles, RSS, and default sharing metadata |
+| `site.name` / `site.tagline` | Site name and tagline, used in the header brand, page titles, RSS, and default sharing metadata |
 | `site.author` / `site.bio` | Author and site description; also used as fallbacks for the About page description and default share-card copy |
+| `site.lang` / `site.timeZone` | HTML `lang`, OG locale, RSS and JSON-LD language / time zone for displayed dates; defaults to `zh-CN` / `Asia/Shanghai` |
+| `site.favicon` / `site.sealText` | Favicon path / header and default share-card seal; the seal defaults to the first character of the site name |
+| `site.footer` | `copyright` supports a `{year}` placeholder; `links[]` holds ICP / public-security filings or custom entries |
 | `posts.perPage` / `posts.recentCount` | Posts per listing page / number of recent posts on the homepage |
 | `socials[]` | Homepage shortcuts, displayed in array order; `primary: true` highlights the main link. Set it on at most one item. |
+
+The `{year}` placeholder in `site.footer.copyright` is replaced with the current year in the site time zone. `site.footer.links` is intended for ICP / public-security filings or other footer entries; the row is not rendered when the list is empty.
+
+> `site.lang` only affects language metadata such as `<html lang>`, share-card locale, RSS and JSON-LD; it does not translate UI copy.
+>
+> `site.timeZone` only affects displayed dates and the footer year. The `date` / `updated` injection hook runs independently and always uses `Asia/Shanghai`.
 
 `socials` controls **only the homepage shortcut bar**; these links are not shown on the About page. The template appends RSS automatically, so do not add it again. RSS and the private-post link are included in the footer by default.
 
