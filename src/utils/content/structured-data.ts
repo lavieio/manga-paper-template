@@ -9,15 +9,16 @@ import type { SiteConfig } from "../../config";
  */
 
 const SCHEMA_CONTEXT = "https://schema.org";
-const LANGUAGE = "zh-CN";
 
-/** 站点身份：各节点共用的 name / url / author */
+/** 站点身份：各节点共用的 name / url / author / lang */
 export interface JsonLdSite {
   /** 站点根 URL（绝对地址，含结尾斜杠） */
   readonly url: string;
   readonly name: string;
   readonly tagline: string;
   readonly author: string;
+  /** 站点语言（来自 site.lang） */
+  readonly lang: string;
 }
 
 /** 文章侧字段（调用方负责归一：日期给 Date、URL 给绝对地址） */
@@ -39,7 +40,7 @@ export interface JsonLdNode {
 
 /** 把 Astro.site 与站点配置拼成 JSON-LD 用的站点身份 */
 export function siteFacts(
-  config: Pick<SiteConfig, "name" | "tagline" | "author">,
+  config: Pick<SiteConfig, "name" | "tagline" | "author" | "lang">,
   siteUrl: URL | undefined,
 ): JsonLdSite {
   if (!siteUrl) throw new Error("[structured-data] 缺少 site 配置（SITE_URL 未生效），无法生成 JSON-LD");
@@ -49,6 +50,7 @@ export function siteFacts(
     name: config.name,
     tagline: config.tagline,
     author: config.author,
+    lang: config.lang,
   };
 }
 
@@ -59,7 +61,7 @@ export function websiteJsonLd(site: JsonLdSite): JsonLdNode {
     name: site.name,
     url: site.url,
     description: site.tagline,
-    inLanguage: LANGUAGE,
+    inLanguage: site.lang,
     publisher: person(site.author),
   };
 }
@@ -71,7 +73,7 @@ export function blogJsonLd(site: JsonLdSite): JsonLdNode {
     name: site.name,
     url: site.url,
     description: site.tagline,
-    inLanguage: LANGUAGE,
+    inLanguage: site.lang,
     author: person(site.author),
     publisher: person(site.author),
   };
@@ -87,7 +89,7 @@ export function blogPostingJsonLd(post: JsonLdPost, site: JsonLdSite): JsonLdNod
     mainEntityOfPage: post.url,
     datePublished: iso(post.published),
     dateModified: iso(post.updated ?? post.published),
-    inLanguage: LANGUAGE,
+    inLanguage: site.lang,
     author: person(site.author),
     publisher: person(site.author),
     // 可选字段给 undefined：JSON.stringify 会整个丢掉该键，不用手工拼对象

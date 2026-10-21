@@ -8,10 +8,11 @@
 import userConfig from "../manga-paper.config";
 import { parseGaMeasurementId } from "./utils/env/analytics";
 import { isEnabledFlag } from "./utils/env/env-flag";
+import { resolveSiteConfig, type ResolvedSiteConfig } from "./utils/site/identity";
 import { RSS_SOCIAL, resolveSocials } from "./utils/social/links";
 
-/** 站点身份与文案：换站只改 manga-paper.config.ts 的 site */
-export const site = { ...userConfig.site } as const;
+/** 站点身份与文案：换站只改 manga-paper.config.ts 的 site；默认值与校验在 resolveSiteConfig */
+export const site: ResolvedSiteConfig = resolveSiteConfig(userConfig.site);
 
 /** 内容组织：列表分页篇数与首页「最近更新」条数 */
 export const posts = { ...userConfig.posts } as const;
@@ -64,4 +65,4 @@ export const isVercelAnalyticsEnabled = vercelObservability.analytics && vercelO
 export const isVercelSpeedInsightsEnabled = vercelObservability.speedInsights && vercelObservability.onVercel;
 export const isVercelInsightsEnabled = isVercelAnalyticsEnabled || isVercelSpeedInsightsEnabled;
 
-export type SiteConfig = typeof site;
+export type SiteConfig = ResolvedSiteConfig;

@@ -2,6 +2,7 @@ import rss from "@astrojs/rss";
 import type { APIContext } from "astro";
 import { getPublishedPosts, getPostSlug } from "../utils/content/posts";
 import { site } from "../config";
+import { toRssLanguage } from "../utils/site/locale";
 
 /** RSS 2.0：摘要用 frontmatter description，私密/草稿天然缺席 */
 export async function GET(context: APIContext) {
@@ -20,6 +21,6 @@ export async function GET(context: APIContext) {
       link: `/posts/${getPostSlug(post)}/`,
       categories: post.data.tags,
     })),
-    customData: `<language>zh-cn</language><lastBuildDate>${lastBuild.toUTCString()}</lastBuildDate>`,
+    customData: `<language>${toRssLanguage(site.lang)}</language><lastBuildDate>${lastBuild.toUTCString()}</lastBuildDate>`,
   });
 }
