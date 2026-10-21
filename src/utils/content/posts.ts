@@ -114,6 +114,27 @@ export function toUrlSegment(value: string): string {
   return encodeURIComponent(value);
 }
 
+/*
+ * 站内地址一律带尾斜杠：产物里每个页面都是 `<path>/index.html`，sitemap 也是这个形状。
+ * 两个平台（Cloudflare Pages 默认、Vercel 的 trailingSlash: true）都以此为准，站内就不产生跳转。
+ * 分页页面的地址 = 第 1 页地址 + 编号 + "/"，所以这几个构造函数返回的都以 "/" 结尾。
+ */
+
+/** 文章详情地址 */
+export function postUrl(post: BlogPost): string {
+  return `/posts/${getPostSlug(post)}/`;
+}
+
+/** 分类页第 1 页的地址（第 2 页起 `<base>N/`） */
+export function categoryUrl(category: string): string {
+  return `/category/${toUrlSegment(category)}/`;
+}
+
+/** 标签页第 1 页的地址（第 2 页起 `<base>N/`） */
+export function tagUrl(tag: string): string {
+  return `/tags/${toUrlSegment(tag)}/`;
+}
+
 export interface SiteStats {
   posts: number;
   categories: number;

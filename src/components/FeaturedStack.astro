@@ -7,7 +7,7 @@
  * - prefers-reduced-motion：不自动播放，切换瞬时
  */
 import type { DatedPost } from "../utils/content/posts";
-import { getPostSlug, getCategory } from "../utils/content/posts";
+import { getPostSlug, getCategory, postUrl } from "../utils/content/posts";
 import { estimateReadTime } from "../utils/content/readtime";
 import { formatDate } from "../utils/content/format";
 
@@ -61,7 +61,7 @@ const stacked = sheets.length > 1;
             「可访问名」与「可见文本」就不会互相打架（WCAG 2.5.3 Label in Name）。
             后层纸片的点击仍由脚本在 .sheet 上拦下来，改成「抽到顶层」。
           */}
-          <a class="cover" href={`/posts/${getPostSlug(post)}`}>
+          <a class="cover" href={postUrl(post)}>
             <span class="sr-only">
               精选文章：{post.data.title}（{getCategory(post)} · {formatDate(post.data.date)} ·{" "}
               {estimateReadTime(post.body ?? "")} 分钟）

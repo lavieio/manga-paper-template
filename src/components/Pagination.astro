@@ -2,9 +2,11 @@
 interface Props {
   currentPage: number;
   lastPage: number;
+  /** 第 1 页的地址，必须以 `/` 结尾：`/posts/`、`/category/%E6%8A%80%E6%9C%AF/`、`/tags/%E6%8C%87%E5%8D%97/` */
+  base: string;
 }
 
-const { currentPage, lastPage } = Astro.props;
+const { currentPage, lastPage, base } = Astro.props;
 
 const PAGE_WINDOW = 7;
 
@@ -22,8 +24,8 @@ function pageItems(current: number, last: number): (number | "…")[] {
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
-/** 编号页一律 /posts/N（第 1 页在 /posts/1，`/posts/` 由 _redirects 301 过去） */
-const pageUrl = (n: number) => `/posts/${n}`;
+/** 第 1 页就是裸地址，第 2 页起是 `base + 编号 + /`（产物是 `<编号>/index.html`，尾斜杠才是规范形式） */
+const pageUrl = (n: number) => (n <= 1 ? base : `${base}${n}/`);
 const items = pageItems(currentPage, lastPage);
 ---
 

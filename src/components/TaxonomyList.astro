@@ -1,0 +1,88 @@
+---
+/**
+ * 分类页 / 标签页共用的列表体。
+ *
+ * 两页的差别只有标题、计数贴纸底色与返回链接，其余（卡片网格、分页器、样式）完全一致，
+ * 所以放在这里一份；页面文件只负责取数与 `<Base>` 的 title/description。
+ */
+import PostCard from "./PostCard.astro";
+import Pagination from "./Pagination.astro";
+import type { Page } from "astro";
+import type { BlogPost } from "../utils/content/posts";
+
+interface Props {
+  /** 页面主标题（分类名，或标签页的 `# 标签名`） */
+  heading: string;
+  /** 该分类 / 标签下的文章总数（翻到第 N 页也仍是总数） */
+  count: number;
+  /** 计数贴纸底色：分类用黄、标签用青 */
+  accent: "yellow" | "cyan";
+  backHref: string;
+  backLabel: string;
+  page: Page<BlogPost>;
+  /** 分页第 1 页的地址（分类页 / 标签页各自的裸地址） */
+  base: string;
+}
+
+const { heading, count, accent, backHref, backLabel, page, base } = Astro.props;
+---
+
+<div class={`tax-head ${accent}`}>
+  <h1>{heading}</h1>
+  <span class="sticker">{count} 篇</span>
+  <a class="back" href={backHref}>{backLabel}</a>
+</div>
+
+<section class="cards">
+  {page.data.map((post) => <PostCard post={post} />)}
+</section>
+
+<Pagination currentPage={page.currentPage} lastPage={page.lastPage} base={base} />
+
+<style>
+  .tax-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 8px 0 30px;
+    flex-wrap: wrap;
+  }
+  .tax-head h1 {
+    font-size: 26px;
+    font-weight: 700;
+  }
+  .tax-head .back {
+    margin-left: auto;
+    font-size: 13px;
+    /* 行盒只有 22.8px，把可点区域撑到 24px（WCAG 2.5.8） */
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
+    color: var(--ink-soft);
+  }
+  .tax-head .back:hover {
+    color: var(--red-ink);
+  }
+  .sticker {
+    display: inline-block;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border: 2px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    color: var(--on-light-fill);
+  }
+  .tax-head.yellow .sticker {
+    background: var(--yellow);
+    transform: rotate(-1deg);
+  }
+  .tax-head.cyan .sticker {
+    background: var(--cyan);
+    transform: rotate(-1.2deg);
+  }
+  .cards {
+    display: grid;
+    gap: 26px;
+  }
+</style>

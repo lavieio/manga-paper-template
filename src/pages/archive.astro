@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { getPublishedPosts, getPostSlug, getCategory } from "../utils/content/posts";
+import { getPublishedPosts, getCategory, postUrl } from "../utils/content/posts";
 import { formatMonthDay, getYear } from "../utils/content/format";
 import { estimateReadTime } from "../utils/content/readtime";
 
@@ -12,15 +12,17 @@ for (const post of posts) {
   byYear.set(year, [...(byYear.get(year) ?? []), post]);
 }
 const years = [...byYear.keys()].sort((a, b) => b - a);
-const earliest = posts.at(-1);
 ---
 
 <Base
   title="归档"
   description={`共 ${posts.length} 篇文章的时间线（跨 ${years.length} 个年份），按发布时间倒序。`}
 >
-  <div class="page-head">
-    <h1>时间轴</h1>
+  <h1>文章归档</h1>
+
+  <div class="summary">
+    <span>记录从这里开始</span>
+    <span>共 <strong>{posts.length}</strong> 篇文章</span>
   </div>
 
   <section class="timeline">
@@ -32,7 +34,7 @@ const earliest = posts.at(-1);
             <div class="t-item">
               <span class="date">{formatMonthDay(post.data.date)}</span>
               <h2>
-                <a href={`/posts/${getPostSlug(post)}`}>{post.data.title}</a>
+                <a href={postUrl(post)}>{post.data.title}</a>
               </h2>
               <span class="mins">
                 {getCategory(post)} · {estimateReadTime(post.body ?? "")} 分钟
@@ -46,11 +48,22 @@ const earliest = posts.at(-1);
 </Base>
 
 <style>
-  .page-head {
-    margin: 8px 0 40px;
-  }
-  .page-head h1 {
+  h1 {
+    margin: 8px 0 0;
     font-size: 30px;
+    font-weight: 700;
+  }
+  .summary {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 14px 0 30px;
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+  .summary strong {
+    color: var(--ink);
+    font-size: 15px;
     font-weight: 700;
   }
 

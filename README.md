@@ -292,7 +292,7 @@ MangaPaper 输出纯静态文件，构建产物位于 `dist/`。选择 Vercel �
 │       ├── og/                   # OG 分享卡片：渲染管线与 og:image 取值
 │       ├── content/              # 文章内容管线：读取、分类、格式化、阅读时长、结构化数据
 │       ├── env/                  # 环境变量、站点地址、统计
-│       ├── deploy/               # 安全响应头与 301 策略
+│       ├── deploy/               # 安全响应头与部署策略
 │       ├── social/               # 首页入口与内置图标
 │       ├── crypto/               # 私密文章加密
 │       ├── image/                # 外链图片尺寸探测
@@ -328,6 +328,7 @@ MangaPaper 输出纯静态文件，构建产物位于 `dist/`。选择 Vercel �
 欢迎通过 [GitHub Issues](https://github.com/lavieio/manga-paper-template/issues) 提交问题、建议或功能请求。
 
 - 模板代码：[MIT License](LICENSE)
+- 版本变更：[CHANGELOG.md](CHANGELOG.md)
 - Maple Mono NF CN 字体：[SIL Open Font License 1.1](https://github.com/subframe7536/maple-font)
 
 ---

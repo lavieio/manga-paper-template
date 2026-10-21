@@ -292,7 +292,7 @@ For supported platforms, the build generates security-header configuration inclu
 │       ├── og/                   # OG social cards: render pipeline and og:image policy
 │       ├── content/              # post pipeline: loading, categories, formatting, reading time, structured data
 │       ├── env/                  # environment variables, site URL, analytics
-│       ├── deploy/               # security headers and the 301 policy
+│       ├── deploy/               # security headers and deploy policy
 │       ├── social/               # homepage entries and built-in icons
 │       ├── crypto/               # private-post encryption
 │       ├── image/                # remote image size probing
@@ -328,6 +328,7 @@ The template aims to reduce the initial page load: fonts are self-hosted and sub
 Please use [GitHub Issues](https://github.com/lavieio/manga-paper-template/issues) for bug reports, suggestions, and feature requests.
 
 - Template code: [MIT License](LICENSE)
+- Release history: [CHANGELOG.md](CHANGELOG.md)
 - Maple Mono NF CN font: [SIL Open Font License 1.1](https://github.com/subframe7536/maple-font)
 
 ---

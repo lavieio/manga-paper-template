@@ -1,8 +1,8 @@
 /**
- * 部署层策略的唯一来源：安全响应头 + 重定向。
+ * 部署层策略的唯一来源：安全响应头。
  *
  * 同一份策略有两个出口，因为两个平台看的地方不同：
- * - `dist/_headers`、`dist/_redirects`：Cloudflare Pages / Netlify 读**发布目录**里的这两个文件，
+ * - `dist/_headers`：Cloudflare Pages / Netlify 读**发布目录**里的这个文件，
  *   由 `scripts/build-deploy-config.ts` 生成；
  * - `vercel.ts`：Vercel 只认仓根的配置文件，但它支持 TypeScript——那份**在 Vercel 构建时执行**，
  *   直接读环境变量，所以仓库里不需要提交任何生成物。
@@ -192,58 +192,6 @@ export function toVercelHeaders(rules: readonly HeaderRule[]): VercelHeaderRule[
   return rules.map((rule) => ({
     source: toVercelSource(rule.source),
     headers: rule.headers.map((entry) => ({ key: entry.name, value: entry.value })),
-  }));
-}
-
-/* ── 重定向 ─────────────────────────────────────────────────────────────
-   分页第一页住在 /posts/1，两个旧地址都用真 301 收口，免得它们变成 404
-   或者和第一页内容重复：
-   - `/posts/`：Astro 不再生成的旧地址；
-   - `/posts`（不带斜杠）：压根没这个路由——产物里它只是 `posts/` 这个目录，
-     静态托管请求它直接 404。带不带斜杠在各平台的处理并不一致，两条都写上。 */
-
-/** 文章列表第一页的地址（`[...page].astro` 改成 `[page].astro` 后就住在这里） */
-export const POSTS_FIRST_PAGE = "/posts/1";
-const MOVED_PERMANENTLY = 301;
-/** 要 301 到第一页的旧地址 */
-const POSTS_LEGACY_PATHS: readonly string[] = ["/posts/", "/posts"];
-
-export interface RedirectRule {
-  readonly source: string;
-  readonly destination: string;
-  readonly status: number;
-}
-
-export function buildRedirectRules(): RedirectRule[] {
-  return POSTS_LEGACY_PATHS.map((source) => ({
-    source,
-    destination: POSTS_FIRST_PAGE,
-    status: MOVED_PERMANENTLY,
-  }));
-}
-
-const REDIRECTS_DOC = [
-  "# 真 301（Cloudflare Pages / Netlify 的 _redirects 语法）",
-  "# ⚠️ 本文件由 `node scripts/build-deploy-config.ts` 生成，改这里会被下次构建覆盖——",
-  "#    要改规则请改 src/utils/deploy/deploy-policy.ts；Vercel 那份在仓根的 vercel.ts 里。",
-  "# 分页第一页的正式地址是 /posts/1；/posts/ 与 /posts 都是旧地址，一并 301 过去。",
-].join("\n");
-
-/** `_redirects`：`源 目标 状态码`，一行一条 */
-export function renderRedirectsFile(rules: readonly RedirectRule[]): string {
-  const body = rules.map((rule) => `${rule.source} ${rule.destination} ${rule.status}`).join("\n");
-  return `${REDIRECTS_DOC}\n\n${body}\n`;
-}
-
-export function toVercelRedirects(rules: readonly RedirectRule[]): {
-  readonly source: string;
-  readonly destination: string;
-  readonly statusCode: number;
-}[] {
-  return rules.map((rule) => ({
-    source: toVercelSource(rule.source),
-    destination: rule.destination,
-    statusCode: rule.status,
   }));
 }
 

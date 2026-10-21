@@ -1,6 +1,6 @@
 ---
 import type { DatedPost } from "../utils/content/posts";
-import { getPostSlug, getCategory } from "../utils/content/posts";
+import { getCategory, postUrl } from "../utils/content/posts";
 import { categoryColor } from "../utils/content/category";
 import { estimateReadTime } from "../utils/content/readtime";
 import { formatDate } from "../utils/content/format";
@@ -12,7 +12,7 @@ interface Props {
 const { post } = Astro.props;
 const category = getCategory(post);
 const minutes = estimateReadTime(post.body ?? "");
-const href = `/posts/${getPostSlug(post)}`;
+const href = postUrl(post);
 ---
 
 <a class="card" href={href}>

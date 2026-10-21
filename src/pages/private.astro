@@ -137,7 +137,7 @@ if (posts.length > 0) {
       list.innerHTML = cards
         .map(
           (c) => `
-        <a class="card" href="/posts/${esc(c.slug)}">
+        <a class="card" href="/posts/${esc(c.slug)}/">
           <div class="top">
             <span class="sticker ${categoryColor(c.category)}">${esc(c.category)}</span>
             ${c.tags.map((t) => `<span class="sticker blue">${esc(t)}</span>`).join("")}
