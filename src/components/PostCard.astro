@@ -20,6 +20,7 @@ const href = postUrl(post);
 <a class="card" href={href}>
   <div class="top">
     <span class={`sticker ${categoryStickerColor}`}>{category}</span>
+    {post.data.draft && <span class="sticker red">草稿</span>}
     {post.data.featured && <span class="sticker red">精选</span>}
   </div>
   <h2>{post.data.title}</h2>

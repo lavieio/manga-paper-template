@@ -3,7 +3,7 @@ title: MangaPaper 使用指南：从改配置到部署上线
 description: 从创建仓库、配置站点信息与关于页，到编写文章、设置环境变量，再到部署至 Vercel 或 Cloudflare Pages，一步步搭建自己的 MangaPaper 博客。
 tags: [博客, 开源]
 date: 2026-10-14
-updated: 2026-10-16
+updated: 2026-10-22
 ---
 
 [上一篇文章](/posts/about-manga-paper/)介绍了 MangaPaper 的设计理念与核心功能。这一篇换个角度，只讲一件事：**怎样把 MangaPaper 变成你自己的博客。**
@@ -275,7 +275,7 @@ private: false
 | `description` | 文章摘要，用于 SEO、RSS 和分享卡片 |
 | `tags` | 文章标签，可以有多个 |
 | `featured` | 可选，设为 `true` 后加入首页精选轮播 |
-| `draft` | 可选，设为 `true` 后在构建时排除 |
+| `draft` | 可选，设为 `true` 后仅开发环境预览，生产构建排除 |
 | `private` | 可选，设为 `true` 后在构建阶段加密 |
 
 普通公开文章不需要设置 `draft` 或 `private`，也不必手动填写 `false`。只有需要启用相应功能时，再添加对应字段即可。
@@ -298,7 +298,7 @@ private: false
 
 `draft` 和 `private` 用于解决两种不同的需求。
 
-- **草稿**：用于暂时不准备发布的文章。设置 `draft: true` 后，文章会在构建时被排除，也不会进入正常的公开内容产物。
+- **草稿**：用于暂时不准备发布的文章。设置 `draft: true` 后，`npm run dev` 仍会显示这篇文章，并在列表卡片和详情页标注「草稿」，方便本地预览；`npm run build` 会完全排除它，不会生成页面，也不会进入 RSS、sitemap、Pagefind 或 OG 分享图。
 - **私密文章**：用于希望保留在站点中、但不直接公开展示的内容。设置 `private: true` 后，文章会在构建阶段加密，并通过 `/private` 页面提供解锁入口。
 
 私密文章不仅会从普通文章列表中排除，还会从归档、标签、分类、RSS、sitemap 和搜索索引中排除。它的详细加密方式及安全边界，可以参考项目介绍中「私密文章」一节。

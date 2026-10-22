@@ -4,7 +4,7 @@ import { getPublishedPosts, getPostSlug } from "../utils/content/posts";
 import { site } from "../config";
 import { toRssLanguage } from "../utils/site/locale";
 
-/** RSS 2.0：摘要用 frontmatter description，私密/草稿天然缺席 */
+/** RSS 2.0：摘要用 frontmatter description；私密文章缺席，草稿只在开发环境出现 */
 export async function GET(context: APIContext) {
   const posts = await getPublishedPosts();
   const lastBuild = posts[0]?.data.date ?? new Date();

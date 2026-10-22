@@ -24,7 +24,7 @@ import { blogPostingJsonLd, siteFacts } from "../../utils/content/structured-dat
 import { postShareImage } from "../../utils/og/share";
 
 export async function getStaticPaths() {
-  // 详情页路由取全量（含私密）；上一篇/下一篇只取公开文章（不泄露私密标题）
+  // 详情页路由取全量（含私密；dev 下也含草稿）；上一篇/下一篇只取公开文章（生产构建不含草稿）
   const [all, publicOnly] = await Promise.all([
     getPublishedPosts({ includePrivate: true }),
     getPublishedPosts(),
@@ -82,13 +82,19 @@ const jsonLd = privatePayload
 <Base
   title={privatePayload ? "私密文章" : post.data.title}
   description={privatePayload ? "这篇内容已加密" : post.data.description}
-  noindex={!!privatePayload}
+  noindex={!!privatePayload || post.data.draft}
   unlockCheck={!!privatePayload}
-  searchable={!privatePayload}
+  searchable={!privatePayload && !post.data.draft}
   structuredData={jsonLd}
   shareImage={shareImage}
   shareType="article"
 >
+  {import.meta.env.DEV && post.data.draft && (
+    <div class="draft-banner">
+      <b>草稿预览</b>
+      <span>这篇内容只在开发环境可见，生产构建不会包含。</span>
+    </div>
+  )}
   {
     privatePayload ? (
       <>
@@ -104,6 +110,7 @@ const jsonLd = privatePayload
       <>
         <div class="post-head">
           <div class="stickers">
+            {post.data.draft && <span class="sticker red">草稿</span>}
             <a class={`sticker ${categoryStickerColor}`} href={categoryUrl(category)}>
               {category}
             </a>
@@ -170,6 +177,22 @@ const jsonLd = privatePayload
   }
   .stickers a.sticker:hover {
     box-shadow: 4px 4px 0 var(--ink);
+  }
+  .draft-banner {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 18px 0 0;
+    padding: 10px 14px;
+    border: 3px dashed var(--red-ink);
+    background: var(--paper);
+    box-shadow: var(--shadow);
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .draft-banner b {
+    color: var(--red-ink);
   }
 </style>
 

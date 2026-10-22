@@ -37,6 +37,7 @@ const stacked = sheets.length > 1;
               <span class="tl y" />
               <span class="tl g" />
               <span class="file">posts/{getPostSlug(post)}.md</span>
+              {post.data.draft && <span class="draft-chip">草稿</span>}
               <span class="desc">
                 {formatDate(post.data.date)} · {getCategory(post)} ·{" "}
                 {estimateReadTime(post.body ?? "")} 分钟
@@ -63,8 +64,8 @@ const stacked = sheets.length > 1;
           */}
           <a class="cover" href={postUrl(post)}>
             <span class="sr-only">
-              精选文章：{post.data.title}（{getCategory(post)} · {formatDate(post.data.date)} ·{" "}
-              {estimateReadTime(post.body ?? "")} 分钟）
+              {post.data.draft ? "草稿 · " : ""}精选文章：{post.data.title}（{getCategory(post)} ·{" "}
+              {formatDate(post.data.date)} · {estimateReadTime(post.body ?? "")} 分钟）
             </span>
           </a>
         </div>
@@ -296,6 +297,17 @@ const stacked = sheets.length > 1;
     margin-left: auto;
     font-size: 12px;
     color: var(--ink-soft);
+  }
+  .window .cap .draft-chip {
+    flex: none;
+    padding: 1px 6px;
+    border: 2px solid var(--ink);
+    background: var(--red);
+    color: var(--on-dark-fill);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0.04em;
   }
   .window .body {
     flex: 1;

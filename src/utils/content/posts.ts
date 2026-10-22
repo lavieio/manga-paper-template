@@ -63,9 +63,9 @@ function assertUniqueSlugs(posts: BlogPost[]): void {
 }
 
 /**
- * 非草稿文章缺 date 时的构建期兜底：用构建时刻日期填充并发出警告。
- * 正常流程下 date 由钩子注入，只会出现在「写完还没提交」的预览期；
- * 提交后 frontmatter 已有真实日期，警告不会再出现。
+ * 文章缺 date 时的构建/开发期兜底：用当前日期填充并发出警告。
+ * 生产构建只对已发布文章执行；草稿只在开发环境走到这里。
+ * 正常流程下 date 由钩子注入，警告只会出现在「写完还没提交」的预览期。
  */
 function fillMissingDate(post: BlogPost): DatedPost {
   if (post.data.date) return post as DatedPost;
@@ -82,17 +82,29 @@ function printDistinctCategories(posts: BlogPost[]): void {
 }
 
 /**
- * 唯一的「已发布文章」入口：排除 draft；列表/归档/标签/分类/RSS 一律走这里。
+ * 唯一的「已发布文章」入口：默认排除 draft；开发环境保留草稿，便于本地预览。
+ * 列表/归档/标签/分类/RSS/OG 一律走这里。
  * 私密文章默认排除；仅详情页路由需要时用 { includePrivate: true } 取全量。
  */
-export async function getPublishedPosts(options?: {
+export interface PublishedPostOptions {
+  /** 详情页路由取全量时包含私密文章；默认 false */
   includePrivate?: boolean;
-}): Promise<DatedPost[]> {
+  /**
+   * 开发环境是否包含草稿；默认 true。生产构建始终排除。
+   * 传 false 可在 dev 中临时关闭草稿预览（测试用）。
+   */
+  includeDrafts?: boolean;
+}
+
+export async function getPublishedPosts(
+  options: PublishedPostOptions = {},
+): Promise<DatedPost[]> {
+  const includeDrafts = import.meta.env.DEV && options.includeDrafts !== false;
   const all = await getCollection("blog");
   all.forEach(assertValidPost);
   assertUniqueSlugs(all);
   const published = all
-    .filter((p) => !p.data.draft && (options?.includePrivate || !p.data.private))
+    .filter((p) => (includeDrafts || !p.data.draft) && (options.includePrivate || !p.data.private))
     .map(fillMissingDate);
   printDistinctCategories(published);
   return published.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());

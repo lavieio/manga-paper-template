@@ -18,10 +18,10 @@ MangaPaper 是一个漫画稿纸风格的开源博客模板。点阵纸背景、
 
 - **漫画稿纸风格**：点阵背景、硬边框、单向硬阴影、贴纸标签，以及明暗双主题。
 - **自托管字体**：使用 Maple Mono NF CN；构建时按站点内容生成字体子集，无需依赖第三方字体 CDN。
-- **完整的内容组织**：精选文章、分类、标签、归档时间轴、草稿与分页（每页默认 8 篇）。
+- **完整的内容组织**：精选文章、分类、标签、归档时间轴、草稿（开发环境可预览）与分页（每页默认 8 篇）。
 - **阅读体验优化**：文章目录与滚动高亮、代码一键复制、PhotoSwipe 图片灯箱，以及构建期图片尺寸处理以减少布局偏移。
 - **静态全文搜索**：集成 Pagefind，构建时生成索引，支持中文检索。
-- **SEO 与分享**：生成 sitemap、RSS、robots.txt，并为公开文章生成 1200 × 630 OG 分享图；草稿与私密文章不会进入公开索引或生成分享图。
+- **SEO 与分享**：生成 sitemap、RSS、robots.txt，并为公开文章生成 1200 × 630 OG 分享图；生产构建中草稿与私密文章不会进入公开索引或生成分享图，草稿在 `npm run dev` 下仍可预览。
 - **私密文章**：构建时使用 AES-256-GCM 加密，静态站点只发布密文；访客在 `/private` 页面输入密码后，由浏览器解密内容。
 - **按需启用的集成**：remark42 评论、Google Analytics 4、Google Search Console 验证，以及 Vercel Web Analytics / Speed Insights。
 - **静态托管友好**：支持 Vercel 和 Cloudflare Pages，并根据环境变量生成相应的部署配置与安全响应头。
@@ -183,7 +183,7 @@ title: 文章标题
 description: 用于 SEO、RSS 和分享卡片的摘要
 tags: [技术, 随笔]
 featured: true          # 可选：加入首页精选轮播
-draft: false            # 可选：true 时不发布
+draft: false            # 可选：true 时仅开发环境预览，生产构建排除
 private: false          # 可选：true 时作为私密文章加密
 cover: /images/cover.png # 可选：封面图片
 ---
