@@ -18,10 +18,10 @@ Built with Astro, MangaPaper generates a fully static site, so you do not need t
 
 - **Comic-paper design:** Dotted background, hard borders, directional hard shadows, sticker labels, and light/dark themes.
 - **Self-hosted fonts:** Uses Maple Mono NF CN and generates font subsets from site content during the build, without relying on a third-party font CDN.
-- **Complete content organization:** Featured posts, categories, tags, an archive timeline, drafts, and pagination (8 posts per page by default).
+- **Complete content organization:** Featured posts, categories, tags, an archive timeline, drafts (previewable in dev), and pagination (8 posts per page by default).
 - **Reading enhancements:** Table of contents with scroll highlighting, one-click code copying, PhotoSwipe image lightbox, and build-time image dimensions to help reduce layout shifts.
 - **Static full-text search:** Pagefind generates the search index at build time and supports Chinese queries.
-- **SEO and sharing:** Generates a sitemap, RSS feed, and `robots.txt`, plus 1200 × 630 OG images for public posts. Drafts and private posts are excluded from public indexes and do not receive share images.
+- **SEO and sharing:** Generates a sitemap, RSS feed, and `robots.txt`, plus 1200 × 630 OG images for public posts. In production builds, drafts and private posts are excluded from public indexes and do not receive share images; drafts remain previewable under `npm run dev`.
 - **Private posts:** Content is encrypted with AES-256-GCM during the build; only ciphertext is published to the static site. Readers enter a password at `/private`, where content is decrypted in the browser.
 - **Optional integrations:** remark42 comments, Google Analytics 4, Google Search Console verification, and Vercel Web Analytics / Speed Insights.
 - **Static-hosting friendly:** Supports Vercel and Cloudflare Pages, generating deployment configuration and security headers from environment variables.
@@ -183,7 +183,7 @@ title: Post title
 description: Summary used for SEO, RSS, and share cards
 tags: [Engineering, Notes]
 featured: true           # Optional: include in the homepage featured carousel
-draft: false             # Optional: true excludes the post from publication
+draft: false             # Optional: true previews in dev only; excluded from production builds
 private: false           # Optional: true encrypts the post as private content
 cover: /images/cover.png # Optional: cover image
 ---

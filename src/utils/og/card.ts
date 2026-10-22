@@ -91,7 +91,7 @@ export interface OgGeometry {
   readonly markRight: number;
 }
 
-/** 文章卡片：公开文章才有（私密/草稿的标题不能出现在图里） */
+/** 文章卡片：生产构建只给公开文章；开发环境的草稿卡片仅用于本地预览 */
 export function postCard(post: DatedPost, host: string): OgCard {
   return {
     label: `posts/${getPostSlug(post)}.md`,

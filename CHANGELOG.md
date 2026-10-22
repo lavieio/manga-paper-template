@@ -20,6 +20,10 @@
   - 未在 `categories.colors` 中覆盖的分类按名称做稳定哈希取色，同一分类每次构建颜色一致，不使用随机色。
   - 新增 `categories.colors` 可选覆盖；示例配置以注释形式给出，需要固定分类颜色时取消注释即可。
 
+- **草稿本地预览**
+  - `npm run dev` 下，首页、文章列表、归档、标签、分类、RSS、OG 与文章详情会包含 `draft: true` 的文章；卡片、精选、归档与详情页标注「草稿」，详情页显示仅开发环境可见的提示条。
+  - 生产构建继续完全排除草稿：不生成页面，不进入 sitemap、RSS、Pagefind 或 OG 分享图。
+
 ### 修复
 
 - **页头与默认分享卡不再写死站名**：改 `site.name` 后，页头品牌、默认分享卡 wordmark 与 RSS 标题保持一致。
@@ -34,6 +38,7 @@
 - `manga-paper.config.ts` 中的 `sealText` 显式写成 `"M"`；改站名后请同步修改，或删掉该字段让模板取站名首字。
 - 分类颜色默认改为按名称哈希；未设置 `categories.colors` 时，分类颜色会与 v2.1.0 不同。需要固定颜色时，取消 `manga-paper.config.ts` 中的示例注释即可。
 - 修改 `categories.colors` 后需要重新构建；搜索页的颜色来自构建期写入 Pagefind 的 meta。
+- 草稿只在 `npm run dev` 下可见；`npm run build` 与 v2.1.0 一样排除，无需修改现有 `draft` 字段。
 
 ## [2.1.0] - 2026-10-20
 
