@@ -7,7 +7,7 @@ import TableOfContents from "../../components/TableOfContents.astro";
 import BackToTop from "../../components/BackToTop.astro";
 import Comments from "../../components/Comments.astro";
 import PrivateUnlock from "../../components/PrivateUnlock.astro";
-import { site } from "../../config";
+import { site, categoryColors } from "../../config";
 import { encryptText, getPrivatePassword, type EncryptedPayload } from "../../utils/crypto/private-crypto";
 import {
   getPublishedPosts,
@@ -45,6 +45,7 @@ export async function getStaticPaths() {
 const { post, prev, next } = Astro.props;
 const { Content, headings } = await render(post);
 const category = getCategory(post);
+const categoryStickerColor = categoryColor(category, categoryColors);
 const minutes = estimateReadTime(post.body ?? "");
 
 // 私密文章：构建期加密正文——同一条渲染管线，只存密文
@@ -103,7 +104,7 @@ const jsonLd = privatePayload
       <>
         <div class="post-head">
           <div class="stickers">
-            <a class={`sticker ${categoryColor(category)}`} href={categoryUrl(category)}>
+            <a class={`sticker ${categoryStickerColor}`} href={categoryUrl(category)}>
               {category}
             </a>
             {
@@ -125,6 +126,7 @@ const jsonLd = privatePayload
         <article class="prose" data-pagefind-body>
           {/* Pagefind 元数据需在 body 内：搜索结果卡片用它显示分类贴纸 */}
           <span data-pagefind-meta="category" hidden>{category}</span>
+          <span data-pagefind-meta="color" hidden>{categoryStickerColor}</span>
           <Content />
         </article>
 

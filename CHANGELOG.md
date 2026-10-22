@@ -7,6 +7,34 @@
 
 ## [Unreleased]
 
+### 新增
+
+- **站点身份配置**
+  - 新增 `site.lang`、`site.timeZone`、`site.favicon`、`site.sealText` 与 `site.footer` 配置；页头品牌名 / 印章、默认分享卡 wordmark / logo、`<html lang>`、`og:locale`、RSS 与 JSON-LD 语言、日期时区、页脚年份与备案链接统一读取站点配置。
+  - `manga-paper.config.ts` 直接写出默认值；省略时仍由 `src/utils/site/identity.ts` 套默认值，并在构建期校验非法语言标签、时区与页脚链接。
+  - 页脚支持可选附加链接，适合放 ICP 备案、公安备案或自定义入口；`copyright` 支持 `{year}` 占位。
+  - 导航保持主题内固定，不开放配置（站内路由固定）。
+
+- **分类贴纸色自动分配**
+  - 分类色改为 8 色调色板（`cyan` / `pink` / `yellow` / `blue` / `green` / `orange` / `violet` / `lime`）。
+  - 未在 `categories.colors` 中覆盖的分类按名称做稳定哈希取色，同一分类每次构建颜色一致，不使用随机色。
+  - 新增 `categories.colors` 可选覆盖；示例配置以注释形式给出，需要固定分类颜色时取消注释即可。
+
+### 修复
+
+- **页头与默认分享卡不再写死站名**：改 `site.name` 后，页头品牌、默认分享卡 wordmark 与 RSS 标题保持一致。
+- **页脚年份按站点时区计算**：跨年后由浏览器按 `site.timeZone` 就地修正，无需重新部署。
+- **搜索页分类色与索引策略**：搜索结果优先使用构建期写入 Pagefind 的分类色，不再写死三个示例分类；`/search/` 标记 `noindex`，`robots.txt` 增加 `Disallow: /search/`。
+
+### 升级注意
+
+- 站点身份相关字段无需新增必填配置；不写新字段时这部分行为与 v2.1.0 一致。
+- `site.lang` 只影响语言元数据，不会翻译界面文案。
+- `site.timeZone` 只影响日期展示与页脚年份；`date` / `updated` 的 git 钩子仍固定使用 `Asia/Shanghai`。
+- `manga-paper.config.ts` 中的 `sealText` 显式写成 `"M"`；改站名后请同步修改，或删掉该字段让模板取站名首字。
+- 分类颜色默认改为按名称哈希；未设置 `categories.colors` 时，分类颜色会与 v2.1.0 不同。需要固定颜色时，取消 `manga-paper.config.ts` 中的示例注释即可。
+- 修改 `categories.colors` 后需要重新构建；搜索页的颜色来自构建期写入 Pagefind 的 meta。
+
 ## [2.1.0] - 2026-10-20
 
 本次版本主要完善 **分类与标签分页、URL 规范化及跨平台部署一致性**，统一站内地址生成规则，并优化归档页展示与相关文档。

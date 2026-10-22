@@ -102,6 +102,14 @@ export default defineConfig({
       ],
     },
   },
+  categories: {
+    // 可选：显式指定分类贴纸色；未列出的分类按名称稳定取色
+    // colors: {
+    //   技术: "cyan",
+    //   随笔: "pink",
+    //   摄影: "yellow",
+    // },
+  },
   posts: {
     perPage: 8,       // 列表每页篇数
     recentCount: 3,   // 首页「最近更新」条数
@@ -122,10 +130,13 @@ export default defineConfig({
 | `site.lang` / `site.timeZone` | HTML `lang`、OG locale、RSS 与 JSON-LD 语言 / 日期展示时区；默认 `zh-CN` / `Asia/Shanghai` |
 | `site.favicon` / `site.sealText` | favicon 路径 / 页头与默认分享卡的印章字；印章缺省取站名首字 |
 | `site.footer` | `copyright` 支持 `{year}` 占位；`links[]` 放 ICP / 公安备案或自定义入口 |
+| `categories.colors` | 可选：分类贴纸色覆盖；未列出的分类按名称稳定取色 |
 | `posts.perPage` / `posts.recentCount` | 列表分页篇数 / 首页「最近更新」条数 |
 | `socials[]` | 首页快捷入口，数组顺序即显示顺序；`primary: true` 用于突出主入口，最多设置一个 |
 
 `site.footer.copyright` 里的 `{year}` 会替换成站点时区下的当前年份；`site.footer.links` 适合放 ICP 备案、公安备案或其它页脚入口，内容为空时整行不渲染。
+
+分类贴纸色默认从 8 色调色板（`cyan` / `pink` / `yellow` / `blue` / `green` / `orange` / `violet` / `lime`）按分类名做稳定哈希选取，同一分类每次构建颜色一致，不是随机色。只有想固定某个分类的颜色时才需要写 `categories.colors`；新分类不配置也会自动获得颜色。
 
 > `site.lang` 只影响 `<html lang>`、分享卡片 locale、RSS 与 JSON-LD 的语言元数据，不会自动翻译界面文案。
 >
