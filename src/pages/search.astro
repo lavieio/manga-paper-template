@@ -2,7 +2,7 @@
 import Base from "../layouts/Base.astro";
 ---
 
-<Base title="搜索" description="站内全文检索（Pagefind），标题与正文都搜，输入即搜。">
+<Base title="搜索" description="站内全文检索（Pagefind），标题与正文都搜，输入即搜。" noindex>
   <div class="page-head"><h1>搜索</h1></div>
 
   <div class="search-box">
@@ -24,6 +24,8 @@ import Base from "../layouts/Base.astro";
 </Base>
 
 <script>
+  import { categoryColor, isStickerColor } from "../utils/content/category";
+
   /**
    * Pagefind 搜索
    * - 索引由构建脚本 `pagefind --site dist` 生成；dev 模式无索引 → 明确提示
@@ -39,7 +41,7 @@ import Base from "../layouts/Base.astro";
   interface PagefindResultData {
     url: string;
     excerpt: string;
-    meta: { title?: string; category?: string };
+    meta: { title?: string; category?: string; color?: string };
     raw_url?: string;
   }
 
@@ -88,13 +90,13 @@ import Base from "../layouts/Base.astro";
       }
     };
 
-    const stickerClass = (category: string) =>
-      ({ 技术: "cyan", 随笔: "pink", 摄影: "yellow" })[category] ?? "blue";
+    /** 分类贴纸：优先用构建期写入 Pagefind 的颜色，缺失时按分类名稳定取色 */
+    const stickerColor = (meta: PagefindResultData["meta"]): string =>
+      isStickerColor(meta.color) ? meta.color : categoryColor(meta.category ?? "");
 
-    /** 分类贴纸 */
-    const sticker = (category: string): HTMLElement => {
+    const sticker = (color: string, category: string): HTMLElement => {
       const el = document.createElement("span");
-      el.className = `sticker ${stickerClass(category)}`;
+      el.className = `sticker ${color}`;
       el.textContent = category;
       return el;
     };
@@ -122,7 +124,7 @@ import Base from "../layouts/Base.astro";
       const head = document.createElement("div");
       head.className = "head";
       const category = item.meta.category ?? "";
-      if (category) head.append(sticker(category));
+      if (category) head.append(sticker(stickerColor(item.meta), category));
       const title = document.createElement("h2");
       title.textContent = item.meta.title ?? item.url;
       head.append(title);
@@ -276,11 +278,6 @@ import Base from "../layouts/Base.astro";
     color: var(--on-light-fill);
     white-space: nowrap;
   }
-  :global(.hit .sticker.cyan) { background: var(--cyan); transform: rotate(-1.5deg); }
-  :global(.hit .sticker.pink) { background: var(--pink); transform: rotate(1.2deg); }
-  :global(.hit .sticker.yellow) { background: var(--yellow); transform: rotate(-1deg); }
-  :global(.hit .sticker.blue) { background: var(--blue); transform: rotate(1deg); }
-
   .state {
     margin-top: 40px;
     border: 3px dashed var(--ink-soft);

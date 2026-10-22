@@ -6,6 +6,7 @@
  * 不进仓里的配置文件。
  */
 import userConfig from "../manga-paper.config";
+import { resolveCategoryColors } from "./utils/content/category";
 import { parseGaMeasurementId } from "./utils/env/analytics";
 import { isEnabledFlag } from "./utils/env/env-flag";
 import { resolveSiteConfig, type ResolvedSiteConfig } from "./utils/site/identity";
@@ -16,6 +17,9 @@ export const site: ResolvedSiteConfig = resolveSiteConfig(userConfig.site);
 
 /** 内容组织：列表分页篇数与首页「最近更新」条数 */
 export const posts = { ...userConfig.posts } as const;
+
+/** 分类贴纸色覆盖：未列出的分类由 categoryColor() 按名称稳定取色 */
+export const categoryColors = resolveCategoryColors(userConfig.categories?.colors);
 
 /**
  * 首页贴纸条的入口：socials + 固定的 RSS。

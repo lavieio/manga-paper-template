@@ -102,6 +102,14 @@ export default defineConfig({
       ],
     },
   },
+  categories: {
+    // Optional: pin a category to a sticker color; unlisted categories are hashed by name
+    // colors: {
+    //   技术: "cyan",
+    //   随笔: "pink",
+    //   摄影: "yellow",
+    // },
+  },
   posts: {
     perPage: 8,       // Posts per listing page
     recentCount: 3,   // Number of recent posts on the homepage
@@ -122,10 +130,13 @@ export default defineConfig({
 | `site.lang` / `site.timeZone` | HTML `lang`, OG locale, RSS and JSON-LD language / time zone for displayed dates; defaults to `zh-CN` / `Asia/Shanghai` |
 | `site.favicon` / `site.sealText` | Favicon path / header and default share-card seal; the seal defaults to the first character of the site name |
 | `site.footer` | `copyright` supports a `{year}` placeholder; `links[]` holds ICP / public-security filings or custom entries |
+| `categories.colors` | Optional category sticker-color overrides; unlisted categories are colored by a stable name hash |
 | `posts.perPage` / `posts.recentCount` | Posts per listing page / number of recent posts on the homepage |
 | `socials[]` | Homepage shortcuts, displayed in array order; `primary: true` highlights the main link. Set it on at most one item. |
 
 The `{year}` placeholder in `site.footer.copyright` is replaced with the current year in the site time zone. `site.footer.links` is intended for ICP / public-security filings or other footer entries; the row is not rendered when the list is empty.
+
+Category sticker colors are chosen from an 8-color palette (`cyan` / `pink` / `yellow` / `blue` / `green` / `orange` / `violet` / `lime`) by a stable hash of the category name. The same category gets the same color on every build; it is not random. `categories.colors` is only needed when you want to pin a specific color; new categories get a color automatically.
 
 > `site.lang` only affects language metadata such as `<html lang>`, share-card locale, RSS and JSON-LD; it does not translate UI copy.
 >

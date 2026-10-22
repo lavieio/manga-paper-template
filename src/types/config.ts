@@ -1,3 +1,5 @@
+import type { StickerColor } from "../utils/content/category";
+
 /**
  * 用户配置的类型契约。
  *
@@ -63,9 +65,16 @@ export interface SiteIdentityConfig {
   readonly footer?: SiteFooterConfig;
 }
 
+export interface CategoryConfig {
+  /** 可选：把分类固定到某个贴纸色；未列出的分类按名称稳定取色 */
+  readonly colors?: Readonly<Record<string, StickerColor>>;
+}
+
 export interface MangaPaperConfig {
   /** 站点身份与文案 */
   readonly site: SiteIdentityConfig;
+  /** 分类贴纸色等可选覆盖 */
+  readonly categories?: CategoryConfig;
   /** 内容组织 */
   readonly posts: {
     /** 列表分页每页篇数 */

@@ -24,8 +24,13 @@
   --pink: #f2a7c3;
   --yellow: #f6d34e;
   --blue: #9cb8f0;
+  --green: #a8d98a;
+  --orange: #f4b27a;
+  --violet: #c4a7e7;
+  --lime: #d8e27a;
   /* 色块上的文字：贴纸硬色 / 黄底在暗色下依旧是浅色，所以这几处的字不能跟着主题翻——
-     浅色块（cyan / pink / yellow / blue）永远配墨字，深色块（朱砂）永远配纸白字。 */
+     浅色块（cyan / pink / yellow / blue / green / orange / violet / lime）永远配墨字，
+     深色块（朱砂）永远配纸白字。 */
   --on-light-fill: #1c1913;
   --on-dark-fill: #fffdf6;
   /* 大面积黄底（文章表格表头）：浅色直接用贴纸黄；暗色只把黄压一档（见下），
@@ -55,6 +60,10 @@
   --pink: #f5b7d0;
   --yellow: #f8db66;
   --blue: #a8c3f5;
+  --green: #b8e39a;
+  --orange: #f7c08f;
+  --violet: #d4b8f2;
+  --lime: #e3ec9a;
   /* 表头黄在暗色下只压一档：与亮色表头 #f6d34e 的感知色差 ΔE=13（原先的沉橄榄
      #50431c 是 70.5——那是另一个颜色，看着发脏、不像黄）；墨字对比 8.6:1。 */
   --yellow-fill: #d8b23c; /* hsl(48 67% 54%) */

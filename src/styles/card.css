@@ -61,6 +61,10 @@
   .sticker.pink { background: var(--pink); transform: rotate(1.2deg); }
   .sticker.yellow { background: var(--yellow); transform: rotate(-1deg); }
   .sticker.blue { background: var(--blue); transform: rotate(1deg); }
+  .sticker.green { background: var(--green); transform: rotate(-0.8deg); }
+  .sticker.orange { background: var(--orange); transform: rotate(0.9deg); }
+  .sticker.violet { background: var(--violet); transform: rotate(-1.1deg); }
+  .sticker.lime { background: var(--lime); transform: rotate(1.3deg); }
   .sticker.red { background: var(--red); color: var(--on-dark-fill); transform: rotate(-1.2deg); }
   
   

@@ -35,6 +35,19 @@ export default defineConfig({
     },
   },
 
+  categories: {
+    /**
+     * 可选：给分类指定贴纸色；未列出的分类按名称稳定取色。
+     * 可用值：cyan / pink / yellow / blue / green / orange / violet / lime。
+     * 示例（需要固定某个分类的颜色时取消注释）：
+     */
+    // colors: {
+    //   技术: "cyan",
+    //   随笔: "pink",
+    //   摄影: "yellow",
+    // },
+  },
+
   posts: {
     /** 列表分页每页篇数 */
     perPage: 8,
