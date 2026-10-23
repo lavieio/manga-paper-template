@@ -1,0 +1,95 @@
+---
+import "../styles/taxonomy.css";
+import "../styles/explore.css";
+import Base from "../layouts/Base.astro";
+import { categoryColors } from "../config";
+import { categoryColor } from "../utils/content/category";
+import { getPublishedPosts } from "../utils/content/posts";
+import { summarizeCategories, summarizeTags } from "../utils/content/taxonomy";
+
+const posts = await getPublishedPosts();
+const categories = summarizeCategories(posts);
+const tags = summarizeTags(posts);
+const previewCategories = categories.slice(0, 6);
+const previewTags = tags.slice(0, 8);
+const hiddenCategories = categories.length - previewCategories.length;
+const hiddenTags = tags.length - previewTags.length;
+---
+
+<Base
+  title="发现"
+  description={`按分类和标签浏览 ${posts.length} 篇文章——分类是书架，标签是索引。`}
+>
+  <div class="browse-head">
+    <div class="browse-kicker">
+      <span class="sticker red">// EXPLORE</span>
+      <span class="rule"></span>
+    </div>
+    <h1>发现</h1>
+    <p class="browse-sub">
+      这里只是入口。分类是书架，标签是随手贴上的索引；点进任意一栏看完整列表。
+    </p>
+    <div class="browse-meta">
+      <span><b>{categories.length}</b> 个分类</span>
+      <span><b>{tags.length}</b> 枚标签</span>
+      <span><b>{posts.length}</b> 篇文章</span>
+    </div>
+  </div>
+
+  <section class="explore-list" aria-label="主题索引">
+    <a class="explore-row" href="/categories/">
+      <div class="explore-num">01</div>
+      <div class="explore-body">
+        <div class="explore-head">
+          <span class="sticker yellow">分类 / CATEGORIES</span>
+          <span class="explore-count">{categories.length} 个分类 · {posts.length} 篇文章</span>
+        </div>
+        <div class="explore-preview">
+          {
+            previewCategories.map(({ name, count }) => (
+              <span
+                class="mini-cat"
+                style={`background: var(--${categoryColor(name, categoryColors)})`}
+              >
+                {name} <b>{count}</b>
+              </span>
+            ))
+          }
+          {hiddenCategories > 0 && <span class="mini-cat more">还有 {hiddenCategories} 个 →</span>}
+          {categories.length === 0 && <span class="mini-tag">暂无分类</span>}
+        </div>
+      </div>
+      <span class="explore-arrow" aria-hidden="true">→</span>
+    </a>
+
+    <a class="explore-row" href="/tags/">
+      <div class="explore-num">02</div>
+      <div class="explore-body">
+        <div class="explore-head">
+          <span class="sticker cyan">标签 / TAGS</span>
+          <span class="explore-count">{tags.length} 枚标签</span>
+        </div>
+        <div class="explore-preview">
+          {
+            previewTags.map(({ name, count }) => (
+              <span class="mini-tag">
+                {name} <span class="n">×{count}</span>
+              </span>
+            ))
+          }
+          {hiddenTags > 0 && <span class="mini-tag more">全部 {tags.length} 枚 →</span>}
+          {tags.length === 0 && <span class="mini-tag">暂无标签</span>}
+        </div>
+      </div>
+      <span class="explore-arrow" aria-hidden="true">→</span>
+    </a>
+  </section>
+
+  <div class="explore-outro">
+    <p>不知道从哪读起？<br />先看全部文章，或者让 RSS 把新文章送到你面前。</p>
+    <div class="explore-actions">
+      <a class="explore-btn" href="/posts/">全部文章 →</a>
+      <a class="explore-btn ghost" href="/rss.xml">订阅 RSS</a>
+    </div>
+  </div>
+</Base>

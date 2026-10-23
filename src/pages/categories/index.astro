@@ -1,0 +1,50 @@
+---
+import "../../styles/taxonomy.css";
+import Base from "../../layouts/Base.astro";
+import { categoryColors } from "../../config";
+import { categoryColor } from "../../utils/content/category";
+import { categoryUrl, getPublishedPosts } from "../../utils/content/posts";
+import { summarizeCategories } from "../../utils/content/taxonomy";
+
+const posts = await getPublishedPosts();
+const categories = summarizeCategories(posts);
+---
+
+<Base
+  title="分类"
+  description={`全部 ${categories.length} 个分类，共 ${posts.length} 篇文章——按文件夹翻文章。`}
+>
+  <div class="browse-head">
+    <div class="browse-kicker">
+      <span class="sticker yellow">// CATEGORIES</span>
+      <span class="rule"></span>
+    </div>
+    <h1>分类</h1>
+    <p class="browse-sub">按文件夹翻文章——分类由文章所在目录决定，点进去看该分类下的全部文章。</p>
+    <div class="browse-meta">
+      <span><b>{categories.length}</b> 个分类</span>
+      <span><b>{posts.length}</b> 篇文章</span>
+    </div>
+  </div>
+
+  {
+    categories.length === 0 ? (
+      <p class="empty">还没有文章。</p>
+    ) : (
+      <section class="category-grid" aria-label="全部分类">
+        {categories.map(({ name, count, latest }) => (
+          <a class="category-card" href={categoryUrl(name)}>
+            <div class="top">
+              <span class={`sticker ${categoryColor(name, categoryColors)}`}>{name}</span>
+              <span class="count">{count} 篇</span>
+            </div>
+            <p class="latest">
+              最近：<b>{latest.data.title}</b>
+            </p>
+            <span class="open">查看分类 →</span>
+          </a>
+        ))}
+      </section>
+    )
+  }
+</Base>
