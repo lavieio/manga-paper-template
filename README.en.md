@@ -18,7 +18,8 @@ Built with Astro, MangaPaper generates a fully static site, so you do not need t
 
 - **Comic-paper design:** Dotted background, hard borders, directional hard shadows, sticker labels, and light/dark themes.
 - **Self-hosted fonts:** Uses Maple Mono NF CN and generates font subsets from site content during the build, without relying on a third-party font CDN.
-- **Complete content organization:** Featured posts, categories, tags, an archive timeline, drafts (previewable in dev), and pagination (8 posts per page by default).
+- **Complete content organization:** Featured posts, a category index, tags, an explore hub, an archive timeline, drafts (previewable in dev), and pagination (8 posts per page by default).
+- **Explore hub and category index:** `/explore/` gathers category and tag entry points, and `/categories/` lists all categories. The all-posts page is a flat paginated feed; categories and tags are reached through the explore hub, and the main navigation stays at five items.
 - **Reading enhancements:** Table of contents with scroll highlighting, one-click code copying, PhotoSwipe image lightbox, and build-time image dimensions to help reduce layout shifts.
 - **Static full-text search:** Pagefind generates the search index at build time and supports Chinese queries.
 - **SEO and sharing:** Generates a sitemap, RSS feed, and `robots.txt`, plus 1200 × 630 OG images for public posts. In production builds, drafts and private posts are excluded from public indexes and do not receive share images; drafts remain previewable under `npm run dev`.

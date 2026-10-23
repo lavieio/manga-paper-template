@@ -1,10 +1,10 @@
 ---
 /**
  * 标签页：`/tags/<标签>/`（第 1 页）与 `/tags/<标签>/<N>/`（第 2 页起）。
- * 与分类页同一套分页（`posts.perPage`），只是标题前缀、贴纸底色与返回链接不同。
+ * 与分类页同一套分页（`posts.perPage`）与列表组件，只是标题与返回链接不同。
  */
 import Base from "../../../layouts/Base.astro";
-import TaxonomyList from "../../../components/TaxonomyList.astro";
+import ArticleList from "../../../components/ArticleList.astro";
 import { posts as postsConfig } from "../../../config";
 import { getPublishedPosts, tagUrl } from "../../../utils/content/posts";
 import type { GetStaticPathsOptions } from "astro";
@@ -29,13 +29,13 @@ const { tag, page } = Astro.props;
   title={`标签 · ${tag}${page.currentPage === 1 ? "" : ` · 第 ${page.currentPage} 页`}`}
   description={`标签「${tag}」下的 ${page.total} 篇文章，按发布时间倒序。`}
 >
-  <TaxonomyList
-    heading={`# ${tag}`}
+  <ArticleList
+    heading={tag}
     count={page.total}
-    accent="cyan"
-    backHref="/tags/"
-    backLabel="← 全部标签"
     page={page}
     base={tagUrl(tag)}
+    backHref="/tags/"
+    backLabel="← 全部标签"
+    showPageNote
   />
 </Base>
