@@ -28,17 +28,34 @@ const jsonLd = [websiteJsonLd(jsonLdSite), blogJsonLd(jsonLdSite)];
   {/* 精选统一由 FeaturedStack 渲染；单篇时组件内部降级为单张大卡 */}
   {featured.length > 0 && <FeaturedStack posts={featured} />}
 
-  <div class="sec-head">
-    <span class="sticker yellow">最近更新</span>
-    <span class="rule"></span>
-  </div>
-  <section class="cards">
-    {recent.map((post) => <PostCard post={post} />)}
-  </section>
+  {/*
+    最近更新：没有非精选文章时整块不渲染（全精选 / 一篇文章也没有）。
+    否则会剩下一个只有「最近更新」标题、下面一片空白的板块。
+  */}
+  {
+    recent.length > 0 && (
+      <>
+        <div class="sec-head">
+          <span class="sticker yellow">最近更新</span>
+          <span class="rule" />
+        </div>
+        <section class="cards">
+          {recent.map((post) => <PostCard post={post} />)}
+        </section>
+      </>
+    )
+  }
 
-  <div class="actions">
-    <a class="btn" href="/posts/">查看全部文章 →</a>
-  </div>
+  {/* 一篇文章都没有：给一句说明代替空列表，也不渲染「查看全部文章」（那边同样是空页） */}
+  {
+    posts.length === 0 ? (
+      <p class="empty">还没有发布文章——第一篇写好后会出现在这里。</p>
+    ) : (
+      <div class="actions">
+        <a class="btn" href="/posts/">查看全部文章 →</a>
+      </div>
+    )
+  }
 
   {/* role="group"：aria-label 挂在无 role 的 div 上会被 axe 判 aria-prohibited-attr（与 /about 的统计条一致） */}
   <div class="stats" role="group" aria-label="站点统计">
@@ -91,6 +108,15 @@ const jsonLd = [websiteJsonLd(jsonLdSite), blogJsonLd(jsonLdSite)];
   .btn:active {
     transform: translate(2px, 2px);
     box-shadow: 2px 2px 0 var(--ink);
+  }
+  /* 零文章时的占位：不占标题/列表的结构，只是一行说明 */
+  .empty {
+    margin: 44px 0 8px;
+    padding: 26px 24px;
+    border: 3px dashed var(--ink-soft);
+    color: var(--ink-soft);
+    font-size: 14px;
+    text-align: center;
   }
   .stats {
     display: flex;
