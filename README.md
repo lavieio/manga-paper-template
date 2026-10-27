@@ -18,10 +18,11 @@ MangaPaper 是一个漫画稿纸风格的开源博客模板。点阵纸背景、
 
 - **漫画稿纸风格**：点阵背景、硬边框、单向硬阴影、贴纸标签，以及明暗双主题。
 - **自托管字体**：使用 Maple Mono NF CN；构建时按站点内容生成字体子集，无需依赖第三方字体 CDN。
-- **完整的内容组织**：精选文章、分类、标签、归档时间轴、草稿与分页（每页默认 8 篇）。
+- **完整的内容组织**：精选文章、分类索引、标签、发现页、归档时间轴、草稿（开发环境可预览）与分页（每页默认 8 篇）。
+- **发现页与分类索引**：`/explore/` 汇总分类与标签入口，`/categories/` 按分类浏览全部文章；文章列表只做全量分页，分类与标签从发现页进入，主导航保持五个入口。
 - **阅读体验优化**：文章目录与滚动高亮、代码一键复制、PhotoSwipe 图片灯箱，以及构建期图片尺寸处理以减少布局偏移。
 - **静态全文搜索**：集成 Pagefind，构建时生成索引，支持中文检索。
-- **SEO 与分享**：生成 sitemap、RSS、robots.txt，并为公开文章生成 1200 × 630 OG 分享图；草稿与私密文章不会进入公开索引或生成分享图。
+- **SEO 与分享**：生成 sitemap、RSS、robots.txt，并为公开文章生成 1200 × 630 OG 分享图；生产构建中草稿与私密文章不会进入公开索引或生成分享图，草稿在 `npm run dev` 下仍可预览。
 - **私密文章**：构建时使用 AES-256-GCM 加密，静态站点只发布密文；访客在 `/private` 页面输入密码后，由浏览器解密内容。
 - **按需启用的集成**：remark42 评论、Google Analytics 4、Google Search Console 验证，以及 Vercel Web Analytics / Speed Insights。
 - **静态托管友好**：支持 Vercel 和 Cloudflare Pages，并根据环境变量生成相应的部署配置与安全响应头。
@@ -80,7 +81,7 @@ npm run dev
 
 ## 🎛 站点配置
 
-站名、作者、简介、首页快捷入口和分页设置统一放在仓库根目录的 **`manga-paper.config.ts`** 中。
+站名、作者、简介、语言、时区、页脚、首页快捷入口和分页设置统一放在仓库根目录的 **`manga-paper.config.ts`** 中。
 
 ```ts
 import { defineConfig } from "./src/types/config";
@@ -91,6 +92,24 @@ export default defineConfig({
     tagline: "A loose-leaf, comic-paper, monospace blog theme",
     author: "lavie",
     bio: "漫画稿纸风格的开源博客模板",
+    lang: "zh-CN",              // HTML lang / OG locale / RSS / JSON-LD
+    timeZone: "Asia/Shanghai",  // 日期展示时区
+    favicon: "/favicon.svg",
+    sealText: "M",              // 页头与默认分享卡的印章字；缺省取站名首字
+    footer: {
+      copyright: "Copyright © {year} | All rights reserved.",
+      links: [
+        // { label: "京ICP备12345678号", href: "https://beian.miit.gov.cn/" },
+      ],
+    },
+  },
+  categories: {
+    // 可选：显式指定分类贴纸色；未列出的分类按名称稳定取色
+    // colors: {
+    //   技术: "cyan",
+    //   随笔: "pink",
+    //   摄影: "yellow",
+    // },
   },
   posts: {
     perPage: 8,       // 列表每页篇数
@@ -107,10 +126,22 @@ export default defineConfig({
 
 | 配置项 | 作用 |
 | --- | --- |
-| `site.name` / `site.tagline` | 站点名称与简介，用于页头、页面标题、RSS 和默认分享信息 |
+| `site.name` / `site.tagline` | 站点名称与简介，用于页头品牌、页面标题、RSS 和默认分享信息 |
 | `site.author` / `site.bio` | 作者与站点简介；也用于关于页描述或默认分享卡片的文案兜底 |
+| `site.lang` / `site.timeZone` | HTML `lang`、OG locale、RSS 与 JSON-LD 语言 / 日期展示时区；默认 `zh-CN` / `Asia/Shanghai` |
+| `site.favicon` / `site.sealText` | favicon 路径 / 页头与默认分享卡的印章字；印章缺省取站名首字 |
+| `site.footer` | `copyright` 支持 `{year}` 占位；`links[]` 放 ICP / 公安备案或自定义入口 |
+| `categories.colors` | 可选：分类贴纸色覆盖；未列出的分类按名称稳定取色 |
 | `posts.perPage` / `posts.recentCount` | 列表分页篇数 / 首页「最近更新」条数 |
 | `socials[]` | 首页快捷入口，数组顺序即显示顺序；`primary: true` 用于突出主入口，最多设置一个 |
+
+`site.footer.copyright` 里的 `{year}` 会替换成站点时区下的当前年份；`site.footer.links` 适合放 ICP 备案、公安备案或其它页脚入口，内容为空时整行不渲染。
+
+分类贴纸色默认从 8 色调色板（`cyan` / `pink` / `yellow` / `blue` / `green` / `orange` / `violet` / `lime`）按分类名做稳定哈希选取，同一分类每次构建颜色一致，不是随机色。只有想固定某个分类的颜色时才需要写 `categories.colors`；新分类不配置也会自动获得颜色。
+
+> `site.lang` 只影响 `<html lang>`、分享卡片 locale、RSS 与 JSON-LD 的语言元数据，不会自动翻译界面文案。
+>
+> `site.timeZone` 只影响日期展示与页脚年份；`date` / `updated` 的注入钩子独立运行，固定使用 `Asia/Shanghai`。
 
 `socials` 只控制**首页快捷入口条**，不会显示在关于页。RSS 由模板自动追加，无需重复配置；页脚自带 RSS 与私密文章入口。
 
@@ -153,7 +184,7 @@ title: 文章标题
 description: 用于 SEO、RSS 和分享卡片的摘要
 tags: [技术, 随笔]
 featured: true          # 可选：加入首页精选轮播
-draft: false            # 可选：true 时不发布
+draft: false            # 可选：true 时仅开发环境预览，生产构建排除
 private: false          # 可选：true 时作为私密文章加密
 cover: /images/cover.png # 可选：封面图片
 ---

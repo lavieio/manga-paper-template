@@ -11,6 +11,7 @@ export function GET({ site }: APIContext): Response {
   const body = [
     "User-agent: *",
     "Allow: /",
+    "Disallow: /search/",
     "",
     `Sitemap: ${new URL("sitemap-index.xml", site).href}`,
     "",

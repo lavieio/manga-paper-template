@@ -6,6 +6,8 @@
  */
 import "../styles/private.css";
 import Base from "../layouts/Base.astro";
+import { categoryColors } from "../config";
+import { categoryColor, type StickerColor } from "../utils/content/category";
 import { getPrivatePosts, getPostSlug, getCategory } from "../utils/content/posts";
 import { estimateReadTime } from "../utils/content/readtime";
 import { formatDate } from "../utils/content/format";
@@ -18,6 +20,7 @@ interface PrivateCard {
   date: string;
   updated?: string;
   category: string;
+  color: StickerColor;
   tags: string[];
   minutes: number;
 }
@@ -26,16 +29,20 @@ const posts = await getPrivatePosts();
 let payloadJson = "";
 
 if (posts.length > 0) {
-  const cards: PrivateCard[] = posts.map((p) => ({
-    slug: getPostSlug(p),
-    title: p.data.title,
-    description: p.data.description,
-    date: formatDate(p.data.date),
-    updated: p.data.updated ? formatDate(p.data.updated) : undefined,
-    category: getCategory(p),
-    tags: p.data.tags,
-    minutes: estimateReadTime(p.body ?? ""),
-  }));
+  const cards: PrivateCard[] = posts.map((p) => {
+    const category = getCategory(p);
+    return {
+      slug: getPostSlug(p),
+      title: p.data.title,
+      description: p.data.description,
+      date: formatDate(p.data.date),
+      updated: p.data.updated ? formatDate(p.data.updated) : undefined,
+      category,
+      color: categoryColor(category, categoryColors),
+      tags: p.data.tags,
+      minutes: estimateReadTime(p.body ?? ""),
+    };
+  });
   payloadJson = JSON.stringify(
     await encryptText(JSON.stringify(cards), getPrivatePassword("/private")),
   );
@@ -95,7 +102,6 @@ if (posts.length > 0) {
     type EncryptedPayload,
   } from "../utils/crypto/private-crypto";
   import { saveUnlockedKey, loadUnlockedKey, clearUnlockedKey } from "../scripts/private-key";
-  import { categoryColor } from "../utils/content/category";
 
   const REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const PEEL_MS = REDUCED ? 0 : 450;
@@ -107,6 +113,7 @@ if (posts.length > 0) {
     date: string;
     updated?: string;
     category: string;
+    color: string;
     tags: string[];
     minutes: number;
   }
@@ -139,7 +146,7 @@ if (posts.length > 0) {
           (c) => `
         <a class="card" href="/posts/${esc(c.slug)}/">
           <div class="top">
-            <span class="sticker ${categoryColor(c.category)}">${esc(c.category)}</span>
+            <span class="sticker ${esc(c.color)}">${esc(c.category)}</span>
             ${c.tags.map((t) => `<span class="sticker blue">${esc(t)}</span>`).join("")}
           </div>
           <h2>${esc(c.title)}</h2>

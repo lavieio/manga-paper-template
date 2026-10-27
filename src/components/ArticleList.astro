@@ -1,0 +1,77 @@
+---
+/**
+ * 文章列表页共用的列表体：全部文章、分类文章、标签文章三处同一套标题、计数、分页与卡片布局。
+ *
+ * 分类页 / 标签页只多一个返回链接；`/posts/` 不传 back，保持为纯全量分页。
+ */
+import PostCard from "./PostCard.astro";
+import Pagination from "./Pagination.astro";
+import type { Page } from "astro";
+import type { BlogPost } from "../utils/content/posts";
+
+interface Props {
+  /** 页面主标题：全部文章 / 分类名 / 标签名 */
+  heading: string;
+  /** 该列表下的文章总数（分页后仍是总数） */
+  count: number;
+  page: Page<BlogPost>;
+  /** 分页第 1 页的地址 */
+  base: string;
+  /** 可选返回链接；/posts/ 不传 */
+  backHref?: string;
+  backLabel?: string;
+  /** 多页时在标题旁显示「第 N / M 页」 */
+  showPageNote?: boolean;
+}
+
+const { heading, count, page, base, backHref, backLabel, showPageNote = false } = Astro.props;
+---
+
+<div class="list-head">
+  <h1>{heading}</h1>
+  <span class="sticker yellow">{count} 篇</span>
+  {showPageNote && page.lastPage > 1 && (
+    <span class="page-note">第 {page.currentPage} / {page.lastPage} 页</span>
+  )}
+  {backHref && backLabel && <a class="back" href={backHref}>{backLabel}</a>}
+</div>
+
+<section class="cards">
+  {page.data.map((post) => <PostCard post={post} />)}
+</section>
+
+<Pagination currentPage={page.currentPage} lastPage={page.lastPage} base={base} />
+
+<style>
+  .list-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 8px 0 30px;
+    flex-wrap: wrap;
+  }
+  .list-head h1 {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .page-note {
+    color: var(--ink-soft);
+    font-size: 12px;
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
+    margin-left: auto;
+    color: var(--ink-soft);
+    font-size: 13px;
+  }
+  .back:hover {
+    color: var(--red-ink);
+  }
+  .cards {
+    display: grid;
+    gap: 26px;
+  }
+</style>

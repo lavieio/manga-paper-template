@@ -4,7 +4,7 @@
  * 路由是 rest 参数，`paginate()` 才知道要按 `posts.perPage` 切页；`name` 由父段带进来。
  */
 import Base from "../../../layouts/Base.astro";
-import TaxonomyList from "../../../components/TaxonomyList.astro";
+import ArticleList from "../../../components/ArticleList.astro";
 import { posts as postsConfig } from "../../../config";
 import { getPublishedPosts, getCategory, categoryUrl } from "../../../utils/content/posts";
 import type { GetStaticPathsOptions } from "astro";
@@ -29,13 +29,13 @@ const { name, page } = Astro.props;
   title={`分类 · ${name}${page.currentPage === 1 ? "" : ` · 第 ${page.currentPage} 页`}`}
   description={`分类「${name}」下的 ${page.total} 篇文章，按发布时间倒序。`}
 >
-  <TaxonomyList
+  <ArticleList
     heading={name}
     count={page.total}
-    accent="yellow"
-    backHref="/posts/"
-    backLabel="← 全部文章"
     page={page}
     base={categoryUrl(name)}
+    backHref="/categories/"
+    backLabel="← 全部分类"
+    showPageNote
   />
 </Base>

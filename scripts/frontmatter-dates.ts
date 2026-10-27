@@ -24,6 +24,7 @@ const SILENT_TYPES = new Set(["fix", "chore"]);
 const CONVENTIONAL_HEADER = /^(\w+)(\([^)]*\))?!?:/;
 /** post-commit amend 的递归守卫标记（相对 .git 的路径） */
 const AMEND_GUARD = ".git/.frontmatter-amending";
+/** 与 manga-paper.config.ts 的 site.timeZone 默认值一致；钩子独立运行，不读站点配置 */
 const TIME_ZONE = "Asia/Shanghai";
 const EOL_CRLF = "\r\n";
 const EOL_LF = "\n";

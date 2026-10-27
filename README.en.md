@@ -18,10 +18,11 @@ Built with Astro, MangaPaper generates a fully static site, so you do not need t
 
 - **Comic-paper design:** Dotted background, hard borders, directional hard shadows, sticker labels, and light/dark themes.
 - **Self-hosted fonts:** Uses Maple Mono NF CN and generates font subsets from site content during the build, without relying on a third-party font CDN.
-- **Complete content organization:** Featured posts, categories, tags, an archive timeline, drafts, and pagination (8 posts per page by default).
+- **Complete content organization:** Featured posts, a category index, tags, an explore hub, an archive timeline, drafts (previewable in dev), and pagination (8 posts per page by default).
+- **Explore hub and category index:** `/explore/` gathers category and tag entry points, and `/categories/` lists all categories. The all-posts page is a flat paginated feed; categories and tags are reached through the explore hub, and the main navigation stays at five items.
 - **Reading enhancements:** Table of contents with scroll highlighting, one-click code copying, PhotoSwipe image lightbox, and build-time image dimensions to help reduce layout shifts.
 - **Static full-text search:** Pagefind generates the search index at build time and supports Chinese queries.
-- **SEO and sharing:** Generates a sitemap, RSS feed, and `robots.txt`, plus 1200 × 630 OG images for public posts. Drafts and private posts are excluded from public indexes and do not receive share images.
+- **SEO and sharing:** Generates a sitemap, RSS feed, and `robots.txt`, plus 1200 × 630 OG images for public posts. In production builds, drafts and private posts are excluded from public indexes and do not receive share images; drafts remain previewable under `npm run dev`.
 - **Private posts:** Content is encrypted with AES-256-GCM during the build; only ciphertext is published to the static site. Readers enter a password at `/private`, where content is decrypted in the browser.
 - **Optional integrations:** remark42 comments, Google Analytics 4, Google Search Console verification, and Vercel Web Analytics / Speed Insights.
 - **Static-hosting friendly:** Supports Vercel and Cloudflare Pages, generating deployment configuration and security headers from environment variables.
@@ -80,7 +81,7 @@ Open [http://localhost:4321](http://localhost:4321). The Pagefind search index i
 
 ## 🎛 Site configuration
 
-The site name, author, bio, homepage shortcuts, and pagination settings live in **`manga-paper.config.ts`** at the repository root.
+The site name, author, bio, language, time zone, footer, homepage shortcuts, and pagination settings live in **`manga-paper.config.ts`** at the repository root.
 
 ```ts
 import { defineConfig } from "./src/types/config";
@@ -91,6 +92,24 @@ export default defineConfig({
     tagline: "A loose-leaf, comic-paper, monospace blog theme",
     author: "lavie",
     bio: "An open-source blog template with a comic-paper aesthetic",
+    lang: "en-US",              // <html lang>, OG locale, RSS and JSON-LD
+    timeZone: "Asia/Shanghai",  // Time zone for displayed dates
+    favicon: "/favicon.svg",
+    sealText: "M",              // Header / default share-card seal; defaults to the first character of the name
+    footer: {
+      copyright: "Copyright © {year} | All rights reserved.",
+      links: [
+        // { label: "ICP filing number", href: "https://beian.miit.gov.cn/" },
+      ],
+    },
+  },
+  categories: {
+    // Optional: pin a category to a sticker color; unlisted categories are hashed by name
+    // colors: {
+    //   技术: "cyan",
+    //   随笔: "pink",
+    //   摄影: "yellow",
+    // },
   },
   posts: {
     perPage: 8,       // Posts per listing page
@@ -107,10 +126,22 @@ export default defineConfig({
 
 | Setting | Purpose |
 | --- | --- |
-| `site.name` / `site.tagline` | Site name and tagline, used in the header, page titles, RSS, and default sharing metadata |
+| `site.name` / `site.tagline` | Site name and tagline, used in the header brand, page titles, RSS, and default sharing metadata |
 | `site.author` / `site.bio` | Author and site description; also used as fallbacks for the About page description and default share-card copy |
+| `site.lang` / `site.timeZone` | HTML `lang`, OG locale, RSS and JSON-LD language / time zone for displayed dates; defaults to `zh-CN` / `Asia/Shanghai` |
+| `site.favicon` / `site.sealText` | Favicon path / header and default share-card seal; the seal defaults to the first character of the site name |
+| `site.footer` | `copyright` supports a `{year}` placeholder; `links[]` holds ICP / public-security filings or custom entries |
+| `categories.colors` | Optional category sticker-color overrides; unlisted categories are colored by a stable name hash |
 | `posts.perPage` / `posts.recentCount` | Posts per listing page / number of recent posts on the homepage |
 | `socials[]` | Homepage shortcuts, displayed in array order; `primary: true` highlights the main link. Set it on at most one item. |
+
+The `{year}` placeholder in `site.footer.copyright` is replaced with the current year in the site time zone. `site.footer.links` is intended for ICP / public-security filings or other footer entries; the row is not rendered when the list is empty.
+
+Category sticker colors are chosen from an 8-color palette (`cyan` / `pink` / `yellow` / `blue` / `green` / `orange` / `violet` / `lime`) by a stable hash of the category name. The same category gets the same color on every build; it is not random. `categories.colors` is only needed when you want to pin a specific color; new categories get a color automatically.
+
+> `site.lang` only affects language metadata such as `<html lang>`, share-card locale, RSS and JSON-LD; it does not translate UI copy.
+>
+> `site.timeZone` only affects displayed dates and the footer year. The `date` / `updated` injection hook runs independently and always uses `Asia/Shanghai`.
 
 `socials` controls **only the homepage shortcut bar**; these links are not shown on the About page. The template appends RSS automatically, so do not add it again. RSS and the private-post link are included in the footer by default.
 
@@ -153,7 +184,7 @@ title: Post title
 description: Summary used for SEO, RSS, and share cards
 tags: [Engineering, Notes]
 featured: true           # Optional: include in the homepage featured carousel
-draft: false             # Optional: true excludes the post from publication
+draft: false             # Optional: true previews in dev only; excluded from production builds
 private: false           # Optional: true encrypts the post as private content
 cover: /images/cover.png # Optional: cover image
 ---

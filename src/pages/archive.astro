@@ -37,6 +37,7 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
                 <a href={postUrl(post)}>{post.data.title}</a>
               </h2>
               <span class="mins">
+                {post.data.draft && <b class="draft">草稿</b>}
                 {getCategory(post)} · {estimateReadTime(post.body ?? "")} 分钟
               </span>
             </div>
@@ -129,6 +130,10 @@ const years = [...byYear.keys()].sort((a, b) => b - a);
     font-size: 12px;
     color: var(--ink-soft);
     justify-self: end;
+  }
+  .t-item .mins .draft {
+    margin-right: 6px;
+    color: var(--red-ink);
   }
   .t-item h2 {
     font-size: 16px;

@@ -10,6 +10,16 @@ import { site, analytics, isAnalyticsEnabled, isVercelInsightsEnabled } from "..
 import { FONT_PRELOAD } from "../utils/font/assets";
 import { serializeJsonLd, type JsonLdNode } from "../utils/content/structured-data";
 import { siteShareImage, type ShareImage } from "../utils/og/share";
+import { toOgLocale } from "../utils/site/locale";
+
+/** favicon 的 MIME 由扩展名推导；不认识的扩展名就不写 type，交给浏览器 */
+const FAVICON_TYPES: Readonly<Record<string, string>> = {
+  svg: "image/svg+xml",
+  png: "image/png",
+  ico: "image/x-icon",
+  webp: "image/webp",
+  avif: "image/avif",
+};
 
 interface Props {
   title?: string;
@@ -48,10 +58,14 @@ const shareTitle = title ?? site.name;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 // RSS auto-discovery：阅读器 / 浏览器扩展靠这条声明自动发现订阅地址
 const rssFeed = new URL("rss.xml", Astro.site);
+// og:locale 用 language_TERRITORY；site.lang 是 BCP 47
+const ogLocale = toOgLocale(site.lang);
+const faviconExt = site.favicon.match(/\.([a-z0-9]+)(?:[?#].*)?$/i)?.[1].toLowerCase() ?? "";
+const faviconType = FAVICON_TYPES[faviconExt];
 ---
 
 <!doctype html>
-<html lang="zh-CN">
+<html lang={site.lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -81,7 +95,7 @@ const rssFeed = new URL("rss.xml", Astro.site);
     */}
     <meta property="og:type" content={shareType} />
     <meta property="og:site_name" content={site.name} />
-    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:locale" content={ogLocale} />
     <meta property="og:title" content={shareTitle} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
@@ -100,7 +114,7 @@ const rssFeed = new URL("rss.xml", Astro.site);
         <script type="application/ld+json" is:inline set:html={serializeJsonLd(structuredData)} />
       )
     }
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type={faviconType} href={site.favicon} />
     {/*
       字体 preload：自托管子集只 preload 400 / 700 两个字面（正文 + 标题），
       其余字重交给 unicode-range 按需取；清单来自构建期生成的 font-assets.ts。

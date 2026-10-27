@@ -1,5 +1,6 @@
 ---
 import ThemeToggle from "./ThemeToggle.astro";
+import { site } from "../config";
 
 interface Props {
   current?: string;
@@ -7,31 +8,39 @@ interface Props {
 
 const { current = "" } = Astro.props;
 
+/** 站内路由固定，导航也固定在主题里；需要增删入口时直接改这份清单 */
 const NAV_ITEMS = [
-  { href: "/posts/", match: "/posts", label: "文章" },
-  { href: "/archive/", match: "/archive", label: "归档" },
-  { href: "/tags/", match: "/tags", label: "标签" },
-  { href: "/search/", match: "/search", label: "搜索" },
-  { href: "/about/", match: "/about", label: "关于" },
+  { href: "/posts/", matches: ["/posts"], label: "文章" },
+  { href: "/archive/", matches: ["/archive"], label: "归档" },
+  { href: "/explore/", matches: ["/explore", "/categories", "/category", "/tags"], label: "发现" },
+  { href: "/search/", matches: ["/search"], label: "搜索" },
+  { href: "/about/", matches: ["/about"], label: "关于" },
 ] as const;
+
+/** 命中任一前缀即点亮；`/` 只匹配首页，避免把其它页面全点亮 */
+function isActive(matches: readonly string[]): boolean {
+  return matches.some((match) => {
+    if (match === "/") return current === "/";
+    return current === match || current === `${match}/` || current.startsWith(`${match}/`);
+  });
+}
 ---
 
 <header class="site-header">
   <a class="brand" href="/">
-    <span class="seal" aria-hidden="true">M</span>
-    <span class="name">MangaPaper</span>
+    <span class="seal" aria-hidden="true">{site.sealText}</span>
+    <span class="name">{site.name}</span>
   </a>
   <nav class="site-nav" aria-label="主导航">
     {
-      NAV_ITEMS.map((item) => (
-        <a
-          href={item.href}
-          class={current.startsWith(item.match) ? "on" : ""}
-          aria-current={current.startsWith(item.match) ? "page" : undefined}
-        >
-          {item.label}
-        </a>
-      ))
+      NAV_ITEMS.map((item) => {
+        const active = isActive(item.matches);
+        return (
+          <a href={item.href} class={active ? "on" : ""} aria-current={active ? "page" : undefined}>
+            {item.label}
+          </a>
+        );
+      })
     }
     <ThemeToggle />
   </nav>
@@ -50,8 +59,10 @@ const NAV_ITEMS = [
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 0;
   }
   .seal {
+    flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -66,9 +77,13 @@ const NAV_ITEMS = [
     transform: rotate(-3deg);
   }
   .brand .name {
+    min-width: 0;
+    overflow: hidden;
     font-size: 24px;
     font-weight: 700;
     letter-spacing: 0.06em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .site-nav {
     display: flex;

@@ -1,56 +1,100 @@
 ---
 import SocialIcon from "./SocialIcon.astro";
+import { site } from "../config";
+import { getYear } from "../utils/content/format";
 
-// 构建期年份：静态产物自带正确年份（无 JS 也成立）；跨年后由页尾内联脚本按浏览器时间修正
-const buildYear = new Date().getFullYear();
+// 构建期年份：按站点时区取，静态产物自带正确年份；跨年后由页尾内联脚本按 site.timeZone 修正
+const buildYear = getYear(new Date());
+const copyrightParts = site.footer.copyright.split("{year}");
 ---
 
 <footer class="site-footer">
-  <span>Copyright © <span data-year>{buildYear}</span> | All rights reserved.</span>
+  <div class="footer-row">
+    <span class="copyright">
+      {
+        copyrightParts.map((part, index) => (
+          <Fragment>
+            {part}
+            {index < copyrightParts.length - 1 && (
+              <span data-year data-timezone={site.timeZone}>{buildYear}</span>
+            )}
+          </Fragment>
+        ))
+      }
+    </span>
 
-  <span class="meta">
-    {/* RSS 与私密文章都是站点自带入口（不属「站点主人的社交账号」，不进 socials） */}
-    <a class="feed-link" href="/rss.xml" title="订阅本站更新（RSS）">
-      <SocialIcon icon={{ kind: "builtin", name: "rss" }} size={10} />
-      RSS
-    </a>
+    <span class="meta">
+      {/* RSS 与私密文章都是站点自带入口（不属「站点主人的社交账号」，不进 socials） */}
+      <a class="feed-link" href="/rss.xml" title="订阅本站更新（RSS）">
+        <SocialIcon icon={{ kind: "builtin", name: "rss" }} size={10} />
+        RSS
+      </a>
 
-    <a class="private-link" href="/private/" title="本站私密文章（需密码）">
-      <svg class="seal-mark" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">
-        <rect
-          x="1.6"
-          y="1.6"
-          width="12.8"
-          height="12.8"
-          fill="var(--red)"
-          stroke="var(--ink)"
-          stroke-width="2.6"
-        />
-      </svg>
-      私密文章
-    </a>
-  </span>
+      <a class="private-link" href="/private/" title="本站私密文章（需密码）">
+        <svg class="seal-mark" viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">
+          <rect
+            x="1.6"
+            y="1.6"
+            width="12.8"
+            height="12.8"
+            fill="var(--red)"
+            stroke="var(--ink)"
+            stroke-width="2.6"
+          />
+        </svg>
+        私密文章
+      </a>
+    </span>
+  </div>
+
+  {
+    site.footer.links.length > 0 && (
+      <div class="footer-records">
+        {site.footer.links.map((link) => (
+          <a
+            href={link.href}
+            target={link.external ? "_blank" : undefined}
+            rel={link.external ? "noopener noreferrer" : undefined}
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
+    )
+  }
 </footer>
 
 <script is:inline>
-  // 纯静态站不会自己翻年份：跨年后打开页面时按浏览器时间就地修正（不必重新部署）
+  // 纯静态站不会自己翻年份：跨年后打开页面时按站点时区就地修正（不必重新部署）
   (function () {
-    var el = document.querySelector("[data-year]");
-    if (el) el.textContent = String(new Date().getFullYear());
+    document.querySelectorAll("[data-year]").forEach(function (el) {
+      var timeZone = el.getAttribute("data-timezone") || undefined;
+      try {
+        var year = new Intl.DateTimeFormat("en-CA", timeZone ? { timeZone: timeZone } : undefined)
+          .format(new Date())
+          .slice(0, 4);
+        el.textContent = year;
+      } catch (e) {
+        el.textContent = String(new Date().getFullYear());
+      }
+    });
   })();
 </script>
 
 <style>
   .site-footer {
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    flex-wrap: wrap;
+    display: block;
     margin-top: 72px;
     padding: 15px 0 30px;
     border-top: 2px dashed var(--ink-soft);
     font-size: 12px;
     color: var(--ink-soft);
+  }
+  .footer-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
   }
   .site-footer .meta {
     display: inline-flex;
@@ -71,6 +115,17 @@ const buildYear = new Date().getFullYear();
   }
   .site-footer a:hover {
     color: var(--red-ink);
+  }
+  /* 页脚附加链接（ICP / 公安备案 / 自定义入口）：单独一行，避免挤在版权与 RSS 之间 */
+  .footer-records {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin-top: 8px;
+    font-size: 11px;
+  }
+  .footer-records a {
+    word-break: break-word;
   }
   /* 私密文章的朱砂小方章（负 3° 与解锁页 .seal-stamp 同一手势；
      不叫 .seal——那是页头 logo 的名字） */

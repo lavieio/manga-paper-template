@@ -1,15 +1,10 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { getPublishedPosts, tagUrl } from "../../utils/content/posts";
+import { summarizeTags } from "../../utils/content/taxonomy";
 
 const posts = await getPublishedPosts();
-const counts = new Map<string, number>();
-for (const post of posts) {
-  for (const tag of post.data.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
-}
-const tags = [...counts.entries()].sort(
-  (a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "zh-Hans-CN"),
-);
+const tags = summarizeTags(posts);
 
 /** 字号档位：×1-2 → s1；×3-4 → s2；×5+ → s3 */
 function sizeClass(count: number): string {
@@ -30,9 +25,9 @@ function sizeClass(count: number): string {
 
   <div class="cloud">
     {
-      tags.map(([tag, count]) => (
-        <a class={`tag-chip ${sizeClass(count)}`} href={tagUrl(tag)}>
-          {tag} <span class="n">×{count}</span>
+      tags.map(({ name, count }) => (
+        <a class={`tag-chip ${sizeClass(count)}`} href={tagUrl(name)}>
+          {name} <span class="n">×{count}</span>
         </a>
       ))
     }

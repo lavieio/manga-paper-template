@@ -2,6 +2,7 @@
  * 卡片外围的界面构件：顶栏（三个窗口点 + 假文件名）、页眉（朱砂 logo + 站名 + 分类贴纸）、
  * 页脚（作者 · 日期 · 时长 + 右下角域名）。内容部分在 `og-tree.ts`。
  */
+import { site } from "../../config";
 import { COLOR, LAYOUT, type OgCard } from "./card";
 import { node, text, type OgNode } from "./node";
 import { fitOneLine } from "./text";
@@ -69,9 +70,11 @@ function sticker(style: OgNode["props"]["style"], content: OgNode | string): OgN
   );
 }
 
-/** 页眉：logo（朱砂方块 + 白色 M）、站名、右上角分类贴纸 */
+/** 页眉：logo（朱砂方块 + 印章字）、站名、右上角分类贴纸 */
 export function header(card: OgCard): readonly OgNode[] {
   const { logo, wordmark, badge } = LAYOUT;
+  // 站名过长时截断，避免压到右上角分类贴纸
+  const wordmarkMax = badge.x - wordmark.x - 24;
   return [
     sticker(
       {
@@ -83,7 +86,7 @@ export function header(card: OgCard): readonly OgNode[] {
         border: `${logo.border}px solid ${COLOR.ink}`,
         transform: `rotate(${logo.rotate}deg)`,
       },
-      text({ fontSize: logo.mSize, fontWeight: 700, lineHeight: 1, color: COLOR.onRed }, "M"),
+      text({ fontSize: logo.mSize, fontWeight: 700, lineHeight: 1, color: COLOR.onRed }, site.sealText),
     ),
     text(
       {
@@ -96,7 +99,7 @@ export function header(card: OgCard): readonly OgNode[] {
         letterSpacing: wordmark.letterSpacing,
         color: COLOR.ink,
       },
-      "MangaPaper",
+      fitOneLine(site.name, wordmarkMax, wordmark.size, wordmark.letterSpacing),
     ),
     sticker(
       {
